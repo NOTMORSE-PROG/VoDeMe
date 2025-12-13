@@ -12,7 +12,7 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
   const [activeTab, setActiveTab] = useState("games")
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 via-blue-50 to-sky-50">
+    <div className="h-screen overflow-y-auto bg-gradient-to-br from-sky-100 via-blue-50 to-sky-50">
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
@@ -69,12 +69,12 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 border-b-2 border-gray-200 overflow-x-auto">
+        <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 border-b-2 border-gray-200 overflow-x-auto overflow-y-clip">
           <button
             onClick={() => setActiveTab("games")}
             className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
               activeTab === "games"
-                ? "text-orange-600 border-b-4 border-orange-600 -mb-2"
+                ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -84,7 +84,7 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
             onClick={() => setActiveTab("quizzes")}
             className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
               activeTab === "quizzes"
-                ? "text-orange-600 border-b-4 border-orange-600 -mb-2"
+                ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -94,7 +94,7 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
             onClick={() => setActiveTab("leaderboard")}
             className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
               activeTab === "leaderboard"
-                ? "text-orange-600 border-b-4 border-orange-600 -mb-2"
+                ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -186,7 +186,7 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
                 onClick: () => onPlayGame("wordstudyjournal"),
               },
               {
-                title: "Collocation Match",
+                title: "HopRight",
                 desc: "Master word combinations",
                 emoji: "🎯",
                 color: "from-blue-500 to-blue-600",

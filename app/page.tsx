@@ -40,17 +40,7 @@ export default function AppPage() {
   }
 
   if (page === "hopright") {
-    return (
-      <div>
-        <button
-          onClick={() => setPage("dashboard")}
-          className="absolute top-4 left-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-        >
-          ← Back to Dashboard
-        </button>
-        <HopRightGame />
-      </div>
-    )
+    return <HopRightGame onBack={() => setPage("dashboard")} />
   }
 
   if (page === "wordstudyjournal") {
@@ -72,7 +62,7 @@ export default function AppPage() {
   }
 
   if (page === "dashboard" && user) {
-    return <Dashboard user={user} onLogout={handleLogout} onPlayGame={() => setPage("synohit")} />
+    return <Dashboard user={user} onLogout={handleLogout} onPlayGame={(gameName) => setPage(gameName as any)} />
   }
 
   return (
