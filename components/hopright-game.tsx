@@ -1,342 +1,129 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import React from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 
+// Game data for all 30 stages
 interface Stage {
-  targetWord?: string
+  id: number
+  type: "word" | "sentence"
+  target?: string
   sentence?: string
   options: string[]
   correct: number
 }
 
-const levelData = {
+const gameData: { easy: Stage[]; medium: Stage[]; hard: Stage[] } = {
   easy: [
-    { targetWord: "breakfast", options: ["have a breakfast", "make breakfast", "eat a breakfast"], correct: 1 },
-    { targetWord: "rain", options: ["heavy rain", "loud rain", "soft rain"], correct: 0 },
-    {
-      sentence: "Arthur needs to ________ before going out.",
-      options: ["take homework", "do homework", "make homework"],
-      correct: 1,
-    },
-    { targetWord: "cold", options: ["big cold", "strong cold", "catch a cold"], correct: 2 },
-    {
-      sentence: "Everyone makes a ________, so don't be too hard on yourself.",
-      options: ["makes a mistaken", "makes a mistakes", "make a mistake"],
-      correct: 2,
-    },
-    { targetWord: "food", options: ["quick food", "fast food", "slow food"], correct: 1 },
-    {
-      sentence: "Peter Parker need ________ to wake up this morning.",
-      options: ["soft coffee", "strong coffee", "weak coffee"],
-      correct: 1,
-    },
-    { targetWord: "promise", options: ["say a promise", "have a promise", "break a promise"], correct: 2 },
-    {
-      sentence: "Some teenagers prefer to ________ to organize their thoughts.",
-      options: ["keep a diary", "do a diary", "create a diary"],
-      correct: 0,
-    },
-    {
-      sentence: "The students in room 404 made a ________ outside the classroom.",
-      options: ["strong noise", "soft noise", "loud noise"],
-      correct: 2,
-    },
+    { id: 1, type: "word", target: "breakfast", options: ["have a breakfast", "make breakfast", "eat a breakfast"], correct: 1 },
+    { id: 2, type: "word", target: "rain", options: ["heavy rain", "loud rain", "soft rain"], correct: 0 },
+    { id: 3, type: "sentence", sentence: "Arthur needs to ________ before going out.", options: ["take homework", "do homework", "make homework"], correct: 1 },
+    { id: 4, type: "word", target: "cold", options: ["big cold", "strong cold", "catch a cold"], correct: 2 },
+    { id: 5, type: "sentence", sentence: "Everyone makes a ________, so don't be too hard on yourself.", options: ["makes a mistaken", "makes a mistakes", "make a mistake"], correct: 2 },
+    { id: 6, type: "word", target: "food", options: ["quick food", "fast food", "slow food"], correct: 1 },
+    { id: 7, type: "sentence", sentence: "Peter Parker needs ________ to wake up this morning.", options: ["soft coffee", "strong coffee", "weak coffee"], correct: 1 },
+    { id: 8, type: "word", target: "promise", options: ["say a promise", "have a promise", "break a promise"], correct: 2 },
+    { id: 9, type: "sentence", sentence: "Some teenagers prefer to ________ to organize their thoughts.", options: ["keep a diary", "do a diary", "create a diary"], correct: 0 },
+    { id: 10, type: "sentence", sentence: "The students in room 404 made a ________ outside the classroom.", options: ["strong noise", "soft noise", "loud noise"], correct: 2 },
   ],
   medium: [
-    {
-      sentence: "The students are starting to ________ in their vocabulary learning.",
-      options: ["do progress", "make progress", "have progress"],
-      correct: 1,
-    },
-    { targetWord: "energy", options: ["high energy", "nuclear energy", "powerful energy"], correct: 0 },
-    { targetWord: "vocabulary", options: ["wide vocabulary", "thick vocabulary", "broad vocabulary"], correct: 2 },
-    { targetWord: "research", options: ["carry up research", "conduct research", "carry out research"], correct: 1 },
-    {
-      sentence: "The researchers will ________ to collect data.",
-      options: ["conduct a survey", "create a survey", "do a survey"],
-      correct: 0,
-    },
-    {
-      sentence: "The softball team felt ________ after losing the finals.",
-      options: ["strong disappointment", "bitter disappointment", "loud disappointment"],
-      correct: 1,
-    },
-    {
-      targetWord: "appointment",
-      options: ["keep an appointment", "take an appointment", "do an appointment"],
-      correct: 0,
-    },
-    {
-      sentence: "I ________ that education changes lives.",
-      options: ["softly believe", "begly believe", "firmly believe"],
-      correct: 2,
-    },
-    { targetWord: "follow", options: ["slowly follow", "strictly follow", "loudly follow"], correct: 1 },
-    {
-      sentence: "Teachers were ________ about the sudden drop in attendance.",
-      options: ["lightly concerned", "strongly concerned", "deeply concerned"],
-      correct: 2,
-    },
+    { id: 11, type: "sentence", sentence: "The students are starting to ________ in their vocabulary learning.", options: ["do progress", "make progress", "have progress"], correct: 1 },
+    { id: 12, type: "word", target: "energy", options: ["high energy", "nuclear energy", "powerful energy"], correct: 1 },
+    { id: 13, type: "word", target: "vocabulary", options: ["wide vocabulary", "thick vocabulary", "broad vocabulary"], correct: 2 },
+    { id: 14, type: "word", target: "research", options: ["carry up research", "conduct research", "carry out research"], correct: 2 },
+    { id: 15, type: "sentence", sentence: "The researchers will ________ to collect data.", options: ["conduct a survey", "create a survey", "do a survey"], correct: 0 },
+    { id: 16, type: "sentence", sentence: "The softball team felt ________ after losing the finals.", options: ["strong disappointment", "bitter disappointment", "loud disappointment"], correct: 1 },
+    { id: 17, type: "word", target: "appointment", options: ["keep an appointment", "take an appointment", "do an appointment"], correct: 0 },
+    { id: 18, type: "sentence", sentence: "I ________ that education changes lives.", options: ["softly believe", "begly believe", "firmly believe"], correct: 2 },
+    { id: 19, type: "word", target: "follow", options: ["slowly follow", "strictly follow", "loudly follow"], correct: 1 },
+    { id: 20, type: "sentence", sentence: "Teachers were ________ about the sudden drop in attendance.", options: ["lightly concerned", "strongly concerned", "deeply concerned"], correct: 2 },
   ],
   hard: [
-    {
-      targetWord: "regulations",
-      options: ["comply in regulations", "comply with regulations", "obey regulations quickly"],
-      correct: 1,
-    },
-    {
-      sentence: "All athletes must ________ to avoid penalties.",
-      options: ["follow in rules", "obey rules strongly", "adhere to rules"],
-      correct: 2,
-    },
-    {
-      sentence: "Teachers often have to ________ when deadlines are tight.",
-      options: ["look on the problem", "grapple with a problem", "push a problem"],
-      correct: 1,
-    },
-    { targetWord: "conflict", options: ["resolve a conflict", "dissolve a conflict", "break a conflict"], correct: 0 },
-    { targetWord: "debate", options: ["hotted debate", "heated debate", "warmed debate"], correct: 1 },
-    {
-      sentence: "The rise of fake news continues to ________ to society.",
-      options: ["have a danger", "make a threat", "pose a threat"],
-      correct: 2,
-    },
-    {
-      sentence: "The two sides reached a ________ during negotiations.",
-      options: ["strong agreement", "tentative agreement", "cold agreement"],
-      correct: 1,
-    },
-    { targetWord: "pressure", options: ["mounting pressure", "thicking pressure", "widening pressure"], correct: 0 },
-    { targetWord: "damaged", options: ["greatly damaged", "hardly damaged", "severely damaged"], correct: 2 },
-    {
-      sentence: "It is ________ that the school will cancel classes today.",
-      options: ["barely unlikely", "softly unlikely", "highly unlikely"],
-      correct: 2,
-    },
+    { id: 21, type: "word", target: "regulations", options: ["comply in regulations", "comply with regulations", "obey regulations quickly"], correct: 1 },
+    { id: 22, type: "sentence", sentence: "All athletes must ________ to avoid penalties.", options: ["follow in rules", "obey rules strongly", "adhere to rules"], correct: 2 },
+    { id: 23, type: "sentence", sentence: "Teachers often have to ________ when deadlines are tight.", options: ["look on the problem", "grapple with a problem", "push a problem"], correct: 1 },
+    { id: 24, type: "word", target: "conflict", options: ["resolve a conflict", "dissolve a conflict", "break a conflict"], correct: 0 },
+    { id: 25, type: "word", target: "debate", options: ["hotted debate", "heated debate", "warmed debate"], correct: 1 },
+    { id: 26, type: "sentence", sentence: "The rise of fake news continues to ________ to society.", options: ["have a danger", "make a threat", "pose a threat"], correct: 2 },
+    { id: 27, type: "sentence", sentence: "The two sides reached a ________ during negotiations.", options: ["strong agreement", "tentative agreement", "cold agreement"], correct: 1 },
+    { id: 28, type: "word", target: "pressure", options: ["mounting pressure", "thicking pressure", "widening pressure"], correct: 0 },
+    { id: 29, type: "word", target: "damaged", options: ["greatly damaged", "hardly damaged", "severely damaged"], correct: 2 },
+    { id: 30, type: "sentence", sentence: "It is ________ that the school will cancel classes today.", options: ["barely unlikely", "softly unlikely", "highly unlikely"], correct: 2 },
   ],
 }
 
-// High School Background Component
-function HighSchoolBackground({ children }: { children: React.ReactNode }) {
+// Shuffle function using Fisher-Yates algorithm
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+// Beautiful Nature Background Component
+function NatureBackground({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Sky with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-sky-300 to-green-200" />
+      {/* Sky gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-400 via-sky-300 to-emerald-200" />
 
       {/* Sun */}
-      <div className="absolute top-8 right-16 w-20 h-20">
-        <div className="absolute inset-0 bg-yellow-300 rounded-full blur-lg opacity-60 animate-pulse" />
-        <div className="absolute inset-2 bg-yellow-200 rounded-full shadow-xl" />
+      <div className="absolute top-8 right-12 w-20 h-20">
+        <div className="absolute inset-0 bg-yellow-300 rounded-full blur-xl opacity-60 animate-pulse" />
+        <div className="absolute inset-2 bg-yellow-200 rounded-full shadow-2xl" />
       </div>
 
-      {/* Clouds */}
-      <div className="absolute top-12 left-20 w-32 h-12 opacity-90 animate-float-slow">
+      {/* Animated clouds */}
+      <div className="absolute top-16 left-16 w-32 h-12 opacity-90 animate-cloud-slow">
         <div className="absolute top-0 left-0 w-16 h-10 bg-white rounded-full" />
-        <div className="absolute top-2 left-10 w-24 h-8 bg-white rounded-full" />
+        <div className="absolute top-2 left-10 w-20 h-8 bg-white rounded-full" />
+        <div className="absolute top-3 left-6 w-12 h-6 bg-white rounded-full" />
       </div>
-      <div className="absolute top-20 right-32 w-28 h-10 opacity-80 animate-float-slower">
+      <div className="absolute top-24 right-24 w-28 h-10 opacity-80 animate-cloud-slower">
         <div className="absolute top-0 right-0 w-14 h-8 bg-white rounded-full" />
-        <div className="absolute top-2 right-8 w-20 h-6 bg-white rounded-full" />
+        <div className="absolute top-2 right-8 w-18 h-6 bg-white rounded-full" />
       </div>
 
-      {/* Large Modern School Building in background */}
-      <div className="absolute bottom-64 left-1/2 -translate-x-1/2 z-5">
-        <div className="relative">
-          {/* Main Building - Large and modern */}
-          <div className="relative w-96 h-56 bg-gradient-to-b from-orange-400 via-orange-500 to-orange-600 rounded-lg border-6 border-orange-700 shadow-2xl">
-            {/* Building accents - horizontal lines */}
-            <div className="absolute top-0 left-0 right-0 h-2 bg-orange-800"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-3 bg-orange-800"></div>
-
-            {/* Windows Grid - 3 floors */}
-            <div className="grid grid-cols-6 gap-3 p-6">
-              {/* First Floor Windows */}
-              {[...Array(6)].map((_, i) => (
-                <div key={`f1-${i}`} className="w-12 h-14 bg-gradient-to-b from-sky-300 to-sky-400 border-3 border-blue-900 rounded-sm shadow-md relative overflow-hidden">
-                  {/* Window cross */}
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-900 -translate-y-1/2"></div>
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-blue-900 -translate-x-1/2"></div>
-                  {/* Reflection */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent"></div>
-                </div>
-              ))}
-              {/* Second Floor Windows */}
-              {[...Array(6)].map((_, i) => (
-                <div key={`f2-${i}`} className="w-12 h-14 bg-gradient-to-b from-sky-300 to-sky-400 border-3 border-blue-900 rounded-sm shadow-md relative overflow-hidden">
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-900 -translate-y-1/2"></div>
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-blue-900 -translate-x-1/2"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent"></div>
-                </div>
-              ))}
-              {/* Third Floor Windows */}
-              {[...Array(6)].map((_, i) => (
-                <div key={`f3-${i}`} className="w-12 h-14 bg-gradient-to-b from-sky-300 to-sky-400 border-3 border-blue-900 rounded-sm shadow-md relative overflow-hidden">
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-900 -translate-y-1/2"></div>
-                  <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-blue-900 -translate-x-1/2"></div>
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Entrance - Double doors */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              <div className="w-16 h-32 bg-gradient-to-b from-red-700 to-red-900 border-3 border-red-950 rounded-t-lg shadow-xl relative">
-                {/* Door window */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-10 h-16 bg-gradient-to-b from-sky-200 to-sky-300 border-2 border-sky-500 rounded"></div>
-                {/* Door handle */}
-                <div className="w-2 h-3 bg-yellow-500 rounded-full absolute bottom-12 right-2 shadow-md"></div>
-              </div>
-              <div className="w-16 h-32 bg-gradient-to-b from-red-700 to-red-900 border-3 border-red-950 rounded-t-lg shadow-xl relative">
-                {/* Door window */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-10 h-16 bg-gradient-to-b from-sky-200 to-sky-300 border-2 border-sky-500 rounded"></div>
-                {/* Door handle */}
-                <div className="w-2 h-3 bg-yellow-500 rounded-full absolute bottom-12 left-2 shadow-md"></div>
-              </div>
-            </div>
-
-            {/* Entrance overhang */}
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 bg-gradient-to-b from-orange-600 to-orange-700 border-3 border-orange-800 rounded shadow-lg -z-10"></div>
-          </div>
-
-          {/* Roof */}
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[210px] border-r-[210px] border-b-[40px] border-l-transparent border-r-transparent border-b-red-800 drop-shadow-2xl"></div>
-
-          {/* Chimney */}
-          <div className="absolute -top-16 left-3/4 w-8 h-16 bg-gradient-to-r from-red-900 to-red-950 border-2 border-red-950 shadow-lg"></div>
-
-          {/* Flag pole */}
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2">
-            <div className="w-2 h-28 bg-gradient-to-b from-gray-600 to-gray-800 shadow-md"></div>
-            <div className="absolute top-3 left-2 w-14 h-10 bg-gradient-to-r from-blue-600 to-blue-700 rounded-r shadow-lg animate-flag-wave"></div>
-          </div>
-
-          {/* Front steps */}
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center">
-            <div className="w-40 h-2 bg-gray-400 border-2 border-gray-500 shadow-md"></div>
-            <div className="w-44 h-2 bg-gray-500 border-2 border-gray-600 shadow-md"></div>
-            <div className="w-48 h-2 bg-gray-600 border-2 border-gray-700 shadow-md"></div>
-          </div>
-        </div>
-      </div>
-
-      {/* CSS Animation for flag */}
-      <style jsx>{`
-        @keyframes flag-wave {
-          0%, 100% { transform: scaleX(1); }
-          50% { transform: scaleX(0.95); }
-        }
-        .animate-flag-wave {
-          animation: flag-wave 2s ease-in-out infinite;
-        }
-      `}</style>
-
-      {/* Pathway - Curved path leading to viewer */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <svg viewBox="0 0 800 300" className="w-full h-64" preserveAspectRatio="none">
-          {/* Grass on sides */}
-          <path d="M0,0 L0,300 L250,300 Q400,200 400,100 L400,0 Z" fill="#7cb342" />
-          <path d="M800,0 L800,300 L550,300 Q400,200 400,100 L400,0 Z" fill="#7cb342" />
-          {/* Path */}
-          <path d="M250,300 Q400,200 400,100 Q400,200 550,300 Z" fill="#d4a574" />
-          {/* Path edge lines */}
-          <path d="M250,300 Q400,200 400,100" stroke="#a57c52" strokeWidth="3" fill="none" />
-          <path d="M550,300 Q400,200 400,100" stroke="#a57c52" strokeWidth="3" fill="none" />
+      {/* Distant hills */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 320" className="w-full" preserveAspectRatio="none">
+          <path fill="#22c55e" fillOpacity="0.3" d="M0,192L48,176C96,160,192,128,288,133.3C384,139,480,181,576,186.7C672,192,768,160,864,149.3C960,139,1056,149,1152,170.7C1248,192,1344,224,1392,240L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
         </svg>
       </div>
 
-      {/* Trees on far left */}
-      <div className="absolute bottom-32 left-4 sm:left-8 z-10 hidden sm:block">
-        <div className="relative">
-          <div className="w-4 sm:w-6 h-20 sm:h-28 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 mx-auto rounded" />
-          <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 w-16 sm:w-24 h-16 sm:h-24 bg-green-700 rounded-full" />
-          <div className="absolute -top-6 sm:-top-10 left-1/2 -translate-x-1/2 w-12 sm:w-18 h-12 sm:h-18 bg-green-600 rounded-full" />
-        </div>
-      </div>
+      {/* Green grass/ground */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-green-600 via-green-500 to-green-400" />
 
-      {/* Trees on left */}
-      <div className="absolute bottom-28 left-12 sm:left-24 z-10">
-        <div className="relative">
-          <div className="w-5 sm:w-8 h-16 sm:h-32 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 mx-auto rounded" />
-          <div className="absolute -top-10 sm:-top-16 left-1/2 -translate-x-1/2 w-20 sm:w-32 h-20 sm:h-32 bg-green-600 rounded-full" />
-          <div className="absolute -top-6 sm:-top-12 left-1/2 -translate-x-1/2 w-16 sm:w-24 h-16 sm:h-24 bg-green-500 rounded-full" />
-          <div className="absolute -top-14 sm:-top-20 left-1/2 -translate-x-1/2 w-10 sm:w-16 h-10 sm:h-16 bg-green-700 rounded-full" />
-        </div>
-      </div>
-
-      {/* Trees on far right */}
-      <div className="absolute bottom-32 right-4 sm:right-8 z-10 hidden sm:block">
-        <div className="relative">
-          <div className="w-4 sm:w-6 h-20 sm:h-28 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 mx-auto rounded" />
-          <div className="absolute -top-10 sm:-top-14 left-1/2 -translate-x-1/2 w-16 sm:w-24 h-16 sm:h-24 bg-green-700 rounded-full" />
-          <div className="absolute -top-6 sm:-top-10 left-1/2 -translate-x-1/2 w-12 sm:w-18 h-12 sm:h-18 bg-green-600 rounded-full" />
-        </div>
-      </div>
-
-      {/* Trees on right */}
-      <div className="absolute bottom-28 right-12 sm:right-24 z-10">
-        <div className="relative">
-          <div className="w-5 sm:w-8 h-16 sm:h-32 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900 mx-auto rounded" />
-          <div className="absolute -top-10 sm:-top-16 left-1/2 -translate-x-1/2 w-20 sm:w-32 h-20 sm:h-32 bg-green-600 rounded-full" />
-          <div className="absolute -top-6 sm:-top-12 left-1/2 -translate-x-1/2 w-16 sm:w-24 h-16 sm:h-24 bg-green-500 rounded-full" />
-          <div className="absolute -top-14 sm:-top-20 left-1/2 -translate-x-1/2 w-10 sm:w-16 h-10 sm:h-16 bg-green-700 rounded-full" />
-        </div>
-      </div>
-
-      {/* Bushes on left side */}
-      <div className="absolute bottom-20 left-8 sm:left-40 z-10">
-        <div className="flex gap-1">
-          <div className="w-8 sm:w-12 h-6 sm:h-10 bg-green-500 rounded-full" />
-          <div className="w-10 sm:w-16 h-8 sm:h-12 bg-green-600 rounded-full -ml-2" />
-          <div className="w-8 sm:w-12 h-6 sm:h-10 bg-green-500 rounded-full -ml-2" />
-        </div>
-      </div>
-
-      {/* Bushes on right side */}
-      <div className="absolute bottom-20 right-8 sm:right-40 z-10">
-        <div className="flex gap-1">
-          <div className="w-8 sm:w-12 h-6 sm:h-10 bg-green-500 rounded-full" />
-          <div className="w-10 sm:w-16 h-8 sm:h-12 bg-green-600 rounded-full -ml-2" />
-          <div className="w-8 sm:w-12 h-6 sm:h-10 bg-green-500 rounded-full -ml-2" />
-        </div>
-      </div>
-
-      {/* Fence on left */}
-      <div className="absolute bottom-16 left-2 sm:left-16 z-8 hidden md:flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <div key={`fence-l-${i}`} className="relative">
-            <div className="w-3 h-12 bg-gradient-to-b from-amber-600 to-amber-800 rounded-t" />
-            <div className="absolute top-2 left-0 right-0 h-1.5 bg-amber-700" />
-            <div className="absolute top-6 left-0 right-0 h-1.5 bg-amber-700" />
-          </div>
+      {/* Grass texture lines */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden opacity-30">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute bottom-0 w-1 bg-green-800 rounded-t-full"
+            style={{
+              left: `${i * 2 + Math.random() * 2}%`,
+              height: `${20 + Math.random() * 30}px`,
+              transform: `rotate(${Math.random() * 10 - 5}deg)`,
+            }}
+          />
         ))}
       </div>
 
-      {/* Fence on right */}
-      <div className="absolute bottom-16 right-2 sm:right-16 z-8 hidden md:flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <div key={`fence-r-${i}`} className="relative">
-            <div className="w-3 h-12 bg-gradient-to-b from-amber-600 to-amber-800 rounded-t" />
-            <div className="absolute top-2 left-0 right-0 h-1.5 bg-amber-700" />
-            <div className="absolute top-6 left-0 right-0 h-1.5 bg-amber-700" />
-          </div>
-        ))}
-      </div>
+      {/* Flowers scattered */}
+      <div className="absolute bottom-36 left-12 text-2xl animate-sway">🌸</div>
+      <div className="absolute bottom-32 left-32 text-xl animate-sway" style={{ animationDelay: "0.5s" }}>🌺</div>
+      <div className="absolute bottom-40 right-20 text-2xl animate-sway" style={{ animationDelay: "1s" }}>🌼</div>
+      <div className="absolute bottom-28 right-40 text-xl animate-sway" style={{ animationDelay: "0.3s" }}>🌷</div>
 
-      {/* Flowers scattered - responsive */}
-      <div className="absolute bottom-32 left-20 sm:left-32 text-xl sm:text-2xl animate-sway">🌺</div>
-      <div className="absolute bottom-28 right-24 sm:right-40 text-lg sm:text-xl animate-sway" style={{ animationDelay: '0.5s' }}>🌸</div>
-      <div className="absolute bottom-36 left-1/4 text-base sm:text-lg animate-sway" style={{ animationDelay: '1s' }}>🌼</div>
-      <div className="absolute bottom-24 left-1/3 text-lg sm:text-xl animate-sway hidden sm:block" style={{ animationDelay: '1.5s' }}>🌷</div>
-      <div className="absolute bottom-30 right-1/3 text-base sm:text-lg animate-sway hidden sm:block" style={{ animationDelay: '2s' }}>🌻</div>
+      {/* Trees */}
+      <div className="absolute bottom-36 left-8 text-5xl">🌳</div>
+      <div className="absolute bottom-40 right-8 text-6xl">🌲</div>
+      <div className="absolute bottom-32 left-1/4 text-4xl hidden md:block">🌴</div>
 
       {/* Butterflies */}
-      <div className="absolute top-1/3 left-1/4 text-xl sm:text-2xl animate-butterfly opacity-70">🦋</div>
-      <div className="absolute top-1/2 right-1/4 text-lg sm:text-xl animate-butterfly opacity-60" style={{ animationDelay: '1s' }}>🦋</div>
-
-      {/* Birds */}
-      <div className="absolute top-16 left-1/3 text-sm sm:text-base animate-float-slow opacity-80">🐦</div>
-      <div className="absolute top-24 right-1/3 text-sm sm:text-base animate-float-slower opacity-70" style={{ animationDelay: '0.5s' }}>🐦</div>
+      <div className="absolute top-1/3 left-1/4 text-xl animate-butterfly" style={{ animationDelay: "0s" }}>🦋</div>
+      <div className="absolute top-1/4 right-1/3 text-lg animate-butterfly" style={{ animationDelay: "1.5s" }}>🦋</div>
 
       {/* Content */}
       <div className="relative z-20">
@@ -345,119 +132,311 @@ function HighSchoolBackground({ children }: { children: React.ReactNode }) {
 
       {/* CSS Animations */}
       <style jsx>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateX(0) translateY(0); }
-          50% { transform: translateX(20px) translateY(-8px); }
+        @keyframes cloud-slow {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(30px); }
         }
-        @keyframes float-slower {
-          0%, 100% { transform: translateX(0) translateY(0); }
-          50% { transform: translateX(-30px) translateY(-10px); }
+        @keyframes cloud-slower {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-40px); }
         }
         @keyframes sway {
           0%, 100% { transform: rotate(-5deg); }
           50% { transform: rotate(5deg); }
         }
-        .animate-float-slow {
-          animation: float-slow 12s ease-in-out infinite;
+        @keyframes butterfly {
+          0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+          25% { transform: translateX(30px) translateY(-20px) rotate(10deg); }
+          50% { transform: translateX(0) translateY(-35px) rotate(-5deg); }
+          75% { transform: translateX(-30px) translateY(-20px) rotate(10deg); }
         }
-        .animate-float-slower {
-          animation: float-slower 15s ease-in-out infinite;
+        .animate-cloud-slow {
+          animation: cloud-slow 20s ease-in-out infinite;
+        }
+        .animate-cloud-slower {
+          animation: cloud-slower 25s ease-in-out infinite;
         }
         .animate-sway {
           animation: sway 3s ease-in-out infinite;
         }
+        .animate-butterfly {
+          animation: butterfly 8s ease-in-out infinite;
+        }
       `}</style>
     </div>
   )
 }
 
-// Character Component
-function Character({ gender = "boy" }: { gender?: "boy" | "girl" }) {
+// Hopping Character Component
+function HoppingCharacter({
+  isHopping,
+  isWrong,
+  position,
+  hoveredIndex,
+  jumpKey
+}: {
+  isHopping: boolean
+  isWrong: boolean
+  position: number
+  hoveredIndex: number | null
+  jumpKey: number
+}) {
+  // Calculate horizontal position based on hovered option
+  // Options are positioned at -1 (left), 0 (center), 1 (right)
+  const getHoverOffset = () => {
+    if (hoveredIndex === null) return 0
+    // Map index 0 to -200px (left), index 1 to 0px (center), index 2 to 200px (right)
+    return (hoveredIndex - 1) * 200
+  }
+
   return (
-    <div className="relative w-32 h-40 mx-auto">
-      <img
-        src={gender === "boy" ? "/school_boy.png" : "/school_girl.png"}
-        alt={`School ${gender}`}
-        className="w-full h-full object-contain animate-character-bounce"
-      />
+    <div
+      key={jumpKey}
+      className={`
+        relative
+        ${isHopping ? "animate-hop-right" : ""}
+        ${isWrong ? "animate-shake-wrong" : ""}
+        ${hoveredIndex !== null ? "animate-hover-jump" : ""}
+      `}
+      style={{
+        transform: `translateX(${position * 30 + getHoverOffset()}px)`,
+        transition: 'transform 0.35s ease-out',
+      }}
+    >
+      {/* Character shadow */}
+      <div className={`
+        absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-4
+        bg-black/20 rounded-full blur-sm
+        transition-all duration-300
+        ${isHopping || hoveredIndex !== null ? "scale-75 opacity-50" : "scale-100 opacity-100"}
+      `} />
+
+      {/* Character - Cute Frog */}
+      <div className={`
+        relative text-7xl sm:text-8xl md:text-9xl
+        transition-transform duration-300
+        ${isHopping ? "scale-110" : "scale-100"}
+        filter drop-shadow-lg
+      `}>
+        🐸
+      </div>
+
+      {/* Happy expression on correct */}
+      {isHopping && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl animate-pop-up">
+          ⭐
+        </div>
+      )}
+
+      {/* Sad expression on wrong */}
+      {isWrong && (
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl animate-shake">
+          😢
+        </div>
+      )}
+
       <style jsx>{`
-        @keyframes character-bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
+        @keyframes hop-right {
+          0% { transform: translateY(0) rotate(0deg); }
+          30% { transform: translateY(-40px) rotate(-10deg); }
+          50% { transform: translateY(-50px) rotate(0deg); }
+          70% { transform: translateY(-30px) rotate(10deg); }
+          100% { transform: translateY(0) rotate(0deg); }
         }
-        .animate-character-bounce {
-          animation: character-bounce 2s ease-in-out infinite;
+        @keyframes shake-wrong {
+          0%, 100% { transform: translateX(0); }
+          20% { transform: translateX(-10px) rotate(-5deg); }
+          40% { transform: translateX(10px) rotate(5deg); }
+          60% { transform: translateX(-10px) rotate(-5deg); }
+          80% { transform: translateX(10px) rotate(5deg); }
+        }
+        @keyframes hover-jump {
+          0% { transform: translateY(0) scale(1) rotate(0deg); }
+          20% { transform: translateY(-15px) scale(1.03) rotate(-3deg); }
+          40% { transform: translateY(-35px) scale(1.05) rotate(0deg); }
+          60% { transform: translateY(-30px) scale(1.05) rotate(3deg); }
+          80% { transform: translateY(-10px) scale(1.02) rotate(0deg); }
+          100% { transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        @keyframes pop-up {
+          0% { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0); }
+          50% { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.2); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0); }
+        }
+        .animate-hop-right {
+          animation: hop-right 0.6s ease-out;
+        }
+        .animate-shake-wrong {
+          animation: shake-wrong 0.5s ease-out;
+        }
+        .animate-hover-jump {
+          animation: hover-jump 0.35s ease-out;
+        }
+        .animate-pop-up {
+          animation: pop-up 1s ease-out forwards;
         }
       `}</style>
     </div>
   )
 }
 
-// Word Bubble Component - Simple rounded blue box like Figure 5
-function WordBubble({ children }: { children: React.ReactNode }) {
+// Speech Bubble for target word/sentence
+function SpeechBubble({ children, type }: { children: React.ReactNode; type: "word" | "sentence" }) {
   return (
-    <div className="bg-gradient-to-br from-sky-300 to-sky-400 rounded-3xl px-8 py-4 shadow-xl border-4 border-sky-500 max-w-md mx-auto mb-8">
-      {children}
+    <div className="relative animate-fade-in">
+      {/* Bubble */}
+      <div className={`
+        bg-white rounded-2xl shadow-2xl border-4 border-teal-400
+        ${type === "word" ? "px-8 py-6" : "px-6 py-5 max-w-xl"}
+      `}>
+        <div className={`
+          ${type === "word" ? "text-2xl sm:text-3xl md:text-4xl font-bold text-teal-700 text-center" : "text-lg sm:text-xl text-gray-700 text-center leading-relaxed"}
+        `}>
+          {children}
+        </div>
+      </div>
+
+      {/* Pointer */}
+      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[15px] border-r-[15px] border-t-[20px] border-l-transparent border-r-transparent border-t-white" />
+      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[18px] border-r-[18px] border-t-[24px] border-l-transparent border-r-transparent border-t-teal-400 -z-10" />
+
+      <style jsx>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
 
-// Stone Button Component - Rock-shaped buttons like Figure 5 - Larger
-function StoneButton({
+// Choice Button Component - Like lily pads
+function ChoiceButton({
   label,
   onClick,
   disabled,
   isCorrect,
-  isWrong
+  isWrong,
+  answered,
+  index,
+  onMouseEnter,
+  onMouseLeave,
 }: {
   label: string
   onClick: () => void
   disabled: boolean
   isCorrect: boolean
   isWrong: boolean
+  answered: boolean
+  index: number
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }) {
+  const colors = [
+    "from-emerald-400 to-emerald-600",
+    "from-teal-400 to-teal-600",
+    "from-cyan-400 to-cyan-600",
+  ]
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`relative transform transition-all duration-300 ${
-        !disabled ? "hover:scale-105 cursor-pointer" : "cursor-not-allowed"
-      }`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      className={`
+        group relative px-4 sm:px-6 py-4 sm:py-5 rounded-2xl font-bold text-white
+        transition-all duration-300 ease-out
+        min-w-[140px] sm:min-w-[180px] md:min-w-[200px]
+        ${!disabled ? `bg-gradient-to-br ${colors[index]} hover:scale-110 hover:-translate-y-2 hover:shadow-xl active:scale-95` : ""}
+        ${isCorrect ? "bg-gradient-to-br from-green-400 to-green-600 scale-110 ring-4 ring-green-300 animate-pulse-success" : ""}
+        ${isWrong ? "bg-gradient-to-br from-red-400 to-red-600 scale-95 ring-4 ring-red-300 animate-shake" : ""}
+        ${answered && !isCorrect && !isWrong ? "opacity-50 bg-gradient-to-br from-gray-400 to-gray-500" : ""}
+        shadow-lg border-b-4 border-black/20
+      `}
+      style={{
+        animationDelay: `${index * 0.1}s`,
+      }}
     >
-      {/* Stone shape background - wider, flatter and LARGER like Figure 5 */}
-      <div className={`relative rounded-[40%] px-8 sm:px-12 py-10 sm:py-12 shadow-2xl transition-all ${
-        isCorrect
-          ? "bg-gradient-to-b from-green-400 to-green-600 scale-110"
-          : isWrong
-            ? "bg-gradient-to-b from-red-400 to-red-600 opacity-70"
-            : "bg-gradient-to-b from-gray-500 via-gray-600 to-gray-700 hover:from-gray-400 hover:via-gray-500 hover:to-gray-600"
-      }`}>
-        {/* Stone texture overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/20 rounded-[40%] pointer-events-none" />
-
-        {/* Bottom shadow for 3D effect */}
-        <div className="absolute inset-x-2 bottom-0 h-4 bg-black/30 rounded-[40%] blur-md -z-10" />
-
-        {/* Text - Larger */}
-        <p className={`relative text-center font-bold text-base sm:text-lg md:text-xl leading-tight ${
-          isCorrect || isWrong ? "text-white" : "text-yellow-100"
-        }`}>
-          {label}
-        </p>
-
-        {/* Checkmark or X - Larger */}
-        {isCorrect && (
-          <div className="absolute -top-3 -right-3 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-            <span className="text-white text-3xl font-bold">✓</span>
-          </div>
-        )}
-        {isWrong && (
-          <div className="absolute -top-3 -right-3 w-14 h-14 bg-red-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-            <span className="text-white text-3xl font-bold">✗</span>
-          </div>
-        )}
+      {/* Shine effect */}
+      <div className="absolute inset-0 rounded-2xl overflow-hidden">
+        <div className={`absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-t-2xl ${!disabled && !answered ? "group-hover:bg-white/30" : ""}`} />
       </div>
+
+      {/* Label */}
+      <span className="relative z-10 text-sm sm:text-base md:text-lg drop-shadow-md">
+        {label}
+      </span>
+
+      {/* Correct checkmark */}
+      {isCorrect && (
+        <span className="absolute -top-2 -right-2 text-2xl animate-bounce-in">✓</span>
+      )}
+
+      {/* Wrong X */}
+      {isWrong && (
+        <span className="absolute -top-2 -right-2 text-2xl animate-shake">✗</span>
+      )}
+
+      <style jsx>{`
+        @keyframes pulse-success {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+          50% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
+        }
+        @keyframes bounce-in {
+          0% { transform: scale(0); }
+          50% { transform: scale(1.3); }
+          100% { transform: scale(1); }
+        }
+        .animate-pulse-success {
+          animation: pulse-success 1s ease-out;
+        }
+        .animate-shake {
+          animation: shake 0.4s ease-out;
+        }
+        .animate-bounce-in {
+          animation: bounce-in 0.4s ease-out;
+        }
+      `}</style>
     </button>
+  )
+}
+
+// Progress Bar Component
+function ProgressBar({ current, total, level }: { current: number; total: number; level: string }) {
+  const percentage = (current / total) * 100
+
+  const levelColors: Record<string, string> = {
+    easy: "from-green-400 to-green-600",
+    medium: "from-yellow-400 to-orange-500",
+    hard: "from-red-400 to-red-600",
+  }
+
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex justify-between items-center mb-2 text-sm font-semibold">
+        <span className="text-white drop-shadow-md">Stage {current}/{total}</span>
+        <span className={`px-3 py-1 rounded-full text-white bg-gradient-to-r ${levelColors[level]} shadow-md uppercase text-xs`}>
+          {level}
+        </span>
+      </div>
+      <div className="h-4 bg-white/30 rounded-full overflow-hidden shadow-inner border-2 border-white/50">
+        <div
+          className={`h-full bg-gradient-to-r ${levelColors[level]} rounded-full transition-all duration-500 ease-out relative overflow-hidden`}
+          style={{ width: `${percentage}%` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent" />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -466,374 +445,356 @@ interface HopRightGameProps {
 }
 
 export default function HopRightGame({ onBack }: HopRightGameProps) {
-  const [currentLevel, setCurrentLevel] = useState<"easy" | "medium" | "hard" | "start" | "selectCharacter" | "selectLevel" | "complete">("start")
+  const [gameState, setGameState] = useState<"start" | "playing" | "levelComplete" | "gameComplete">("start")
+  const [currentLevel, setCurrentLevel] = useState<"easy" | "medium" | "hard">("easy")
   const [currentStage, setCurrentStage] = useState(0)
   const [score, setScore] = useState(0)
+  const [totalScore, setTotalScore] = useState(0)
   const [answered, setAnswered] = useState(false)
-  const [feedback, setFeedback] = useState("")
-  const [timeElapsed, setTimeElapsed] = useState(0)
-  const [completedLevels, setCompletedLevels] = useState({ easy: false, medium: false, hard: false })
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
+  const [isHopping, setIsHopping] = useState(false)
+  const [isWrong, setIsWrong] = useState(false)
+  const [characterPosition, setCharacterPosition] = useState(0)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [jumpAnimKey, setJumpAnimKey] = useState(0)
+  const [shuffledStages, setShuffledStages] = useState<Stage[]>([])
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>([])
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0)
+  const [levelScores, setLevelScores] = useState({ easy: 0, medium: 0, hard: 0 })
+  const [stageStartTime, setStageStartTime] = useState<number>(Date.now())
   const [showReminder, setShowReminder] = useState(false)
-  const [characterGender, setCharacterGender] = useState<"boy" | "girl">("boy")
+  const reminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const reminderAudioRef = useRef<HTMLAudioElement | null>(null)
 
-  const levelKey = currentLevel as "easy" | "medium" | "hard"
-  const stages =
-    currentLevel === "easy" || currentLevel === "medium" || currentLevel === "hard"
-      ? levelData[levelKey]
-      : []
-  const currentStageData = stages[currentStage]
-
-  // Timer for 1-minute reminder
+  // Trigger jump animation when hoveredIndex changes
   useEffect(() => {
-    if (currentLevel === "start" || currentLevel === "complete" || !currentStageData || answered) {
-      setTimeElapsed(0)
-      setShowReminder(false)
-      return
+    if (hoveredIndex !== null) {
+      setJumpAnimKey(prev => prev + 1)
+    }
+  }, [hoveredIndex])
+
+  // Get current stage data
+  const stage = shuffledStages[currentStage]
+
+  // Initialize shuffled options for current stage
+  const shuffleStageOptions = useCallback((stageData: Stage) => {
+    const correctAnswer = stageData.options[stageData.correct]
+    const shuffled = shuffleArray(stageData.options)
+    const newCorrectIndex = shuffled.indexOf(correctAnswer)
+    setShuffledOptions(shuffled)
+    setCorrectAnswerIndex(newCorrectIndex)
+  }, [])
+
+  // Start level
+  const startLevel = useCallback((level: "easy" | "medium" | "hard") => {
+    const stages = shuffleArray(gameData[level])
+    setShuffledStages(stages)
+    setCurrentStage(0)
+    setScore(0)
+    setAnswered(false)
+    setSelectedAnswer(null)
+    setIsHopping(false)
+    setIsWrong(false)
+    setCharacterPosition(0)
+    setCurrentLevel(level)
+    setGameState("playing")
+    setStageStartTime(Date.now())
+    setShowReminder(false)
+    if (stages[0]) {
+      shuffleStageOptions(stages[0])
+    }
+  }, [shuffleStageOptions])
+
+  // 1-minute reminder timer
+  useEffect(() => {
+    if (gameState !== "playing" || answered) return
+
+    // Clear existing timeout
+    if (reminderTimeoutRef.current) {
+      clearTimeout(reminderTimeoutRef.current)
     }
 
-    const timer = setInterval(() => {
-      setTimeElapsed((prev) => {
-        if (prev === 59) {
-          // Show reminder at 60 seconds
-          setShowReminder(true)
-          // Hide after 3 seconds
-          setTimeout(() => setShowReminder(false), 3000)
+    // Set new timeout for 1 minute
+    reminderTimeoutRef.current = setTimeout(() => {
+      setShowReminder(true)
+      // Play encouraging audio
+      try {
+        const audio = new Audio("data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleDs...")
+        audio.volume = 0.5
+        // Using Web Speech API for the reminder message
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance("You can do it! Help me hop right!")
+          utterance.rate = 0.9
+          utterance.pitch = 1.1
+          window.speechSynthesis.speak(utterance)
         }
-        return prev + 1
-      })
-    }, 1000)
+      } catch (e) {
+        console.log("Audio not supported")
+      }
+    }, 60000) // 1 minute
 
-    return () => clearInterval(timer)
-  }, [currentLevel, currentStage, answered, currentStageData])
+    return () => {
+      if (reminderTimeoutRef.current) {
+        clearTimeout(reminderTimeoutRef.current)
+      }
+    }
+  }, [gameState, answered, currentStage])
 
+  // Handle answer click
   const handleAnswerClick = (index: number) => {
     if (answered) return
 
     setAnswered(true)
+    setSelectedAnswer(index)
+    setShowReminder(false)
+    setHoveredIndex(null)
 
-    if (index === currentStageData.correct) {
-      setFeedback("✓ Correct! +1 point")
+    if (index === correctAnswerIndex) {
+      // Correct answer
+      setIsHopping(true)
       setScore(score + 1)
-      // Play success sound
-      const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_d3d346ba65.mp3")
-      audio.play().catch(() => {})
-    } else {
-      setFeedback(`✗ Wrong! You must repeat this stage. Correct answer: "${currentStageData.options[currentStageData.correct]}"`)
-      // Play wrong sound
-      const wrongAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3")
-      wrongAudio.volume = 0.3
-      wrongAudio.play().catch(() => {})
-    }
-  }
+      setCharacterPosition(characterPosition + 1)
 
-  const handleNext = () => {
-    // Check if answer was correct
-    const wasCorrect = feedback.includes("Correct")
-
-    if (wasCorrect) {
-      // Move to next stage
-      if (currentStage < stages.length - 1) {
-        setCurrentStage(currentStage + 1)
-        setFeedback("")
-        setAnswered(false)
-        setTimeElapsed(0)
-      } else {
-        // Level complete
-        setCompletedLevels({ ...completedLevels, [levelKey]: true })
-        setCurrentLevel("complete")
+      // Play hop sound effect
+      try {
+        const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3")
+        audio.volume = 0.4
+        audio.play().catch(() => {})
+      } catch (e) {
+        console.log("Audio not supported")
       }
+
+      setTimeout(() => setIsHopping(false), 600)
     } else {
-      // Repeat the same stage
-      setFeedback("")
+      // Wrong answer
+      setIsWrong(true)
+
+      // Play wrong sound
+      try {
+        const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
+        audio.volume = 0.3
+        audio.play().catch(() => {})
+      } catch (e) {
+        console.log("Audio not supported")
+      }
+
+      setTimeout(() => setIsWrong(false), 500)
+    }
+  }
+
+  // Handle next stage
+  const handleNext = () => {
+    if (currentStage < shuffledStages.length - 1) {
+      // Next stage
+      setCurrentStage(currentStage + 1)
       setAnswered(false)
-      setTimeElapsed(0)
+      setSelectedAnswer(null)
+      setCharacterPosition(0)
+      setHoveredIndex(null)
+      setIsHopping(false)
+      setIsWrong(false)
+      setStageStartTime(Date.now())
+      shuffleStageOptions(shuffledStages[currentStage + 1])
+    } else {
+      // Level complete
+      setLevelScores({ ...levelScores, [currentLevel]: score })
+      setTotalScore(totalScore + score)
+
+      if (currentLevel === "easy") {
+        setGameState("levelComplete")
+      } else if (currentLevel === "medium") {
+        setGameState("levelComplete")
+      } else {
+        setGameState("gameComplete")
+      }
     }
   }
 
-  const handleStartLevel = (level: "easy" | "medium" | "hard") => {
-    // Check if level is locked
-    if (level === "medium" && !completedLevels.easy) {
-      alert("Please complete Easy level first!")
-      return
+  // Handle next level
+  const handleNextLevel = () => {
+    if (currentLevel === "easy") {
+      startLevel("medium")
+    } else if (currentLevel === "medium") {
+      startLevel("hard")
     }
-    if (level === "hard" && !completedLevels.medium) {
-      alert("Please complete Medium level first!")
-      return
-    }
-
-    setCurrentLevel(level)
-    setCurrentStage(0)
-    setScore(0)
-    setFeedback("")
-    setAnswered(false)
-    setTimeElapsed(0)
   }
 
-  const handlePlayAgain = () => {
-    setCurrentLevel("start")
+  // Restart game
+  const handleRestart = () => {
+    setGameState("start")
+    setCurrentLevel("easy")
     setCurrentStage(0)
     setScore(0)
-    setFeedback("")
+    setTotalScore(0)
     setAnswered(false)
-    setTimeElapsed(0)
+    setSelectedAnswer(null)
+    setIsHopping(false)
+    setIsWrong(false)
+    setCharacterPosition(0)
+    setLevelScores({ easy: 0, medium: 0, hard: 0 })
+    setShuffledStages([])
+    setShuffledOptions([])
   }
 
-  const handleBackToStart = () => {
-    // Always go back to start screen when in game
-    setCurrentLevel("start")
-    setCurrentStage(0)
-    setScore(0)
-    setFeedback("")
-    setAnswered(false)
-    setTimeElapsed(0)
-  }
-
-  if (currentLevel === "start") {
+  // Start Screen
+  if (gameState === "start") {
     return (
-      <HighSchoolBackground>
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
+      <NatureBackground>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
           {/* Back Button */}
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm"
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
             >
-              <span>←</span> <span className="hidden sm:inline">Back</span>
+              ← Back
             </button>
           )}
 
-          {/* Title Banner - Styled like Figure 4 */}
-          <div className="relative mb-8 animate-fade-in">
-            {/* Banner background with arrow ends */}
-            <div className="relative bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-400 px-12 py-4 shadow-2xl">
-              {/* Left arrow */}
-              <div className="absolute left-0 top-0 bottom-0 w-0 h-0 border-t-[30px] border-t-transparent border-b-[30px] border-b-transparent border-l-[20px] border-l-green-700 -translate-x-full"></div>
-              {/* Right arrow */}
-              <div className="absolute right-0 top-0 bottom-0 w-0 h-0 border-t-[30px] border-t-transparent border-b-[30px] border-b-transparent border-r-[20px] border-r-green-700 translate-x-full"></div>
-
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white text-center drop-shadow-lg tracking-wider" style={{ textShadow: '3px 3px 6px rgba(0,0,0,0.4)' }}>
-                HOPRIGHT: COLLOCATION EDITION
-              </h1>
-            </div>
+          {/* Title */}
+          <div className="text-center mb-8 animate-bounce-in">
+            <div className="text-6xl mb-4">🐸</div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg mb-2">
+              HopRight
+            </h1>
+            <p className="text-xl sm:text-2xl text-teal-100 drop-shadow-md font-semibold">
+              Collocation Edition
+            </p>
           </div>
 
-          {/* Instructions Sign - Large centered box like Figure 4 */}
-          <div className="bg-gradient-to-br from-sky-200 via-blue-100 to-sky-200 rounded-3xl p-8 sm:p-10 shadow-2xl mb-8 max-w-3xl border-8 border-blue-400 animate-slide-up">
-            <div className="space-y-4 text-gray-800">
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-bold">1.</span> A target word or sentence will appear above your character — one at a time and in random order.
-              </p>
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-bold">2.</span> Choose the correct collocation pair from three options below.
-              </p>
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-bold">3.</span> Correct answers earn +1 point. Wrong answers get 0 points and require you to repeat the stage.
-              </p>
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-bold">4.</span> There is no timer, but if you stay on a stage for more than 1 minute, you will hear a reminder: "You can do it. Help me hop right!"
-              </p>
-              <p className="text-base sm:text-lg leading-relaxed">
-                <span className="font-bold">5.</span> The game consists of three levels: Easy, Medium, and Hard, each with ten (10) stages. All stages within a level must be completed to unlock and proceed to the next level.
-              </p>
+          {/* Instructions Card */}
+          <div className="bg-white/95 backdrop-blur rounded-3xl p-6 sm:p-8 max-w-lg shadow-2xl border-4 border-teal-400 animate-slide-up">
+            <h2 className="text-2xl font-bold text-teal-700 mb-4 text-center">How to Play</h2>
+
+            <div className="space-y-4 mb-6">
+              <div className="flex items-start gap-3 bg-teal-50 p-3 rounded-xl">
+                <span className="text-2xl">🎯</span>
+                <p className="text-gray-700">A target word or sentence appears above the frog</p>
+              </div>
+              <div className="flex items-start gap-3 bg-emerald-50 p-3 rounded-xl">
+                <span className="text-2xl">👆</span>
+                <p className="text-gray-700">Choose the correct collocation from 3 options</p>
+              </div>
+              <div className="flex items-start gap-3 bg-cyan-50 p-3 rounded-xl">
+                <span className="text-2xl">⭐</span>
+                <p className="text-gray-700">+1 point for correct answers, game continues either way</p>
+              </div>
+              <div className="flex items-start gap-3 bg-sky-50 p-3 rounded-xl">
+                <span className="text-2xl">📈</span>
+                <p className="text-gray-700">3 Levels: Easy → Medium → Hard (10 stages each)</p>
+              </div>
             </div>
-          </div>
 
-          {/* START GAME Button - Styled like Figure 4 */}
-          <button
-            onClick={() => setCurrentLevel("selectCharacter")}
-            className="bg-gradient-to-r from-cyan-400 via-teal-400 to-cyan-400 hover:from-cyan-500 hover:via-teal-500 hover:to-cyan-500 text-white font-black text-2xl sm:text-3xl py-4 px-12 rounded-2xl shadow-2xl transition-all transform hover:scale-105 active:scale-95 border-4 border-teal-600 animate-pulse-slow"
-            style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}
-          >
-            START GAME
-          </button>
-
-          {/* Squirrel mascot (optional - can be replaced with an image) */}
-          <div className="absolute bottom-8 left-8 text-6xl opacity-80 animate-bounce-slow hidden sm:block">
-            🐿️
+            <button
+              onClick={() => startLevel("easy")}
+              className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl transition-all text-xl shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+            >
+              🐸 Start Hopping!
+            </button>
           </div>
         </div>
 
-        {/* CSS Animations */}
         <style jsx>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
+          @keyframes bounce-in {
+            0% { opacity: 0; transform: scale(0.5) translateY(-50px); }
+            60% { transform: scale(1.1) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
           }
           @keyframes slide-up {
             from { opacity: 0; transform: translateY(50px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.85; }
-          }
-          @keyframes bounce-slow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-          }
-          .animate-fade-in {
-            animation: fade-in 1s ease-out;
+          .animate-bounce-in {
+            animation: bounce-in 0.8s ease-out;
           }
           .animate-slide-up {
-            animation: slide-up 1s ease-out;
-          }
-          .animate-pulse-slow {
-            animation: pulse-slow 2s ease-in-out infinite;
-          }
-          .animate-bounce-slow {
-            animation: bounce-slow 3s ease-in-out infinite;
+            animation: slide-up 0.6s ease-out 0.3s both;
           }
         `}</style>
-      </HighSchoolBackground>
+      </NatureBackground>
     )
   }
 
-  if (currentLevel === "selectCharacter") {
+  // Level Complete Screen
+  if (gameState === "levelComplete") {
+    const nextLevel = currentLevel === "easy" ? "Medium" : "Hard"
+
     return (
-      <HighSchoolBackground>
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
-          {/* Back Button */}
-          <button
-            onClick={() => setCurrentLevel("start")}
-            className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm"
-          >
-            <span>←</span> <span className="hidden sm:inline">Back</span>
-          </button>
-
-          {/* Character Selection */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-lg border-4 border-purple-300 animate-slide-up">
-            <h3 className="text-3xl font-bold mb-6 text-center text-purple-800">Choose Your Character</h3>
-            <div className="flex justify-center gap-8">
-              <button
-                onClick={() => {
-                  setCharacterGender("boy")
-                  setCurrentLevel("selectLevel")
-                }}
-                className="p-6 rounded-lg transition bg-gray-100 border-4 border-gray-300 hover:scale-110 hover:border-blue-500 hover:bg-blue-50"
-              >
-                <div className="w-32 h-40">
-                  <img src="/school_boy.png" alt="School Boy" className="w-full h-full object-contain" />
-                </div>
-                <p className="text-center mt-4 font-bold text-xl">Boy</p>
-              </button>
-              <button
-                onClick={() => {
-                  setCharacterGender("girl")
-                  setCurrentLevel("selectLevel")
-                }}
-                className="p-6 rounded-lg transition bg-gray-100 border-4 border-gray-300 hover:scale-110 hover:border-pink-500 hover:bg-pink-50"
-              >
-                <div className="w-32 h-40">
-                  <img src="/school_girl.png" alt="School Girl" className="w-full h-full object-contain" />
-                </div>
-                <p className="text-center mt-4 font-bold text-xl">Girl</p>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes slide-up {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-slide-up {
-            animation: slide-up 0.5s ease-out;
-          }
-        `}</style>
-      </HighSchoolBackground>
-    )
-  }
-
-  if (currentLevel === "selectLevel") {
-    return (
-      <HighSchoolBackground>
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
-          {/* Back Button */}
-          <button
-            onClick={() => setCurrentLevel("selectCharacter")}
-            className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm"
-          >
-            <span>←</span> <span className="hidden sm:inline">Back</span>
-          </button>
-
-          {/* Level Selection */}
-          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md border-4 border-green-300 animate-slide-up">
-            <h2 className="text-3xl font-bold mb-6 text-center text-green-800">Select Your Level</h2>
-            <div className="space-y-4">
-              <button
-                onClick={() => handleStartLevel("easy")}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-xl transition text-lg shadow-lg flex items-center justify-between transform hover:scale-105"
-              >
-                <span>🟢 Easy Level</span>
-                {completedLevels.easy && <span className="text-yellow-300">✓ Completed</span>}
-              </button>
-              <button
-                onClick={() => handleStartLevel("medium")}
-                disabled={!completedLevels.easy}
-                className={`w-full font-bold py-4 px-6 rounded-xl transition text-lg shadow-lg flex items-center justify-between transform hover:scale-105 ${
-                  completedLevels.easy
-                    ? "bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                <span>🟡 Medium Level</span>
-                {!completedLevels.easy && <span className="text-sm">🔒 Locked</span>}
-                {completedLevels.medium && <span className="text-yellow-300">✓ Completed</span>}
-              </button>
-              <button
-                onClick={() => handleStartLevel("hard")}
-                disabled={!completedLevels.medium}
-                className={`w-full font-bold py-4 px-6 rounded-xl transition text-lg shadow-lg flex items-center justify-between transform hover:scale-105 ${
-                  completedLevels.medium
-                    ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                <span>🔴 Hard Level</span>
-                {!completedLevels.medium && <span className="text-sm">🔒 Locked</span>}
-                {completedLevels.hard && <span className="text-yellow-300">✓ Completed</span>}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <style jsx>{`
-          @keyframes slide-up {
-            from { opacity: 0; transform: translateY(50px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-slide-up {
-            animation: slide-up 0.5s ease-out;
-          }
-        `}</style>
-      </HighSchoolBackground>
-    )
-  }
-
-  if (currentLevel === "complete") {
-    return (
-      <HighSchoolBackground>
+      <NatureBackground>
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-md border-4 border-yellow-400">
-            <h2 className="text-4xl font-bold mb-4 text-green-700">Level Complete! 🎉</h2>
-            <div className="text-8xl mb-6">🏆</div>
-            <div className="bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-xl p-6 mb-6 border-2 border-yellow-400">
-              <p className="text-sm text-gray-600 mb-2">Your Score</p>
-              <p className="text-6xl font-bold text-green-600">{score}/10</p>
+          <div className="bg-white/95 backdrop-blur rounded-3xl p-8 max-w-md shadow-2xl border-4 border-teal-400 text-center animate-fade-in">
+            <div className="text-6xl mb-4 animate-bounce">🎉</div>
+            <h2 className="text-3xl font-bold text-teal-700 mb-2">
+              {currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1)} Level Complete!
+            </h2>
+            <div className="bg-gradient-to-r from-teal-100 to-emerald-100 rounded-2xl p-6 my-6">
+              <p className="text-gray-600 text-sm mb-2">Your Score</p>
+              <p className="text-5xl font-bold text-teal-600">{score}/10</p>
             </div>
-            <p className="text-xl text-gray-700 mb-8 font-semibold">Great hopping! Keep learning!</p>
+            <p className="text-lg text-gray-600 mb-6">Ready for {nextLevel} level?</p>
             <div className="space-y-3">
               <button
-                onClick={handlePlayAgain}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition text-lg shadow-lg"
+                onClick={handleNextLevel}
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
               >
-                Select Another Level
+                Continue to {nextLevel} →
+              </button>
+              <button
+                onClick={handleRestart}
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all"
+              >
+                Start Over
+              </button>
+            </div>
+          </div>
+        </div>
+      </NatureBackground>
+    )
+  }
+
+  // Game Complete Screen
+  if (gameState === "gameComplete") {
+    const finalScore = levelScores.easy + levelScores.medium + levelScores.hard + score
+
+    return (
+      <NatureBackground>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+          <div className="bg-white/95 backdrop-blur rounded-3xl p-8 max-w-md shadow-2xl border-4 border-yellow-400 text-center animate-fade-in">
+            <div className="text-7xl mb-4 animate-bounce">🏆</div>
+            <h2 className="text-3xl font-bold text-yellow-600 mb-2">Congratulations!</h2>
+            <p className="text-gray-600 mb-4">You've completed all levels!</p>
+
+            <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-6 my-6">
+              <p className="text-gray-600 text-sm mb-2">Final Score</p>
+              <p className="text-5xl font-bold text-orange-600">{finalScore}/30</p>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
+              <p className="flex justify-between text-gray-700">
+                <span>Easy Level:</span>
+                <span className="font-bold text-green-600">{levelScores.easy}/10</span>
+              </p>
+              <p className="flex justify-between text-gray-700">
+                <span>Medium Level:</span>
+                <span className="font-bold text-yellow-600">{levelScores.medium}/10</span>
+              </p>
+              <p className="flex justify-between text-gray-700">
+                <span>Hard Level:</span>
+                <span className="font-bold text-red-600">{score}/10</span>
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleRestart}
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+              >
+                Play Again 🐸
               </button>
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-3 px-6 rounded-xl transition text-lg shadow-lg"
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all"
                 >
                   Back to Dashboard
                 </button>
@@ -841,111 +802,123 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
             </div>
           </div>
         </div>
-      </HighSchoolBackground>
+      </NatureBackground>
     )
   }
 
-  if (!currentStageData) return null
-
+  // Playing Screen
   return (
-    <HighSchoolBackground>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
-        {/* Back Button */}
-        <button
-          onClick={handleBackToStart}
-          className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 backdrop-blur-sm"
-        >
-          <span>←</span> <span className="hidden sm:inline">Back</span>
-        </button>
+    <NatureBackground>
+      <div className="min-h-screen flex flex-col p-4">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-4">
+          <button
+            onClick={handleRestart}
+            className="bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
+          >
+            ← Back
+          </button>
 
-        {/* Header Stats - Larger */}
-        <div className="flex gap-4 sm:gap-6 mb-8">
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 sm:px-8 py-3 sm:py-4 shadow-xl border-3 border-blue-400">
-            <span className="font-bold text-blue-800 text-lg sm:text-xl">📊 Level: {currentLevel.toUpperCase()}</span>
-          </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 sm:px-8 py-3 sm:py-4 shadow-xl border-3 border-purple-400">
-            <span className="font-bold text-purple-800 text-lg sm:text-xl">🎯 Stage: {currentStage + 1}/10</span>
-          </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-full px-6 sm:px-8 py-3 sm:py-4 shadow-xl border-3 border-green-400">
-            <span className="font-bold text-green-800 text-lg sm:text-xl">⭐ Score: {score}</span>
+          <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
+            <span className="text-teal-700 font-bold">⭐ Score: {score}</span>
           </div>
         </div>
 
-        {/* 1-Minute Reminder */}
+        {/* Progress Bar */}
+        <div className="mb-6">
+          <ProgressBar current={currentStage + 1} total={10} level={currentLevel} />
+        </div>
+
+        {/* 1-minute Reminder */}
         {showReminder && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-8 py-4 rounded-full shadow-xl border-4 border-yellow-500 font-bold text-xl animate-bounce z-40">
-            💪 You can do it. Help me hop right!
+          <div className="fixed top-1/4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-6 py-4 rounded-2xl shadow-2xl animate-bounce z-50 text-center">
+            <p className="text-lg font-bold">💪 You can do it!</p>
+            <p className="text-sm">Help me hop right!</p>
           </div>
         )}
 
-        {/* Game Area - Larger to fill space */}
-        <div className="max-w-5xl w-full">
-          {/* Word Bubble with Target Word/Sentence - Figure 5 Design - Larger */}
-          <div className="mb-8">
-            <WordBubble>
-              {currentStageData.targetWord ? (
-                <div className="text-center py-4">
-                  <p className="text-5xl sm:text-6xl md:text-7xl font-bold text-white drop-shadow-lg">{currentStageData.targetWord}</p>
-                </div>
-              ) : (
-                <div className="text-center py-3">
-                  <p className="text-xl sm:text-2xl md:text-3xl text-white font-semibold leading-relaxed">{currentStageData.sentence}</p>
-                </div>
-              )}
-            </WordBubble>
+        {/* Main Game Area */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          {/* Speech Bubble with Target */}
+          {stage && (
+            <div className="mb-8">
+              <SpeechBubble type={stage.type}>
+                {stage.type === "word" ? (
+                  <span className="uppercase tracking-wider">{stage.target}</span>
+                ) : (
+                  stage.sentence
+                )}
+              </SpeechBubble>
+            </div>
+          )}
+
+          {/* Character */}
+          <div className="mb-12" key={`frog-${currentStage}`}>
+            <HoppingCharacter
+              isHopping={isHopping}
+              isWrong={isWrong}
+              position={characterPosition}
+              hoveredIndex={hoveredIndex}
+              jumpKey={jumpAnimKey}
+            />
           </div>
 
-          {/* Character - Much Larger */}
-          <div className="transform scale-150 sm:scale-175 my-12">
-            <Character gender={characterGender} />
-          </div>
-
-          {/* Stone Button Options - Figure 5 Design - One row - Larger */}
-          <div className="flex justify-center gap-4 sm:gap-8 mt-12">
-            {currentStageData.options.map((option, index) => (
-              <StoneButton
+          {/* Choices */}
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 px-2">
+            {shuffledOptions.map((option, index) => (
+              <ChoiceButton
                 key={index}
                 label={option}
                 onClick={() => handleAnswerClick(index)}
                 disabled={answered}
-                isCorrect={answered && index === currentStageData.correct}
-                isWrong={answered && index !== currentStageData.correct}
+                isCorrect={answered && index === correctAnswerIndex}
+                isWrong={answered && selectedAnswer === index && index !== correctAnswerIndex}
+                answered={answered}
+                index={index}
+                onMouseEnter={() => !answered && setHoveredIndex(index)}
+                onMouseLeave={() => !answered && setHoveredIndex(null)}
               />
             ))}
           </div>
 
-          {/* Feedback */}
-          {feedback && (
-            <div className={`text-center mt-6 p-4 rounded-xl font-bold text-lg shadow-lg border-4 ${
-              feedback.includes("Correct")
-                ? "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-400"
-                : "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-400"
-            }`}>
-              {feedback}
-            </div>
-          )}
-
-          {/* Next/Repeat Button */}
+          {/* Feedback & Next Button */}
           {answered && (
-            <div className="flex justify-center mt-6">
+            <div className="text-center animate-fade-in">
+              {selectedAnswer === correctAnswerIndex ? (
+                <p className="text-2xl font-bold text-green-500 mb-4 drop-shadow-lg">
+                  ✓ Correct! Great job!
+                </p>
+              ) : (
+                <div className="mb-4">
+                  <p className="text-xl font-bold text-red-500 drop-shadow-lg mb-2">
+                    ✗ Not quite right!
+                  </p>
+                  <p className="text-white bg-black/30 backdrop-blur px-4 py-2 rounded-lg">
+                    Correct answer: <span className="font-bold text-green-300">{shuffledOptions[correctAnswerIndex]}</span>
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleNext}
-                className={`font-bold py-3 px-8 rounded-xl transition-all text-lg shadow-lg transform hover:scale-105 ${
-                  feedback.includes("Correct")
-                    ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                    : "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                }`}
+                className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all text-lg shadow-lg"
               >
-                {feedback.includes("Correct")
-                  ? currentStage < stages.length - 1
-                    ? "Next Stage →"
-                    : "Complete Level →"
-                  : "Try Again 🔄"}
+                {currentStage < 9 ? "Next Stage →" : "Complete Level →"}
               </button>
             </div>
           )}
         </div>
+
+        <style jsx>{`
+          @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fade-in {
+            animation: fade-in 0.4s ease-out;
+          }
+        `}</style>
       </div>
-    </HighSchoolBackground>
+    </NatureBackground>
   )
 }
