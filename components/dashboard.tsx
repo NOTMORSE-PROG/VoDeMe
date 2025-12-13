@@ -176,38 +176,134 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
               `}</style>
             </div>
 
-            {/* Other Games */}
-            {[
-              {
-                title: "Word Builder",
-                desc: "Learn word parts & prefixes",
-                emoji: "🔨",
-                color: "from-purple-500 to-purple-600",
-                onClick: () => onPlayGame("wordstudyjournal"),
-              },
-              {
-                title: "HopRight",
-                desc: "Master word combinations",
-                emoji: "🎯",
-                color: "from-blue-500 to-blue-600",
-                onClick: () => onPlayGame("hopright"),
-              },
-            ].map((game, idx) => (
-              <div
-                key={idx}
-                className={`bg-gradient-to-br ${game.color} rounded-2xl p-6 sm:p-8 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer`}
-              >
-                <p className="text-4xl sm:text-5xl mb-3 sm:mb-4">{game.emoji}</p>
-                <h3 className="text-xl sm:text-2xl font-bold mb-2">{game.title}</h3>
-                <p className="text-xs sm:text-sm mb-4 sm:mb-6 opacity-90">{game.desc}</p>
-                <button
-                  onClick={game.onClick}
-                  className="bg-white text-blue-600 font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-gray-100 transition text-sm sm:text-base"
-                >
+            {/* HopRight Card - Nature Theme */}
+            <div
+              className="relative bg-gradient-to-b from-cyan-400 via-sky-300 to-emerald-200 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer overflow-hidden"
+              onClick={() => onPlayGame("hopright")}
+            >
+              {/* Background decorative elements */}
+              {/* Sun with glow animation */}
+              <div className="absolute top-4 right-4 w-12 h-12 sm:w-16 sm:h-16 animate-sun-float">
+                <div className="absolute inset-0 bg-yellow-300 rounded-full blur-xl opacity-60 animate-pulse" />
+                <div className="absolute inset-2 bg-yellow-200 rounded-full shadow-2xl" />
+              </div>
+
+              {/* Animated clouds */}
+              <div className="absolute top-8 left-8 opacity-70 animate-cloud-slow hidden sm:block">
+                <div className="relative w-16 h-8">
+                  <div className="absolute top-0 left-0 w-8 h-6 bg-white rounded-full" />
+                  <div className="absolute top-1 left-5 w-10 h-5 bg-white rounded-full" />
+                  <div className="absolute top-2 left-3 w-6 h-4 bg-white rounded-full" />
+                </div>
+              </div>
+
+              {/* Grass at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-green-600 via-green-500 to-transparent pointer-events-none" />
+
+              {/* Grass texture */}
+              <div className="absolute bottom-0 left-0 right-0 h-12 overflow-hidden opacity-20 pointer-events-none">
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute bottom-0 w-0.5 bg-green-800 rounded-t-full"
+                    style={{
+                      left: `${i * 5}%`,
+                      height: `${10 + Math.random() * 15}px`,
+                      transform: `rotate(${Math.random() * 10 - 5}deg)`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Flowers */}
+              <div className="absolute bottom-16 left-4 text-xl sm:text-2xl animate-sway">🌸</div>
+              <div className="absolute bottom-14 right-6 text-lg sm:text-xl animate-sway" style={{ animationDelay: '0.5s' }}>🌼</div>
+
+              {/* Butterflies */}
+              <div className="absolute top-1/3 left-1/4 text-lg sm:text-xl animate-butterfly opacity-60" style={{ animationDelay: '0s' }}>
+                🦋
+              </div>
+              <div className="absolute top-1/2 right-1/4 text-base sm:text-lg animate-butterfly opacity-50" style={{ animationDelay: '1.5s' }}>
+                🦋
+              </div>
+
+              {/* Content */}
+              <div className="relative z-10 h-full flex flex-col items-center justify-center">
+                {/* Main character - Frog */}
+                <div className="text-4xl sm:text-5xl mb-2 sm:mb-3 animate-bounce-gentle filter drop-shadow-lg">
+                  🐸
+                </div>
+
+                {/* Title with nature-themed styling */}
+                <div className="bg-white/95 backdrop-blur rounded-xl px-3 py-2 sm:px-4 sm:py-3 mb-2 sm:mb-3 border-3 sm:border-4 border-teal-400 shadow-xl">
+                  <h3 className="text-xl sm:text-2xl font-bold text-teal-700 text-center">HopRight</h3>
+                </div>
+
+                <p className="text-xs sm:text-sm mb-4 sm:mb-6 text-emerald-900 font-semibold text-center bg-white/80 rounded-lg py-2 px-2 sm:px-3 w-full">
+                  Master word collocations with a hopping frog!
+                </p>
+
+                <button className="w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:via-emerald-600 hover:to-teal-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-teal-700 text-sm sm:text-base">
                   Play Now
                 </button>
               </div>
-            ))}
+
+              {/* CSS Animations */}
+              <style jsx>{`
+                @keyframes cloud-slow {
+                  0%, 100% { transform: translateX(0); }
+                  50% { transform: translateX(15px); }
+                }
+                @keyframes sway {
+                  0%, 100% { transform: rotate(-5deg); }
+                  50% { transform: rotate(5deg); }
+                }
+                @keyframes butterfly {
+                  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+                  25% { transform: translateX(15px) translateY(-10px) rotate(10deg); }
+                  50% { transform: translateX(0) translateY(-17px) rotate(-5deg); }
+                  75% { transform: translateX(-15px) translateY(-10px) rotate(10deg); }
+                }
+                @keyframes bounce-gentle {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-8px); }
+                }
+                @keyframes sun-float {
+                  0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+                  25% { transform: translateX(-5px) translateY(-5px) scale(1.05); }
+                  50% { transform: translateX(0) translateY(-8px) scale(1.1); }
+                  75% { transform: translateX(5px) translateY(-5px) scale(1.05); }
+                }
+                .animate-cloud-slow {
+                  animation: cloud-slow 10s ease-in-out infinite;
+                }
+                .animate-sway {
+                  animation: sway 3s ease-in-out infinite;
+                }
+                .animate-butterfly {
+                  animation: butterfly 6s ease-in-out infinite;
+                }
+                .animate-bounce-gentle {
+                  animation: bounce-gentle 2s ease-in-out infinite;
+                }
+                .animate-sun-float {
+                  animation: sun-float 8s ease-in-out infinite;
+                }
+              `}</style>
+            </div>
+
+            {/* Word Builder Card */}
+            <div
+              className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+              onClick={() => onPlayGame("wordstudyjournal")}
+            >
+              <p className="text-4xl sm:text-5xl mb-3 sm:mb-4">🔨</p>
+              <h3 className="text-xl sm:text-2xl font-bold mb-2">Word Builder</h3>
+              <p className="text-xs sm:text-sm mb-4 sm:mb-6 opacity-90">Learn word parts & prefixes</p>
+              <button className="bg-white text-purple-600 font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-gray-100 transition text-sm sm:text-base">
+                Play Now
+              </button>
+            </div>
           </div>
         )}
 
