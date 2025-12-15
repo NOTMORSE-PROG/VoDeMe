@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useActionState } from "react"
+import { useState, useActionState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { UploadButton } from "@/lib/uploadthing"
@@ -24,6 +24,9 @@ export default function ProfileClient({ user }: ProfileClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [editedName, setEditedName] = useState(user.name)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   // Profile update state
   const [profileState, profileAction, isProfilePending] = useActionState(
@@ -36,6 +39,30 @@ export default function ProfileClient({ user }: ProfileClientProps) {
     changePasswordAction,
     null
   )
+
+  useEffect(() => {
+    if (profileState?.success) {
+      setShowSuccess(true)
+      setIsEditing(false)
+      setEditedName(user.name)
+    }
+  }, [profileState, user.name])
+
+  const hasChanges = editedName.trim() !== user.name
+
+  const handleEditClick = () => {
+    setIsEditing(true)
+    setShowSuccess(false)
+  }
+
+  const handleCancelClick = () => {
+    setIsEditing(false)
+    setEditedName(user.name)
+    setShowSuccess(false)
+    if (formRef.current) {
+      formRef.current.reset()
+    }
+  }
 
   const handleLogout = async () => {
     await signOutAction()
@@ -141,9 +168,9 @@ export default function ProfileClient({ user }: ProfileClientProps) {
           </div>
 
           {/* Success/Error Messages */}
-          {profileState?.success && !isEditing && (
+          {showSuccess && !isEditing && profileState?.success && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-700 font-medium">{profileState.message}</p>
+              <p className="text-green-700 font-medium">{profileState.message || 'Profile updated successfully'}</p>
             </div>
           )}
 
@@ -154,7 +181,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
           )}
 
           {/* Profile Form */}
-          <form action={profileAction} className="space-y-6">
+          <form ref={formRef} action={profileAction} className="space-y-6">
             {/* Name Field */}
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -164,7 +191,8 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                 id="name"
                 name="name"
                 type="text"
-                defaultValue={user.name}
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
                 disabled={!isEditing || isProfilePending}
                 className={`w-full px-4 py-3 border rounded-lg transition ${
                   isEditing && !isProfilePending
@@ -198,7 +226,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
               {!isEditing ? (
                 <button
                   type="button"
-                  onClick={() => setIsEditing(true)}
+                  onClick={handleEditClick}
                   className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition"
                 >
                   Edit Profile
@@ -207,14 +235,14 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                 <>
                   <button
                     type="submit"
-                    disabled={isProfilePending}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
+                    disabled={isProfilePending || !hasChanges}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isProfilePending ? "Saving..." : "Save Changes"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsEditing(false)}
+                    onClick={handleCancelClick}
                     disabled={isProfilePending}
                     className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition disabled:opacity-50"
                   >
