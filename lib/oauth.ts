@@ -132,6 +132,10 @@ export async function verifyOAuthState(
  * @returns Google authorization URL
  */
 export async function getGoogleAuthUrl(state: string): Promise<string> {
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw new Error('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID.');
+  }
+
   const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
 
   // Determine redirect URI based on environment
@@ -141,7 +145,7 @@ export async function getGoogleAuthUrl(state: string): Promise<string> {
       : `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback/google`;
 
   const params = new URLSearchParams({
-    client_id: env.GOOGLE_CLIENT_ID!,
+    client_id: env.GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
@@ -163,6 +167,10 @@ export async function getGoogleAuthUrl(state: string): Promise<string> {
 export async function exchangeGoogleCode(
   code: string
 ): Promise<GoogleTokenResponse> {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+    throw new Error('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
+  }
+
   // Determine redirect URI (must match the one used in authorization)
   const redirectUri =
     env.NODE_ENV === 'production'
@@ -173,8 +181,8 @@ export async function exchangeGoogleCode(
 
   const params = new URLSearchParams({
     code,
-    client_id: env.GOOGLE_CLIENT_ID!,
-    client_secret: env.GOOGLE_CLIENT_SECRET!,
+    client_id: env.GOOGLE_CLIENT_ID,
+    client_secret: env.GOOGLE_CLIENT_SECRET,
     redirect_uri: redirectUri,
     grant_type: 'authorization_code',
   });
