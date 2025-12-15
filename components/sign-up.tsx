@@ -21,10 +21,10 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
     <div className="w-full max-w-5xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-stretch">
         {/* Left Side - Illustration */}
-        <div className="hidden md:flex bg-purple-500 items-center justify-center p-8">
+        <div className="hidden md:flex items-center justify-center p-8">
           <div className="relative w-full max-w-sm aspect-square flex flex-col items-center justify-center text-center">
             <Image
-              src="/images/signup-illustration.jpg"
+              src="/images/girl_signup.png"
               alt="Sign up illustration"
               width={400}
               height={400}

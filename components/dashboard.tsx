@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { getProgress, getLevelStatus } from "@/lib/game-progress"
 
 interface DashboardProps {
@@ -80,7 +81,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="text-2xl sm:text-3xl">📚</span>
+              <Image src="/images/vodeme_logo.png" alt="VoDeMe Logo" width={40} height={40} />
               <h1 className="text-xl sm:text-2xl font-bold text-orange-600">VoDeMe</h1>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">

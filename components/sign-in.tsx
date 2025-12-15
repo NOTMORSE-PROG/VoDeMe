@@ -159,10 +159,10 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
         </div>
 
         {/* Right Side - Illustration */}
-        <div className="hidden md:flex bg-sky-100 items-center justify-center p-8">
+        <div className="hidden md:flex items-center justify-center p-8">
           <div className="relative w-full max-w-sm aspect-square flex items-center justify-center">
             <Image
-              src="/images/signin-illustration.jpg"
+              src="/images/boy_login.png"
               alt="Sign in illustration"
               width={400}
               height={400}
