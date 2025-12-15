@@ -10,6 +10,8 @@ import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { profileUpdateSchema, passwordChangeSchema } from '@/lib/validation';
 import { hashPassword, verifyPassword } from '@/lib/password';
+import { UTApi } from 'uploadthing/server';
+import { extractFileKeyFromUrl } from '@/lib/uploadthing';
 
 export type ProfileResult =
   | { success: true; message?: string }
@@ -191,22 +193,49 @@ export async function changePasswordAction(
 
 /**
  * Delete Profile Picture Action
+ * Deletes the profile picture from UploadThing storage and removes the database reference
  */
 export async function deleteProfilePictureAction(): Promise<ProfileResult> {
   try {
     const auth = await requireAuth();
 
+    // Get current profile picture URL
+    const user = await db.user.findUnique({
+      where: { id: auth.userId },
+      select: { profilePicture: true },
+    });
+
+    const oldProfilePicture = user?.profilePicture;
+
+    // Delete from UploadThing storage if it's an UploadThing URL
+    if (oldProfilePicture) {
+      const fileKey = extractFileKeyFromUrl(oldProfilePicture);
+      if (fileKey) {
+        try {
+          const utapi = new UTApi();
+          await utapi.deleteFiles(fileKey);
+          console.log('Deleted profile picture from storage:', fileKey);
+        } catch (error) {
+          console.error('Failed to delete from UploadThing:', error);
+          // Continue with database update even if storage deletion fails
+        }
+      }
+    }
+
+    // Update database to remove profile picture reference
     await db.user.update({
       where: { id: auth.userId },
       data: { profilePicture: null },
     });
 
+    // Create audit log
     await db.auditLog.create({
       data: {
         userId: auth.userId,
         action: 'profile_update',
         entity: 'user',
         entityId: auth.userId,
+        oldData: { profilePicture: oldProfilePicture },
         newData: { profilePicture: null },
       },
     });
