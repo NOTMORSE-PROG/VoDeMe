@@ -141,7 +141,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
           </div>
 
           {/* Success/Error Messages */}
-          {profileState?.success && (
+          {profileState?.success && !isEditing && (
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-700 font-medium">{profileState.message}</p>
             </div>

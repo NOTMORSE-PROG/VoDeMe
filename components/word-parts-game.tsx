@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
 
 // Game Data Types
@@ -1691,7 +1691,10 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     const item = shuffledLevel3[currentItem]
     if (!item) return null
 
-    const allOptions = shuffleArray([...item.derivedForms, ...item.inflectedForms])
+    const allOptions = useMemo(
+      () => shuffleArray([...item.derivedForms, ...item.inflectedForms]),
+      [currentItem, item.derivedForms, item.inflectedForms]
+    )
 
     return (
       <ClassroomBackground>
