@@ -6,26 +6,39 @@
 
 import { z } from 'zod';
 
+// Allow build without env vars (they'll be validated at runtime)
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build';
+
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: isBuild
+    ? z.string().optional()
+    : z.string().min(1, 'DATABASE_URL is required'),
 
   // Authentication
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
-  SESSION_SECRET: z
-    .string()
-    .min(32, 'SESSION_SECRET must be at least 32 characters'),
+  JWT_SECRET: isBuild
+    ? z.string().optional()
+    : z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  SESSION_SECRET: isBuild
+    ? z.string().optional()
+    : z
+        .string()
+        .min(32, 'SESSION_SECRET must be at least 32 characters'),
 
   // UploadThing
-  UPLOADTHING_TOKEN: z.string().min(1, 'UPLOADTHING_TOKEN is required'),
+  UPLOADTHING_TOKEN: isBuild
+    ? z.string().optional()
+    : z.string().min(1, 'UPLOADTHING_TOKEN is required'),
 
   // Rate Limiting (Optional)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
   // Public URLs
-  NEXT_PUBLIC_APP_URL: z.string().url(),
-  NEXT_PUBLIC_APP_NAME: z.string(),
+  NEXT_PUBLIC_APP_URL: isBuild
+    ? z.string().optional()
+    : z.string().url(),
+  NEXT_PUBLIC_APP_NAME: isBuild ? z.string().optional() : z.string(),
 
   // Node Environment
   NODE_ENV: z
