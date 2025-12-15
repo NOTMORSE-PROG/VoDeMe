@@ -1,12 +1,11 @@
 "use client"
 
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 
-interface HomeProps {
-  onNavigate: (page: "signin" | "signup") => void
-}
+export default function Home() {
+  const router = useRouter()
 
-export default function Home({ onNavigate }: HomeProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
@@ -17,13 +16,13 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
         <div className="flex gap-4">
           <button
-            onClick={() => onNavigate("signin")}
+            onClick={() => router.push("/auth/signin")}
             className="px-6 py-2 text-gray-700 font-medium hover:text-gray-900 transition"
           >
             Log In
           </button>
           <button
-            onClick={() => onNavigate("signup")}
+            onClick={() => router.push("/auth/signup")}
             className="px-6 py-2 bg-orange-500 text-white font-medium rounded-full hover:bg-orange-600 transition"
           >
             Sign Up
@@ -62,13 +61,13 @@ export default function Home({ onNavigate }: HomeProps) {
           {/* CTA Buttons */}
           <div className="flex gap-4 justify-center">
             <button
-              onClick={() => onNavigate("signup")}
+              onClick={() => router.push("/auth/signup")}
               className="px-8 py-3 bg-orange-500 text-white font-bold rounded-full hover:bg-orange-600 transition text-lg"
             >
               Get Started Free
             </button>
             <button
-              onClick={() => onNavigate("signin")}
+              onClick={() => router.push("/auth/signin")}
               className="px-8 py-3 bg-gray-200 text-gray-900 font-bold rounded-full hover:bg-gray-300 transition text-lg"
             >
               Sign In

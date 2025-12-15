@@ -1,45 +1,63 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useActionState } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { signInAction } from "@/app/auth/actions"
+import { Eye, EyeOff, ArrowLeft } from "lucide-react"
 
 interface SignInProps {
-  onSignIn: (email: string) => void
   onToggleSignUp: () => void
 }
 
-export default function SignIn({ onSignIn, onToggleSignUp }: SignInProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (email && password) {
-      onSignIn(email)
-    }
-  }
+export default function SignIn({ onToggleSignUp }: SignInProps) {
+  const router = useRouter()
+  const [state, formAction, isPending] = useActionState(signInAction, null)
+  const [showPassword, setShowPassword] = useState(false)
 
   return (
     <div className="w-full max-w-5xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-stretch">
         {/* Left Side - Sign In Form */}
-        <div className="bg-white p-8 md:p-12 flex flex-col justify-center">
-          <div className="mb-8">
+        <div className="bg-white p-8 md:p-12 flex flex-col justify-center relative">
+          {/* Back Button */}
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="absolute top-4 left-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition flex items-center gap-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+
+          <div className="mb-8 mt-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">VoDeMe</h1>
             <h2 className="text-2xl font-semibold text-gray-700">Sign In</h2>
           </div>
 
-          {/* Social Login */}
-          <div className="flex gap-4 mb-6">
-            <button className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition font-semibold text-gray-700">
+          {/* Social Login - Disabled for now */}
+          <div className="flex gap-4 mb-6 opacity-50">
+            <button
+              type="button"
+              disabled
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
+            >
               f
             </button>
-            <button className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition font-semibold text-gray-700">
+            <button
+              type="button"
+              disabled
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
+            >
               G
             </button>
-            <button className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition font-semibold text-gray-700">
+            <button
+              type="button"
+              disabled
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
+            >
               in
             </button>
           </div>
@@ -53,43 +71,88 @@ export default function SignIn({ onSignIn, onToggleSignUp }: SignInProps) {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Global form error */}
+          {state?.success === false && state.errors._form && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{state.errors._form[0]}</p>
+            </div>
+          )}
+
+          {/* General error message for email/password */}
+          {state?.success === false && (state.errors.email || state.errors.password) && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">Invalid email or password. Please try again.</p>
+            </div>
+          )}
+
+          <form action={formAction} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
               <input
+                id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition"
+                required
+                disabled={isPending}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="your@email.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition"
-                placeholder="••••••••"
-              />
-              <a href="#" className="text-sm text-orange-500 hover:text-orange-600 mt-2 block">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  disabled={isPending}
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+                  disabled={isPending}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              <button
+                type="button"
+                disabled
+                className="text-sm text-gray-400 mt-2 block cursor-not-allowed"
+              >
                 Forgot your password?
-              </a>
+              </button>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition mt-6"
+              disabled={isPending}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              SIGN IN
+              {isPending ? "SIGNING IN..." : "SIGN IN"}
             </button>
           </form>
 
           <p className="text-center text-gray-600 mt-6">
             Don't have an account?{" "}
-            <button onClick={onToggleSignUp} className="text-orange-500 hover:text-orange-600 font-semibold">
+            <button
+              type="button"
+              onClick={onToggleSignUp}
+              className="text-orange-500 hover:text-orange-600 font-semibold"
+            >
               Sign up
             </button>
           </p>

@@ -1,15 +1,77 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { getProgress, getLevelStatus } from "@/lib/game-progress"
 
 interface DashboardProps {
-  user: { email: string; name: string }
+  user: { email: string; name: string; profilePicture?: string }
   onLogout: () => void
   onPlayGame: (gameName: string) => void
+  onNavigateToProfile: () => void
 }
 
-export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps) {
+// Level Progress Indicator Component
+function LevelIndicator({ gameName }: { gameName: string }) {
+  const [levels, setLevels] = useState<("locked" | "unlocked" | "completed")[]>([])
+
+  useEffect(() => {
+    const levelStatuses = [1, 2, 3].map(level => getLevelStatus(gameName, level))
+    setLevels(levelStatuses)
+  }, [gameName])
+
+  return (
+    <div className="flex gap-1 sm:gap-1.5 justify-center mt-2">
+      {levels.map((status, index) => (
+        <div
+          key={index}
+          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all ${
+            status === "completed"
+              ? "bg-green-500 border-green-600 text-white"
+              : status === "unlocked"
+              ? "bg-yellow-400 border-yellow-500 text-yellow-900"
+              : "bg-gray-300 border-gray-400 text-gray-500"
+          }`}
+          title={`Level ${index + 1}: ${status}`}
+        >
+          {status === "completed" ? "✓" : status === "unlocked" ? (index + 1) : "🔒"}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile }: DashboardProps) {
   const [activeTab, setActiveTab] = useState("games")
+  const [gameProgress, setGameProgress] = useState<{
+    synohit: ReturnType<typeof getProgress>
+    hopright: ReturnType<typeof getProgress>
+    wordstudyjournal: ReturnType<typeof getProgress>
+  }>({
+    synohit: { currentLevel: 1, levels: [] },
+    hopright: { currentLevel: 1, levels: [] },
+    wordstudyjournal: { currentLevel: 1, levels: [] }
+  })
+
+  // Load game progress on mount
+  useEffect(() => {
+    setGameProgress({
+      synohit: getProgress("synohit"),
+      hopright: getProgress("hopright"),
+      wordstudyjournal: getProgress("wordstudyjournal")
+    })
+  }, [])
+
+  // Grass styles for HopRight card (client-side only to avoid hydration mismatch)
+  const [grassStyles, setGrassStyles] = useState<{ height: number; rotation: number }[]>([])
+
+  useEffect(() => {
+    setGrassStyles(
+      [...Array(20)].map(() => ({
+        height: 10 + Math.random() * 15,
+        rotation: Math.random() * 10 - 5,
+      }))
+    )
+  }, [])
 
   return (
     <div className="h-screen overflow-y-auto bg-gradient-to-br from-sky-100 via-blue-50 to-sky-50">
@@ -21,11 +83,52 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
               <span className="text-2xl sm:text-3xl">📚</span>
               <h1 className="text-xl sm:text-2xl font-bold text-orange-600">VoDeMe</h1>
             </div>
-            <div className="flex items-center gap-2 sm:gap-6">
-              <div className="text-right hidden sm:block">
-                <p className="font-semibold text-gray-800">Welcome, {user.name}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-3 hidden sm:flex">
+                {user.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={user.name}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-orange-300 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="text-right">
+                  <p className="font-semibold text-gray-800">Welcome, {user.name}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
               </div>
+              <button
+                onClick={onNavigateToProfile}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition text-sm sm:text-base flex items-center gap-2"
+                title="Profile Settings"
+              >
+                {user.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={user.name}
+                    className="w-5 h-5 rounded-full object-cover sm:hidden"
+                  />
+                ) : (
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                )}
+                <span className="hidden sm:inline">Profile</span>
+              </button>
               <button
                 onClick={onLogout}
                 className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition text-sm sm:text-base"
@@ -35,9 +138,22 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
             </div>
           </div>
           {/* Mobile user info */}
-          <div className="mt-2 sm:hidden">
-            <p className="font-semibold text-gray-800 text-sm">{user.name}</p>
-            <p className="text-xs text-gray-500">{user.email}</p>
+          <div className="mt-2 sm:hidden flex items-center gap-2">
+            {user.profilePicture ? (
+              <img
+                src={user.profilePicture}
+                alt={user.name}
+                className="w-8 h-8 rounded-full object-cover border-2 border-orange-300"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p className="font-semibold text-gray-800 text-sm">{user.name}</p>
+              <p className="text-xs text-gray-500">{user.email}</p>
+            </div>
           </div>
         </div>
       </header>
@@ -143,11 +259,14 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
                   <h3 className="text-xl sm:text-2xl font-bold text-white text-center drop-shadow-lg">SynoHit</h3>
                 </div>
 
-                <p className="text-xs sm:text-sm mb-4 sm:mb-6 text-amber-900 font-semibold text-center bg-amber-50/80 rounded-lg py-2 px-2 sm:px-3 w-full">
+                <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-amber-900 font-semibold text-center bg-amber-50/80 rounded-lg py-2 px-2 sm:px-3 w-full">
                   Find matching synonyms in a tropical village!
                 </p>
 
-                <button className="w-full bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-amber-900 text-sm sm:text-base">
+                {/* Level Progress */}
+                <LevelIndicator gameName="synohit" />
+
+                <button className="w-full bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-amber-900 text-sm sm:text-base mt-3 sm:mt-4">
                   Play Now
                 </button>
               </div>
@@ -202,14 +321,14 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
 
               {/* Grass texture */}
               <div className="absolute bottom-0 left-0 right-0 h-12 overflow-hidden opacity-20 pointer-events-none">
-                {[...Array(20)].map((_, i) => (
+                {grassStyles.map((style, i) => (
                   <div
                     key={i}
                     className="absolute bottom-0 w-0.5 bg-green-800 rounded-t-full"
                     style={{
                       left: `${i * 5}%`,
-                      height: `${10 + Math.random() * 15}px`,
-                      transform: `rotate(${Math.random() * 10 - 5}deg)`,
+                      height: `${style.height}px`,
+                      transform: `rotate(${style.rotation}deg)`,
                     }}
                   />
                 ))}
@@ -239,11 +358,14 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
                   <h3 className="text-xl sm:text-2xl font-bold text-teal-700 text-center">HopRight</h3>
                 </div>
 
-                <p className="text-xs sm:text-sm mb-4 sm:mb-6 text-emerald-900 font-semibold text-center bg-white/80 rounded-lg py-2 px-2 sm:px-3 w-full">
+                <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-emerald-900 font-semibold text-center bg-white/80 rounded-lg py-2 px-2 sm:px-3 w-full">
                   Master word collocations with a hopping frog!
                 </p>
 
-                <button className="w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:via-emerald-600 hover:to-teal-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-teal-700 text-sm sm:text-base">
+                {/* Level Progress */}
+                <LevelIndicator gameName="hopright" />
+
+                <button className="w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:via-emerald-600 hover:to-teal-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-teal-700 text-sm sm:text-base mt-3 sm:mt-4">
                   Play Now
                 </button>
               </div>
@@ -292,17 +414,62 @@ export default function Dashboard({ user, onLogout, onPlayGame }: DashboardProps
               `}</style>
             </div>
 
-            {/* Word Builder Card */}
+            {/* Word Study Journal Card - Classroom Theme */}
             <div
-              className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer"
+              className="relative bg-gradient-to-b from-amber-100 via-amber-50 to-orange-100 rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition transform hover:scale-105 cursor-pointer overflow-hidden"
               onClick={() => onPlayGame("wordstudyjournal")}
             >
-              <p className="text-4xl sm:text-5xl mb-3 sm:mb-4">🔨</p>
-              <h3 className="text-xl sm:text-2xl font-bold mb-2">Word Builder</h3>
-              <p className="text-xs sm:text-sm mb-4 sm:mb-6 opacity-90">Learn word parts & prefixes</p>
-              <button className="bg-white text-purple-600 font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-gray-100 transition text-sm sm:text-base">
-                Play Now
-              </button>
+              {/* Chalkboard at top */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-[85%] h-16 bg-gradient-to-b from-emerald-800 via-emerald-900 to-emerald-950 rounded border-4 border-amber-700 shadow-lg">
+                <div className="absolute inset-1 border border-amber-600/30 rounded" />
+                {/* Chalk text */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-xs sm:text-sm font-bold opacity-80">ABC 123</span>
+                </div>
+              </div>
+
+              {/* Desk surface at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-800 via-amber-700 to-amber-600 opacity-80" />
+
+              {/* Notebook decorations */}
+              <div className="absolute bottom-14 left-4 text-xl sm:text-2xl">📓</div>
+              <div className="absolute bottom-16 right-4 text-lg sm:text-xl">✏️</div>
+              <div className="absolute top-20 right-4 text-lg sm:text-xl animate-float-slow">📝</div>
+
+              {/* Content */}
+              <div className="relative z-10 h-full flex flex-col items-center justify-center mt-12">
+                {/* Notebook icon */}
+                <div className="text-4xl sm:text-5xl mb-2 sm:mb-3 filter drop-shadow-lg animate-float-slow">
+                  📖
+                </div>
+
+                {/* Title with notebook styling */}
+                <div className="bg-white/95 backdrop-blur rounded-xl px-3 py-2 sm:px-4 sm:py-3 mb-2 sm:mb-3 border-3 sm:border-4 border-amber-400 shadow-xl">
+                  <h3 className="text-lg sm:text-xl font-bold text-amber-700 text-center">Word Study Journal</h3>
+                </div>
+
+                <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-amber-900 font-semibold text-center bg-white/80 rounded-lg py-2 px-2 sm:px-3 w-full">
+                  Master prefixes, suffixes & word forms!
+                </p>
+
+                {/* Level Progress */}
+                <LevelIndicator gameName="wordstudyjournal" />
+
+                <button className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:via-orange-600 hover:to-amber-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-amber-700 text-sm sm:text-base mt-3 sm:mt-4">
+                  Play Now
+                </button>
+              </div>
+
+              {/* CSS Animations */}
+              <style jsx>{`
+                @keyframes float-slow {
+                  0%, 100% { transform: translateY(0); }
+                  50% { transform: translateY(-5px); }
+                }
+                .animate-float-slow {
+                  animation: float-slow 3s ease-in-out infinite;
+                }
+              `}</style>
             </div>
           </div>
         )}

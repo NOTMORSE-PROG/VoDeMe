@@ -1,0 +1,217 @@
+/**
+ * Profile Management Server Actions
+ * Server-side functions for updating user profile
+ */
+
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
+import { profileUpdateSchema, passwordChangeSchema } from '@/lib/validation';
+import { hashPassword, verifyPassword } from '@/lib/password';
+
+export type ProfileResult =
+  | { success: true; message?: string }
+  | { success: false; errors: Record<string, string[]> };
+
+/**
+ * Update Profile Action
+ * Updates user's name, bio, or profile picture
+ */
+export async function updateProfileAction(
+  prevState: ProfileResult | null,
+  formData: FormData
+): Promise<ProfileResult> {
+  try {
+    // Verify authentication
+    const auth = await requireAuth();
+
+    // Parse and validate form data
+    const raw = {
+      name: formData.get('name') || undefined,
+    };
+
+    const parsed = profileUpdateSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+      };
+    }
+
+    const updateData = parsed.data;
+
+    // Get old data for audit log
+    const oldUser = await db.user.findUnique({
+      where: { id: auth.userId },
+      select: {
+        name: true,
+        profilePicture: true,
+      },
+    });
+
+    // Update user profile
+    await db.user.update({
+      where: { id: auth.userId },
+      data: updateData,
+    });
+
+    // Create audit log
+    await db.auditLog.create({
+      data: {
+        userId: auth.userId,
+        action: 'profile_update',
+        entity: 'user',
+        entityId: auth.userId,
+        oldData: oldUser,
+        newData: updateData,
+      },
+    });
+
+    // Revalidate the profile page
+    revalidatePath('/profile');
+
+    return {
+      success: true,
+      message: 'Profile updated successfully',
+    };
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return {
+      success: false,
+      errors: {
+        _form: ['An unexpected error occurred. Please try again.'],
+      },
+    };
+  }
+}
+
+/**
+ * Change Password Action
+ * Updates user's password after verifying current password
+ */
+export async function changePasswordAction(
+  prevState: ProfileResult | null,
+  formData: FormData
+): Promise<ProfileResult> {
+  try {
+    // Verify authentication
+    const auth = await requireAuth();
+
+    // Parse and validate form data
+    const raw = {
+      currentPassword: formData.get('currentPassword'),
+      newPassword: formData.get('newPassword'),
+      confirmPassword: formData.get('confirmPassword'),
+    };
+
+    const parsed = passwordChangeSchema.safeParse(raw);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        errors: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    const { currentPassword, newPassword } = parsed.data;
+
+    // Get user's current password hash
+    const user = await db.user.findUnique({
+      where: { id: auth.userId },
+      select: { passwordHash: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isValidPassword = await verifyPassword(
+      currentPassword,
+      user.passwordHash
+    );
+
+    if (!isValidPassword) {
+      return {
+        success: false,
+        errors: {
+          currentPassword: ['Current password is incorrect'],
+        },
+      };
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password
+    await db.user.update({
+      where: { id: auth.userId },
+      data: { passwordHash: newPasswordHash },
+    });
+
+    // Create audit log
+    await db.auditLog.create({
+      data: {
+        userId: auth.userId,
+        action: 'password_change',
+        entity: 'user',
+        entityId: auth.userId,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Password changed successfully',
+    };
+  } catch (error) {
+    console.error('Password change error:', error);
+    return {
+      success: false,
+      errors: {
+        _form: ['An unexpected error occurred. Please try again.'],
+      },
+    };
+  }
+}
+
+/**
+ * Delete Profile Picture Action
+ */
+export async function deleteProfilePictureAction(): Promise<ProfileResult> {
+  try {
+    const auth = await requireAuth();
+
+    await db.user.update({
+      where: { id: auth.userId },
+      data: { profilePicture: null },
+    });
+
+    await db.auditLog.create({
+      data: {
+        userId: auth.userId,
+        action: 'profile_update',
+        entity: 'user',
+        entityId: auth.userId,
+        newData: { profilePicture: null },
+      },
+    });
+
+    revalidatePath('/profile');
+
+    return {
+      success: true,
+      message: 'Profile picture deleted',
+    };
+  } catch (error) {
+    console.error('Delete profile picture error:', error);
+    return {
+      success: false,
+      errors: {
+        _form: ['Failed to delete profile picture'],
+      },
+    };
+  }
+}

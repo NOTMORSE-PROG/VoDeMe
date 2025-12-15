@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
 
 // Game data for all 30 stages
 interface Stage {
@@ -445,7 +446,7 @@ interface HopRightGameProps {
 }
 
 export default function HopRightGame({ onBack }: HopRightGameProps) {
-  const [gameState, setGameState] = useState<"start" | "playing" | "levelComplete" | "gameComplete">("start")
+  const [gameState, setGameState] = useState<"start" | "levelSelect" | "playing" | "levelComplete" | "gameComplete">("start")
   const [currentLevel, setCurrentLevel] = useState<"easy" | "medium" | "hard">("easy")
   const [currentStage, setCurrentStage] = useState(0)
   const [score, setScore] = useState(0)
@@ -582,6 +583,11 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     }
   }
 
+  // Helper to convert level name to number
+  const getLevelNumber = (level: "easy" | "medium" | "hard"): number => {
+    return { easy: 1, medium: 2, hard: 3 }[level]
+  }
+
   // Handle next stage
   const handleNext = () => {
     if (currentStage < shuffledStages.length - 1) {
@@ -596,9 +602,11 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
       setStageStartTime(Date.now())
       shuffleStageOptions(shuffledStages[currentStage + 1])
     } else {
-      // Level complete
-      setLevelScores({ ...levelScores, [currentLevel]: score })
-      setTotalScore(totalScore + score)
+      // Level complete - calculate final score and save progress
+      const finalScore = answered && selectedAnswer === correctAnswerIndex ? score + 1 : score
+      setLevelScores({ ...levelScores, [currentLevel]: finalScore })
+      setTotalScore(totalScore + finalScore)
+      saveLevelProgress("hopright", getLevelNumber(currentLevel), finalScore, 10)
 
       if (currentLevel === "easy") {
         setGameState("levelComplete")
@@ -612,6 +620,15 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
   // Handle next level
   const handleNextLevel = () => {
+    const nextLevelNum = currentLevel === "easy" ? 2 : 3
+    const levelStatus = getLevelStatus("hopright", nextLevelNum)
+
+    // Check if next level is unlocked
+    if (levelStatus === "locked") {
+      alert(`Level ${nextLevelNum} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in the previous level to unlock it.`)
+      return
+    }
+
     if (currentLevel === "easy") {
       startLevel("medium")
     } else if (currentLevel === "medium") {
@@ -634,6 +651,31 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     setLevelScores({ easy: 0, medium: 0, hard: 0 })
     setShuffledStages([])
     setShuffledOptions([])
+  }
+
+  const handleBackToLevelSelect = () => {
+    setGameState("levelSelect")
+    setCurrentStage(0)
+    setScore(0)
+    setAnswered(false)
+    setSelectedAnswer(null)
+    setIsHopping(false)
+    setIsWrong(false)
+    setCharacterPosition(0)
+    setHoveredIndex(null)
+  }
+
+  const handleLevelSelect = (level: "easy" | "medium" | "hard") => {
+    const levelNum = { easy: 1, medium: 2, hard: 3 }[level]
+    const levelStatus = getLevelStatus("hopright", levelNum)
+
+    // Check if level is unlocked
+    if (levelStatus === "locked") {
+      alert(`This level is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in the previous level to unlock it.`)
+      return
+    }
+
+    startLevel(level)
   }
 
   // Start Screen
@@ -686,7 +728,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
             </div>
 
             <button
-              onClick={() => startLevel("easy")}
+              onClick={() => setGameState("levelSelect")}
               className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl transition-all text-xl shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
             >
               🐸 Start Hopping!
@@ -715,35 +757,190 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     )
   }
 
+  // Level Selection Screen
+  if (gameState === "levelSelect") {
+    const easyStatus = getLevelStatus("hopright", 1)
+    const mediumStatus = getLevelStatus("hopright", 2)
+    const hardStatus = getLevelStatus("hopright", 3)
+
+    const levelConfig = [
+      { level: "easy" as const, levelNum: 1, title: "Easy", subtitle: "10 Basic Collocations", emoji: "🐸", color: "from-green-400 to-green-600", status: easyStatus },
+      { level: "medium" as const, levelNum: 2, title: "Medium", subtitle: "10 Intermediate Collocations", emoji: "🐰", color: "from-yellow-400 to-orange-500", status: mediumStatus },
+      { level: "hard" as const, levelNum: 3, title: "Hard", subtitle: "10 Advanced Collocations", emoji: "🦁", color: "from-red-400 to-red-600", status: hardStatus },
+    ]
+
+    return (
+      <NatureBackground>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+          {/* Back Button */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
+            >
+              ← Back
+            </button>
+          )}
+
+          {/* Title */}
+          <div className="text-center mb-8 animate-bounce-in">
+            <div className="text-6xl mb-4">🐸</div>
+            <h1 className="text-4xl sm:text-5xl font-bold text-white drop-shadow-lg mb-2">
+              Select Level
+            </h1>
+          </div>
+
+          {/* Level Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl w-full">
+            {levelConfig.map((config, index) => {
+              const isLocked = config.status === "locked"
+              const isCompleted = config.status === "completed"
+
+              return (
+                <button
+                  key={config.level}
+                  onClick={() => handleLevelSelect(config.level)}
+                  disabled={isLocked}
+                  className={`
+                    relative bg-white/95 backdrop-blur rounded-3xl p-8 shadow-2xl border-4 border-teal-400
+                    transform transition-all duration-300
+                    ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    animate-slide-up
+                  `}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Lock Icon */}
+                  {isLocked && (
+                    <div className="absolute top-4 right-4 text-4xl">🔒</div>
+                  )}
+
+                  {/* Completed Badge */}
+                  {isCompleted && (
+                    <div className="absolute top-4 right-4 bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
+                      ✓
+                    </div>
+                  )}
+
+                  {/* Emoji */}
+                  <div className="text-6xl mb-4">{config.emoji}</div>
+
+                  {/* Title */}
+                  <h3 className="text-3xl font-bold text-teal-700 mb-2">{config.title}</h3>
+                  <p className="text-base text-gray-600 mb-6">{config.subtitle}</p>
+
+                  {/* Difficulty Badge */}
+                  <div className={`inline-block px-4 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r ${config.color}`}>
+                    {isLocked ? "Locked" : isCompleted ? "Completed" : "Play"}
+                  </div>
+
+                  {/* Lock Message */}
+                  {isLocked && (
+                    <p className="text-xs text-gray-600 mt-3">
+                      Complete {config.levelNum === 2 ? "Easy" : "Medium"} level with {MIN_SCORE_TO_PASS}/10 to unlock
+                    </p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Instructions */}
+          <div className="mt-8 bg-white/90 backdrop-blur border-2 border-teal-400 rounded-xl p-4 max-w-2xl text-center">
+            <p className="text-teal-700 font-semibold">
+              🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
+            </p>
+          </div>
+        </div>
+
+        <style jsx>{`
+          @keyframes bounce-in {
+            0% { opacity: 0; transform: scale(0.5) translateY(-50px); }
+            60% { transform: scale(1.1) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          @keyframes slide-up {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          .animate-bounce-in {
+            animation: bounce-in 0.8s ease-out;
+          }
+          .animate-slide-up {
+            animation: slide-up 0.6s ease-out both;
+          }
+        `}</style>
+      </NatureBackground>
+    )
+  }
+
   // Level Complete Screen
   if (gameState === "levelComplete") {
     const nextLevel = currentLevel === "easy" ? "Medium" : "Hard"
+    const passed = score >= MIN_SCORE_TO_PASS
+    const stars = getStarRating(score, 10)
 
     return (
       <NatureBackground>
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
           <div className="bg-white/95 backdrop-blur rounded-3xl p-8 max-w-md shadow-2xl border-4 border-teal-400 text-center animate-fade-in">
-            <div className="text-6xl mb-4 animate-bounce">🎉</div>
+            <div className="text-6xl mb-4 animate-bounce">{passed ? "🎉" : "😔"}</div>
             <h2 className="text-3xl font-bold text-teal-700 mb-2">
               {currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1)} Level Complete!
             </h2>
-            <div className="bg-gradient-to-r from-teal-100 to-emerald-100 rounded-2xl p-6 my-6">
-              <p className="text-gray-600 text-sm mb-2">Your Score</p>
-              <p className="text-5xl font-bold text-teal-600">{score}/10</p>
+
+            {/* Star Rating */}
+            <div className="flex justify-center gap-2 mb-4">
+              {[1, 2, 3].map((star) => (
+                <span key={star} className={`text-4xl ${star <= stars ? "text-yellow-400" : "text-gray-300"}`}>
+                  ⭐
+                </span>
+              ))}
             </div>
-            <p className="text-lg text-gray-600 mb-6">Ready for {nextLevel} level?</p>
+
+            <div className={`bg-gradient-to-r rounded-2xl p-6 my-6 ${passed ? "from-green-100 to-green-50" : "from-red-100 to-red-50"}`}>
+              <p className="text-gray-600 text-sm mb-2">Your Score</p>
+              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score}/10</p>
+              <p className={`text-sm font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
+                {passed ? `🎊 Next level unlocked!` : `Need ${MIN_SCORE_TO_PASS}/10 to unlock next level`}
+              </p>
+            </div>
+
+            {!passed && (
+              <p className="text-sm text-gray-700 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
+                Keep trying! You need at least {MIN_SCORE_TO_PASS} correct answers to unlock the next level.
+              </p>
+            )}
+
+            {passed && (
+              <p className="text-lg text-gray-600 mb-6">Ready for {nextLevel} level?</p>
+            )}
+
             <div className="space-y-3">
+              {passed && currentLevel !== "hard" && (
+                <button
+                  onClick={handleNextLevel}
+                  className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                >
+                  Continue to {nextLevel} →
+                </button>
+              )}
               <button
-                onClick={handleNextLevel}
-                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                onClick={() => handleLevelSelect(currentLevel)}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
               >
-                Continue to {nextLevel} →
+                Retry {currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1)}
+              </button>
+              <button
+                onClick={handleBackToLevelSelect}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
+              >
+                Select Level
               </button>
               <button
                 onClick={handleRestart}
                 className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all"
               >
-                Start Over
+                Main Menu
               </button>
             </div>
           </div>
@@ -786,10 +983,16 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
             <div className="space-y-3">
               <button
-                onClick={handleRestart}
+                onClick={handleBackToLevelSelect}
                 className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
               >
-                Play Again 🐸
+                Select Level 🐸
+              </button>
+              <button
+                onClick={handleRestart}
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all text-lg"
+              >
+                Main Menu
               </button>
               {onBack && (
                 <button

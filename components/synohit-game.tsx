@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import React from "react"
+import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
 
 interface Question {
   target: string
@@ -533,7 +534,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
   const [currentLevel, setCurrentLevel] = useState(1)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
-  const [gameState, setGameState] = useState<"start" | "playing" | "levelComplete" | "gameComplete">("start")
+  const [gameState, setGameState] = useState<"start" | "levelSelect" | "playing" | "levelComplete" | "gameComplete">("start")
   const [feedback, setFeedback] = useState<string>("")
   const [answered, setAnswered] = useState(false)
   const [levelScores, setLevelScores] = useState({ 1: 0, 2: 0, 3: 0 })
@@ -577,12 +578,24 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
   const question = shuffledQuestions[currentQuestion]
 
   const handleStartGame = () => {
+    setGameState("levelSelect")
+  }
+
+  const handleLevelSelect = (level: number) => {
+    const levelStatus = getLevelStatus("synohit", level)
+
+    // Check if level is unlocked
+    if (levelStatus === "locked") {
+      alert(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${level - 1} to unlock it.`)
+      return
+    }
+
     setGameState("playing")
-    setCurrentLevel(1)
+    setCurrentLevel(level)
     setCurrentQuestion(0)
     setScore(0)
     setSelectedAnswer(null)
-    const questions = getLevelQuestions(1)
+    const questions = getLevelQuestions(level)
     setShuffledQuestions(questions)
     if (questions[0]) {
       shuffleQuestionOptions(questions[0])
@@ -621,8 +634,10 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
       setSelectedAnswer(null)
       shuffleQuestionOptions(shuffledQuestions[nextQuestionIndex])
     } else {
-      // Level complete
-      setLevelScores({ ...levelScores, [currentLevel]: score })
+      // Level complete - Save progress
+      const finalScore = answered && selectedAnswer === correctAnswerIndex ? score + 1 : score
+      setLevelScores({ ...levelScores, [currentLevel]: finalScore })
+      saveLevelProgress("synohit", currentLevel, finalScore, 10)
 
       if (currentLevel < 3) {
         setGameState("levelComplete")
@@ -634,6 +649,14 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
   const handleNextLevel = () => {
     const nextLevel = currentLevel + 1
+    const levelStatus = getLevelStatus("synohit", nextLevel)
+
+    // Check if next level is unlocked
+    if (levelStatus === "locked") {
+      alert(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${nextLevel - 1} to unlock it.`)
+      return
+    }
+
     setCurrentLevel(nextLevel)
     setCurrentQuestion(0)
     setScore(0)
@@ -659,6 +682,15 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     setLevelScores({ 1: 0, 2: 0, 3: 0 })
     setShuffledQuestions([])
     setShuffledOptions([])
+  }
+
+  const handleBackToLevelSelect = () => {
+    setGameState("levelSelect")
+    setCurrentQuestion(0)
+    setScore(0)
+    setFeedback("")
+    setAnswered(false)
+    setSelectedAnswer(null)
   }
 
   const canColors = ["orange", "green", "blue", "teal"]
@@ -725,36 +757,166 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     )
   }
 
+  // Level Selection Screen
+  if (gameState === "levelSelect") {
+    const level1Status = getLevelStatus("synohit", 1)
+    const level2Status = getLevelStatus("synohit", 2)
+    const level3Status = getLevelStatus("synohit", 3)
+
+    const levelConfig = [
+      { level: 1, title: "Level 1", subtitle: "Simple Synonyms", emoji: "🌱", color: "from-green-400 to-green-600", status: level1Status },
+      { level: 2, title: "Level 2", subtitle: "Complex Synonyms", emoji: "🌿", color: "from-yellow-400 to-orange-500", status: level2Status },
+      { level: 3, title: "Level 3", subtitle: "Contextual Synonyms", emoji: "🌳", color: "from-red-400 to-red-600", status: level3Status },
+    ]
+
+    return (
+      <TropicalBackground>
+        <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 relative">
+          {/* Back Button */}
+          <button
+            onClick={handleGoBack}
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95"
+          >
+            <span>←</span> <span className="hidden sm:inline">Back</span>
+          </button>
+
+          {/* Title */}
+          <div className="mb-6 sm:mb-8 animate-fade-in">
+            <WoodenSign size="large">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg tracking-wide">Select Level</h1>
+            </WoodenSign>
+          </div>
+
+          {/* Level Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl w-full px-4">
+            {levelConfig.map((config, index) => {
+              const isLocked = config.status === "locked"
+              const isCompleted = config.status === "completed"
+
+              return (
+                <button
+                  key={config.level}
+                  onClick={() => handleLevelSelect(config.level)}
+                  disabled={isLocked}
+                  className={`
+                    relative bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-2xl p-6 shadow-2xl
+                    transform transition-all duration-300
+                    ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    animate-slide-up
+                  `}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Lock Icon */}
+                  {isLocked && (
+                    <div className="absolute top-4 right-4 text-3xl sm:text-4xl">🔒</div>
+                  )}
+
+                  {/* Completed Badge */}
+                  {isCompleted && (
+                    <div className="absolute top-4 right-4 bg-green-500 text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-xl sm:text-2xl shadow-lg">
+                      ✓
+                    </div>
+                  )}
+
+                  {/* Emoji */}
+                  <div className="text-5xl sm:text-6xl mb-4">{config.emoji}</div>
+
+                  {/* Title */}
+                  <h3 className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">{config.title}</h3>
+                  <p className="text-sm sm:text-base text-amber-700 mb-4">{config.subtitle}</p>
+
+                  {/* Difficulty Badge */}
+                  <div className={`inline-block px-4 py-2 rounded-full text-white font-bold text-sm bg-gradient-to-r ${config.color}`}>
+                    {isLocked ? "Locked" : isCompleted ? "Completed" : "Play"}
+                  </div>
+
+                  {/* Lock Message */}
+                  {isLocked && (
+                    <p className="text-xs text-amber-600 mt-3">
+                      Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS}/10 to unlock
+                    </p>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Instructions */}
+          <div className="mt-8 bg-amber-50/90 backdrop-blur border-2 border-amber-700 rounded-xl p-4 max-w-2xl mx-4 text-center">
+            <p className="text-amber-900 font-semibold text-sm sm:text-base">
+              🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
+            </p>
+          </div>
+        </div>
+      </TropicalBackground>
+    )
+  }
+
   if (gameState === "levelComplete") {
+    const passed = score >= MIN_SCORE_TO_PASS
+    const stars = getStarRating(score, 10)
+    const nextLevelStatus = getLevelStatus("synohit", currentLevel + 1)
+
     return (
       <TropicalBackground>
         <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl text-center max-w-[95%] sm:max-w-md animate-fade-in">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-amber-900">Level {currentLevel} Complete!</h2>
-            <div className="text-6xl sm:text-8xl mb-3 sm:mb-4 animate-bounce-in">🎉</div>
-            <div className="bg-gradient-to-r from-orange-100 to-orange-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-orange-300">
-              <p className="text-4xl sm:text-6xl font-bold text-orange-600">{score}/10</p>
+            <div className="text-6xl sm:text-8xl mb-3 sm:mb-4 animate-bounce-in">{passed ? "🎉" : "😔"}</div>
+
+            {/* Star Rating */}
+            <div className="flex justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
+              {[1, 2, 3].map((star) => (
+                <span key={star} className={`text-3xl sm:text-4xl ${star <= stars ? "text-yellow-400" : "text-gray-300"}`}>
+                  ⭐
+                </span>
+              ))}
             </div>
-            <p className="text-base sm:text-lg text-amber-700 mb-4 sm:mb-6 font-medium">Ready for the next challenge?</p>
+
+            <div className={`bg-gradient-to-r rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 ${passed ? "from-green-100 to-green-50 border-green-300" : "from-red-100 to-red-50 border-red-300"}`}>
+              <p className={`text-4xl sm:text-6xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score}/10</p>
+              <p className={`text-sm sm:text-base font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
+                {passed ? `🎊 Level ${currentLevel + 1} Unlocked!` : `Need ${MIN_SCORE_TO_PASS}/10 to unlock next level`}
+              </p>
+            </div>
+
+            {!passed && (
+              <p className="text-sm sm:text-base text-amber-800 mb-4 sm:mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
+                Keep trying! You need at least {MIN_SCORE_TO_PASS} correct answers to unlock Level {currentLevel + 1}.
+              </p>
+            )}
+
+            {passed && (
+              <p className="text-base sm:text-lg text-amber-700 mb-4 sm:mb-6 font-medium">Ready for the next challenge?</p>
+            )}
+
             <div className="space-y-2 sm:space-y-3">
-              <button
-                onClick={handleNextLevel}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102"
-              >
-                Continue to Level {currentLevel + 1} →
-              </button>
+              {passed && currentLevel < 3 && (
+                <button
+                  onClick={handleNextLevel}
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102"
+                >
+                  Continue to Level {currentLevel + 1} →
+                </button>
+              )}
               <div className="flex gap-2 sm:gap-3">
                 <button
-                  onClick={handleStartGame}
+                  onClick={() => handleLevelSelect(currentLevel)}
                   className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
                 >
-                  Play Again
+                  Retry
+                </button>
+                <button
+                  onClick={handleBackToLevelSelect}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
+                >
+                  Levels
                 </button>
                 <button
                   onClick={handleGoBack}
                   className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
                 >
-                  Go Back
+                  Menu
                 </button>
               </div>
             </div>
@@ -781,18 +943,18 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
               <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 2:</span> <span className="font-bold">{levelScores[2]}/10</span></p>
               <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 3:</span> <span className="font-bold">{levelScores[3]}/10</span></p>
             </div>
-            <div className="flex gap-2 sm:gap-3">
+            <div className="space-y-2 sm:space-y-3">
               <button
-                onClick={handleStartGame}
-                className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95 transform hover:scale-102"
+                onClick={handleBackToLevelSelect}
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95 transform hover:scale-102"
               >
-                Play Again
+                Select Level
               </button>
               <button
                 onClick={handleGoBack}
-                className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95"
+                className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95"
               >
-                Go Back
+                Main Menu
               </button>
             </div>
           </div>
@@ -827,10 +989,10 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
           {/* Go Back Button - Top Left */}
           <button
-            onClick={handleGoBack}
+            onClick={handleBackToLevelSelect}
             className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm"
           >
-            <span>←</span> <span className="hidden sm:inline">Back</span>
+            <span>←</span> <span className="hidden sm:inline">Levels</span>
           </button>
 
           {/* Header Stats with Enhanced Design */}

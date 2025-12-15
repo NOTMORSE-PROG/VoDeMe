@@ -1,0 +1,108 @@
+// Prisma Schema for VoDeMe Authentication System
+// Database: Neon PostgreSQL
+// Prisma 7 with Driver Adapter
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Core user information
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String?  @unique
+  name      String
+
+  // Password storage (hashed with Argon2id)
+  passwordHash String
+
+  // Profile information
+  profilePicture String? // UploadThing URL
+
+  // Account status and verification
+  status        String   @default("active") // active, suspended, deleted
+  emailVerified DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessions  Session[]
+  auditLogs AuditLog[]
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+// Session Model - Server-side session management
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Session metadata
+  ipAddress String?
+  userAgent String?
+
+  // Expiration
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// Verification Token Model - Email verification and password resets
+model VerificationToken {
+  id    String   @id @default(cuid())
+  email String
+  token String   @unique
+  type  String   // "email_verify", "password_reset"
+
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([email])
+  @@index([token])
+  @@index([type])
+  @@map("verification_tokens")
+}
+
+// Audit Log Model - Security and compliance tracking
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Action details
+  action    String // "login", "logout", "password_change", "email_change", "profile_update"
+  entity    String // "user", "profile", "session"
+  entityId  String
+
+  // Change tracking
+  oldData Json?
+  newData Json?
+
+  // Request metadata
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
