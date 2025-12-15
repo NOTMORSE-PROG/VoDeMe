@@ -16,7 +16,7 @@ export default async function ProfilePage() {
     redirect('/');
   }
 
-  // Fetch user data from database
+  // Fetch user data from database including OAuth accounts
   const user = await db.user.findUnique({
     where: { id: auth.userId },
     select: {
@@ -26,6 +26,13 @@ export default async function ProfilePage() {
       profilePicture: true,
       createdAt: true,
       status: true,
+      passwordHash: true,
+      accounts: {
+        select: {
+          provider: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
@@ -33,5 +40,23 @@ export default async function ProfilePage() {
     redirect('/');
   }
 
-  return <ProfileClient user={user} />;
+  // Determine if user has password set
+  const hasPassword = !!user.passwordHash;
+
+  // Map linked providers for UI
+  const linkedProviders = user.accounts.map((acc) => ({
+    provider: acc.provider,
+    linkedAt: acc.createdAt,
+  }));
+
+  // Remove passwordHash from user object before passing to client
+  const { passwordHash, accounts, ...userWithoutPassword } = user;
+
+  return (
+    <ProfileClient
+      user={userWithoutPassword}
+      hasPassword={hasPassword}
+      linkedProviders={linkedProviders}
+    />
+  );
 }

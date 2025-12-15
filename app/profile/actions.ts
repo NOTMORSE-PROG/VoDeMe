@@ -128,6 +128,18 @@ export async function changePasswordAction(
       throw new Error('User not found');
     }
 
+    // Check if user has a password (might be Google-only account)
+    if (!user.passwordHash) {
+      return {
+        success: false,
+        errors: {
+          _form: [
+            'You signed up with Google and have no password set. Use the "Set Password" option below if you want to enable email/password login.',
+          ],
+        },
+      };
+    }
+
     // Verify current password
     const isValidPassword = await verifyPassword(
       currentPassword,
@@ -211,6 +223,100 @@ export async function deleteProfilePictureAction(): Promise<ProfileResult> {
       success: false,
       errors: {
         _form: ['Failed to delete profile picture'],
+      },
+    };
+  }
+}
+
+/**
+ * Set Password Action
+ * Allows Google-only users to set a password for email/password login
+ */
+export async function setPasswordAction(
+  prevState: ProfileResult | null,
+  formData: FormData
+): Promise<ProfileResult> {
+  try {
+    // Verify authentication
+    const auth = await requireAuth();
+
+    // Parse form data
+    const newPassword = formData.get('newPassword') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      return {
+        success: false,
+        errors: {
+          confirmPassword: ["Passwords don't match"],
+        },
+      };
+    }
+
+    // Validate password strength using existing schema
+    const { passwordSchema } = await import('@/lib/validation');
+    const parsed = passwordSchema.safeParse(newPassword);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        errors: {
+          newPassword: parsed.error.errors.map((e) => e.message),
+        },
+      };
+    }
+
+    // Check user doesn't already have password
+    const user = await db.user.findUnique({
+      where: { id: auth.userId },
+      select: { passwordHash: true },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.passwordHash) {
+      return {
+        success: false,
+        errors: {
+          _form: [
+            'Password already set. Use "Change Password" instead.',
+          ],
+        },
+      };
+    }
+
+    // Hash and set password
+    const passwordHash = await hashPassword(parsed.data);
+    await db.user.update({
+      where: { id: auth.userId },
+      data: { passwordHash },
+    });
+
+    // Create audit log
+    await db.auditLog.create({
+      data: {
+        userId: auth.userId,
+        action: 'password_set',
+        entity: 'user',
+        entityId: auth.userId,
+        newData: { hasPassword: true },
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        'Password set successfully! You can now sign in with email and password.',
+    };
+  } catch (error) {
+    console.error('Set password error:', error);
+    return {
+      success: false,
+      errors: {
+        _form: ['An unexpected error occurred. Please try again.'],
       },
     };
   }

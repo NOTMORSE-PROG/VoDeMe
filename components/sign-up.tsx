@@ -52,28 +52,17 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
             <h2 className="text-2xl font-semibold text-gray-700">Sign Up</h2>
           </div>
 
-          {/* Social Login - Disabled for now */}
-          <div className="flex gap-4 mb-6 opacity-50">
+          {/* Social Login */}
+          <div className="flex gap-4 mb-6">
             <button
               type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
+              onClick={() => {
+                window.location.href = '/api/auth/google?mode=signin&redirect=/dashboard'
+              }}
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition cursor-pointer"
+              title="Sign in with Google"
             >
-              f
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
-            >
-              G
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
-            >
-              in
+              <Image src="/images/google-icon.svg" alt="Google" width={18} height={18} />
             </button>
           </div>
 

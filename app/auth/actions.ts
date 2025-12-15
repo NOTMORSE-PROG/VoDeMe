@@ -49,9 +49,31 @@ export async function signUpAction(
     // Check if user already exists
     const existingUser = await db.user.findUnique({
       where: { email },
+      include: {
+        accounts: {
+          select: { provider: true },
+        },
+      },
     });
 
     if (existingUser) {
+      // Check if user signed up with Google
+      const hasGoogleAccount = existingUser.accounts.some(
+        (acc) => acc.provider === 'google'
+      );
+
+      if (hasGoogleAccount) {
+        return {
+          success: false,
+          errors: {
+            email: [
+              'This email is already registered with Google. Please use "Sign in with Google" button to access your account.',
+            ],
+          },
+        };
+      }
+
+      // User has email/password account
       return {
         success: false,
         errors: {
@@ -140,6 +162,18 @@ export async function signInAction(
         success: false,
         errors: {
           email: ['Invalid email or password'],
+        },
+      };
+    }
+
+    // Check if user has a password (might be Google-only account)
+    if (!user.passwordHash) {
+      return {
+        success: false,
+        errors: {
+          email: [
+            'This account uses Google sign-in. Please use "Sign in with Google" button above.',
+          ],
         },
       };
     }

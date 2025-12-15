@@ -20,10 +20,11 @@ model User {
   name      String
 
   // Password storage (hashed with Argon2id)
-  passwordHash String
+  // NOTE: Nullable for OAuth-only users (e.g., Google sign-in)
+  passwordHash String?
 
   // Profile information
-  profilePicture String? // UploadThing URL
+  profilePicture String? // UploadThing URL or OAuth provider URL
 
   // Account status and verification
   status        String   @default("active") // active, suspended, deleted
@@ -36,6 +37,7 @@ model User {
   // Relations
   sessions  Session[]
   auditLogs AuditLog[]
+  accounts  Account[] // OAuth provider accounts
 
   @@index([email])
   @@index([username])
@@ -105,4 +107,51 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// Account Model - OAuth provider linkage for multi-auth support
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Provider information
+  provider          String   // "google", "facebook", "github", etc.
+  providerAccountId String   // Provider's user ID (e.g., Google's sub)
+
+  // OAuth tokens (store encrypted in production)
+  accessToken       String?  @db.Text
+  refreshToken      String?  @db.Text
+  expiresAt         DateTime?
+  tokenType         String?
+  scope             String?
+
+  // Provider profile data (name, email, picture, etc.)
+  providerData      Json?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider]) // One account per provider per user
+  @@index([userId])
+  @@map("accounts")
+}
+
+// OAuthState Model - CSRF protection for OAuth flow
+model OAuthState {
+  id          String   @id @default(cuid())
+  state       String   @unique
+  provider    String   // "google", "facebook", etc.
+  mode        String   // "signin" or "link"
+  userId      String?  // For link mode, track which user is linking
+  redirectUri String?  // Post-auth redirect destination
+
+  expiresAt   DateTime // State tokens expire in 10 minutes
+  createdAt   DateTime @default(now())
+
+  @@index([state])
+  @@index([expiresAt])
+  @@map("oauth_states")
 }

@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useActionState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { signInAction } from "@/app/auth/actions"
 import { Eye, EyeOff, ArrowLeft } from "lucide-react"
@@ -14,8 +14,22 @@ interface SignInProps {
 
 export default function SignIn({ onToggleSignUp }: SignInProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [state, formAction, isPending] = useActionState(signInAction, null)
   const [showPassword, setShowPassword] = useState(false)
+  const [urlError, setUrlError] = useState<string | null>(null)
+
+  // Read error from URL parameters (from OAuth redirect)
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      setUrlError(decodeURIComponent(error))
+      // Clear the error from URL after reading it
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('error')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }, [searchParams])
 
   return (
     <div className="w-full max-w-5xl">
@@ -37,28 +51,17 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
             <h2 className="text-2xl font-semibold text-gray-700">Sign In</h2>
           </div>
 
-          {/* Social Login - Disabled for now */}
-          <div className="flex gap-4 mb-6 opacity-50">
+          {/* Social Login */}
+          <div className="flex gap-4 mb-6">
             <button
               type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
+              onClick={() => {
+                window.location.href = '/api/auth/google?mode=signin&redirect=/dashboard'
+              }}
+              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition cursor-pointer"
+              title="Sign in with Google"
             >
-              f
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
-            >
-              G
-            </button>
-            <button
-              type="button"
-              disabled
-              className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 font-semibold text-gray-700 cursor-not-allowed"
-            >
-              in
+              <Image src="/images/google-icon.svg" alt="Google" width={18} height={18} />
             </button>
           </div>
 
@@ -70,6 +73,13 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
               <span className="px-2 bg-white text-gray-500">or use your account</span>
             </div>
           </div>
+
+          {/* OAuth/URL error message */}
+          {urlError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{urlError}</p>
+            </div>
+          )}
 
           {/* Global form error */}
           {state?.success === false && state.errors._form && (

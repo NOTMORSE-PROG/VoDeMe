@@ -30,6 +30,14 @@ const envSchema = z.object({
     ? z.string().optional()
     : z.string().min(1, 'UPLOADTHING_TOKEN is required'),
 
+  // Google OAuth
+  GOOGLE_CLIENT_ID: isBuild
+    ? z.string().optional()
+    : z.string().min(1, 'GOOGLE_CLIENT_ID is required'),
+  GOOGLE_CLIENT_SECRET: isBuild
+    ? z.string().optional()
+    : z.string().min(1, 'GOOGLE_CLIENT_SECRET is required'),
+
   // Rate Limiting (Optional)
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),

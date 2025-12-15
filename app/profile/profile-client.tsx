@@ -6,6 +6,7 @@ import Image from "next/image"
 import { UploadButton } from "@/lib/uploadthing"
 import { updateProfileAction, deleteProfilePictureAction, changePasswordAction } from "./actions"
 import { signOutAction } from "@/app/auth/actions"
+import { unlinkGoogleAction } from "./oauth-actions"
 
 interface User {
   id: string
@@ -16,11 +17,18 @@ interface User {
   status: string
 }
 
-interface ProfileClientProps {
-  user: User
+interface LinkedProvider {
+  provider: string
+  linkedAt: Date
 }
 
-export default function ProfileClient({ user }: ProfileClientProps) {
+interface ProfileClientProps {
+  user: User
+  hasPassword: boolean
+  linkedProviders: LinkedProvider[]
+}
+
+export default function ProfileClient({ user, hasPassword, linkedProviders }: ProfileClientProps) {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -49,6 +57,7 @@ export default function ProfileClient({ user }: ProfileClientProps) {
   }, [profileState, user.name])
 
   const hasChanges = editedName.trim() !== user.name
+  const isGoogleLinked = linkedProviders.some(p => p.provider === 'google')
 
   const handleEditClick = () => {
     setIsEditing(true)
@@ -73,6 +82,21 @@ export default function ProfileClient({ user }: ProfileClientProps) {
       const result = await deleteProfilePictureAction()
       if (result.success) {
         router.refresh()
+      }
+    }
+  }
+
+  const handleLinkGoogle = () => {
+    window.location.href = '/api/auth/google?mode=link&redirect=/profile'
+  }
+
+  const handleUnlinkGoogle = async () => {
+    if (confirm('Are you sure you want to unlink your Google account? You can link it again later.')) {
+      const result = await unlinkGoogleAction()
+      if (result.success) {
+        router.refresh()
+      } else if (result.errors._form) {
+        alert(result.errors._form[0])
       }
     }
   }
@@ -253,21 +277,22 @@ export default function ProfileClient({ user }: ProfileClientProps) {
             </div>
           </form>
 
-          {/* Password Change Section */}
-          <div className="pt-8 border-t border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-800">Change Password</h3>
-              {!isChangingPassword && (
-                <button
-                  onClick={() => setIsChangingPassword(true)}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
-                >
-                  Update
-                </button>
-              )}
-            </div>
+          {/* Password Change Section - Only show if user has password */}
+          {hasPassword && (
+            <div className="pt-8 border-t border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-800">Change Password</h3>
+                {!isChangingPassword && (
+                  <button
+                    onClick={() => setIsChangingPassword(true)}
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                  >
+                    Update
+                  </button>
+                )}
+              </div>
 
-            {isChangingPassword && (
+              {isChangingPassword && (
               <form action={passwordAction} className="space-y-4">
                 {passwordState?.success && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -350,7 +375,48 @@ export default function ProfileClient({ user }: ProfileClientProps) {
                   </button>
                 </div>
               </form>
-            )}
+              )}
+            </div>
+          )}
+
+          {/* Connected Accounts Section */}
+          <div className="pt-8 border-t border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Connected Accounts</h3>
+
+            {/* Google Account */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-3">
+              <div className="flex items-center gap-3">
+                <Image src="/images/google-icon.svg" alt="Google" width={24} height={24} />
+                <div>
+                  <p className="font-medium text-gray-800">Google</p>
+                  {isGoogleLinked ? (
+                    <p className="text-sm text-gray-500">
+                      Connected {new Date(linkedProviders.find(p => p.provider === 'google')!.linkedAt).toLocaleDateString()}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Not connected</p>
+                  )}
+                </div>
+              </div>
+
+              {isGoogleLinked ? (
+                <button
+                  onClick={handleUnlinkGoogle}
+                  disabled={!hasPassword}
+                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!hasPassword ? "Set a password before unlinking Google" : ""}
+                >
+                  Unlink
+                </button>
+              ) : (
+                <button
+                  onClick={handleLinkGoogle}
+                  className="px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                >
+                  Connect
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Account Information */}

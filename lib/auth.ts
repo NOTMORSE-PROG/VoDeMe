@@ -29,8 +29,8 @@ export async function createJWT(userId: string): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('1h')
-    .setIssuer(env.NEXT_PUBLIC_APP_NAME)
-    .setAudience(env.NEXT_PUBLIC_APP_NAME)
+    .setIssuer(env.NEXT_PUBLIC_APP_NAME || 'VoDeMe')
+    .setAudience(env.NEXT_PUBLIC_APP_NAME || 'VoDeMe')
     .sign(jwtSecret);
 }
 
