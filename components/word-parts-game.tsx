@@ -616,6 +616,14 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   const [shuffledLevel2, setShuffledLevel2] = useState<Level2Item[]>([])
   const [shuffledLevel3, setShuffledLevel3] = useState<Level3Item[]>([])
 
+  // Memoize level 3 options to prevent reshuffling on drag
+  const level3Options = useMemo(() => {
+    if (currentLevel !== 3) return []
+    const item = shuffledLevel3[currentItem]
+    if (!item) return []
+    return shuffleArray([...item.derivedForms, ...item.inflectedForms])
+  }, [currentLevel, currentItem, shuffledLevel3])
+
   // Initialize level data
   const initializeLevel = useCallback((level: 1 | 2 | 3) => {
     setCurrentLevel(level)
@@ -1691,10 +1699,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     const item = shuffledLevel3[currentItem]
     if (!item) return null
 
-    const allOptions = useMemo(
-      () => shuffleArray([...item.derivedForms, ...item.inflectedForms]),
-      [currentItem, item.derivedForms, item.inflectedForms]
-    )
+    const allOptions = level3Options
 
     return (
       <ClassroomBackground>
