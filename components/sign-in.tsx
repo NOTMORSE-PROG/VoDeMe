@@ -31,6 +31,13 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
     }
   }, [searchParams])
 
+  // Clear URL error when form state changes (user submitted form)
+  useEffect(() => {
+    if (state !== null) {
+      setUrlError(null)
+    }
+  }, [state])
+
   return (
     <div className="w-full max-w-5xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-stretch">
@@ -74,26 +81,25 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
             </div>
           </div>
 
-          {/* OAuth/URL error message */}
-          {urlError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{urlError}</p>
-            </div>
-          )}
+          {/* Single error message - show only one at a time with priority */}
+          {(() => {
+            // Priority: URL error > form error > validation error
+            let errorMessage: string | null = null;
 
-          {/* Global form error */}
-          {state?.success === false && state.errors._form && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{state.errors._form[0]}</p>
-            </div>
-          )}
+            if (urlError) {
+              errorMessage = urlError;
+            } else if (state?.success === false && state.errors._form) {
+              errorMessage = state.errors._form[0];
+            } else if (state?.success === false && (state.errors.email || state.errors.password)) {
+              errorMessage = "Invalid email or password. Please try again.";
+            }
 
-          {/* General error message for email/password */}
-          {state?.success === false && (state.errors.email || state.errors.password) && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">Invalid email or password. Please try again.</p>
-            </div>
-          )}
+            return errorMessage ? (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{errorMessage}</p>
+              </div>
+            ) : null;
+          })()}
 
           <form action={formAction} className="space-y-4">
             <div>
