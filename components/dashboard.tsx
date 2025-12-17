@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { getProgress, getLevelStatus } from "@/lib/game-progress"
+import { getWordOfDay } from "@/lib/word-data"
 
 interface DashboardProps {
   user: { email: string; name: string; profilePicture?: string }
@@ -73,6 +74,9 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
       }))
     )
   }, [])
+
+  // Get word of the day
+  const wordOfDay = getWordOfDay()
 
   return (
     <div className="h-screen overflow-y-auto bg-gradient-to-br from-sky-100 via-blue-50 to-sky-50">
@@ -182,6 +186,50 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🏆</div>
             <p className="text-gray-600 text-xs sm:text-sm">Rank</p>
             <p className="text-xl sm:text-3xl font-bold text-orange-600">#8</p>
+          </div>
+        </div>
+
+        {/* Word of the Day Section */}
+        <div className="mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-md border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs text-orange-600 font-semibold mb-1">Word {wordOfDay.index} of 52</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{wordOfDay.word}</h2>
+              <p className="text-sm sm:text-base text-gray-600">{wordOfDay.pronunciation} • {wordOfDay.wordClass}</p>
+            </div>
+            <div className="hidden sm:block text-4xl">📚</div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-semibold text-orange-600 uppercase mb-1">Meaning</p>
+              <p className="text-sm text-gray-700">{wordOfDay.meaning}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-blue-600 uppercase mb-1">Example</p>
+              <p className="text-sm text-gray-600 italic">"{wordOfDay.example}"</p>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-3 pt-2">
+              <div>
+                <p className="text-xs font-semibold text-green-600 uppercase mb-2">Synonyms</p>
+                <div className="flex flex-wrap gap-1">
+                  {wordOfDay.synonyms.slice(0, 4).map((syn, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs border border-green-200">
+                      {syn}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-rose-600 uppercase mb-2">Antonyms</p>
+                <div className="flex flex-wrap gap-1">
+                  {wordOfDay.antonyms.slice(0, 4).map((ant, i) => (
+                    <span key={i} className="px-2 py-0.5 bg-rose-50 text-rose-700 rounded text-xs border border-rose-200">
+                      {ant}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
