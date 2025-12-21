@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import WordStudyTutorial from "./word-study-tutorial"
 
 interface Level1Item {
   target: string
@@ -117,6 +118,7 @@ export default function WordStudyJournal() {
   const [score, setScore] = useState(0)
   const [answered, setAnswered] = useState(false)
   const [levelScores, setLevelScores] = useState({ 1: 0, 2: 0, 3: 0 })
+  const [showTutorial, setShowTutorial] = useState(false)
 
   const handleStartLevel = (lvl: 1 | 2 | 3) => {
     setLevel(lvl)
@@ -171,12 +173,21 @@ export default function WordStudyJournal() {
           <h2 className="text-2xl font-bold mb-8 text-center">Select Your Level</h2>
 
           <div className="space-y-4">
-            <button
-              onClick={() => handleStartLevel(1)}
-              className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg transition text-lg"
-            >
-              Level 1: Deconstruct Words
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleStartLevel(1)}
+                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg transition text-lg"
+              >
+                Level 1: Deconstruct Words
+              </button>
+              <button
+                onClick={() => setShowTutorial(true)}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 px-6 rounded-lg transition text-lg whitespace-nowrap"
+                title="Interactive Tutorial for Level 1"
+              >
+                📖 Tutorial
+              </button>
+            </div>
             <button
               onClick={() => handleStartLevel(2)}
               className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-4 px-6 rounded-lg transition text-lg"
@@ -367,5 +378,9 @@ export default function WordStudyJournal() {
     )
   }
 
-  return null
+  return (
+    <>
+      {showTutorial && <WordStudyTutorial onClose={() => setShowTutorial(false)} />}
+    </>
+  )
 }

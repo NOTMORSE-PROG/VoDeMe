@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import WordStudyTutorial from "./word-study-tutorial"
 
 // Game Data Types
 interface Level1Item {
@@ -591,6 +592,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   const [submitted, setSubmitted] = useState(false)
   const [isWriting, setIsWriting] = useState(false)
   const [handEmotion, setHandEmotion] = useState<"neutral" | "happy" | "sad">("neutral")
+  const [showTutorial, setShowTutorial] = useState(false)
 
   // Level 1 state - drag and drop with manual word splitting
   const [draggingSegment, setDraggingSegment] = useState<"prefix" | "base" | "suffix" | null>(null)
@@ -947,55 +949,69 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
               const isCompleted = config.status === "completed"
 
               return (
-                <button
-                  key={config.level}
-                  onClick={() => handleLevelSelect(config.level as 1 | 2 | 3)}
-                  disabled={isLocked}
-                  className={`
-                    relative bg-white/95 backdrop-blur rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl border-2 sm:border-4 border-amber-400
-                    transform transition-all duration-300
-                    ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
-                    animate-pop-in
-                  `}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Lock Icon */}
-                  {isLocked && (
-                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-2xl sm:text-3xl md:text-4xl">🔒</div>
-                  )}
+                <div key={config.level} className="relative">
+                  <button
+                    onClick={() => handleLevelSelect(config.level as 1 | 2 | 3)}
+                    disabled={isLocked}
+                    className={`
+                      relative bg-white/95 backdrop-blur rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl border-2 sm:border-4 border-amber-400
+                      transform transition-all duration-300 w-full
+                      ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                      animate-pop-in
+                    `}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Lock Icon */}
+                    {isLocked && (
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-2xl sm:text-3xl md:text-4xl">🔒</div>
+                    )}
 
-                  {/* Completed Badge */}
-                  {isCompleted && (
-                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-green-500 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center text-lg sm:text-xl md:text-2xl shadow-lg">
-                      ✓
+                    {/* Completed Badge */}
+                    {isCompleted && (
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-green-500 text-white rounded-full w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex items-center justify-center text-lg sm:text-xl md:text-2xl shadow-lg">
+                        ✓
+                      </div>
+                    )}
+
+                    {/* Emoji */}
+                    <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">{config.emoji}</div>
+
+                    {/* Title */}
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-700 mb-1 sm:mb-2">{config.title}</h3>
+                    <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{config.subtitle}</p>
+
+                    {/* Difficulty Badge */}
+                    <div className={`inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm bg-gradient-to-r ${config.color}`}>
+                      {isLocked ? "Locked" : isCompleted ? "Completed" : "Play"}
                     </div>
+
+                    {/* Lock Message */}
+                    {isLocked && (
+                      <p className="text-[10px] sm:text-xs text-gray-600 mt-2 sm:mt-3">
+                        Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS}/10 to unlock
+                      </p>
+                    )}
+                  </button>
+
+                  {/* Tutorial Button - Only for Level 1 */}
+                  {config.level === 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowTutorial(true)
+                      }}
+                      className="mt-3 w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-all shadow-md hover:shadow-lg text-xs sm:text-sm"
+                    >
+                      📖 Tutorial
+                    </button>
                   )}
-
-                  {/* Emoji */}
-                  <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">{config.emoji}</div>
-
-                  {/* Title */}
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-amber-700 mb-1 sm:mb-2">{config.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{config.subtitle}</p>
-
-                  {/* Difficulty Badge */}
-                  <div className={`inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-white font-bold text-xs sm:text-sm bg-gradient-to-r ${config.color}`}>
-                    {isLocked ? "Locked" : isCompleted ? "Completed" : "Play"}
-                  </div>
-
-                  {/* Lock Message */}
-                  {isLocked && (
-                    <p className="text-[10px] sm:text-xs text-gray-600 mt-2 sm:mt-3">
-                      Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS}/10 to unlock
-                    </p>
-                  )}
-                </button>
+                </div>
               )
             })}
           </div>
 
           {/* Instructions */}
-          <div className="mt-8 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center">
+          <div className="mt-4 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center">
             <p className="text-amber-700 font-semibold">
               🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
             </p>
@@ -1012,6 +1028,9 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           }
           .animate-pop-in { animation: pop-in 0.5s ease-out both; }
         `}</style>
+
+        {/* Tutorial Modal */}
+        {showTutorial && <WordStudyTutorial onClose={() => setShowTutorial(false)} />}
       </ClassroomBackground>
     )
   }
@@ -1834,5 +1853,9 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     )
   }
 
-  return null
+  return (
+    <>
+      {showTutorial && <WordStudyTutorial onClose={() => setShowTutorial(false)} />}
+    </>
+  )
 }
