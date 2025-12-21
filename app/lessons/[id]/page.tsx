@@ -61,6 +61,7 @@ export default async function LessonPage({
           duration={lesson.duration}
           initialProgress={userProgress?.watchedDuration || 0}
           hasQuiz={!!lesson.quiz}
+          isCompleted={userProgress?.completed || false}
         />
       </div>
     </div>

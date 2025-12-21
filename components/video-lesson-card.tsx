@@ -66,16 +66,18 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
           </div>
           <p className="text-gray-600 text-sm mb-3">{lesson.description}</p>
 
-          {actualProgress > 0 && !lesson.completed && (
+          {actualProgress > 0 && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>Progress</span>
-                <span>{actualProgress}%</span>
+                <span>{lesson.completed ? '100' : actualProgress}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-orange-500 h-2 rounded-full transition-all"
-                  style={{ width: `${actualProgress}%` }}
+                  className={`h-2 rounded-full transition-all ${
+                    lesson.completed ? 'bg-green-500' : 'bg-orange-500'
+                  }`}
+                  style={{ width: `${lesson.completed ? 100 : actualProgress}%` }}
                 />
               </div>
             </div>
