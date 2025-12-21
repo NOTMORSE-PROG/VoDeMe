@@ -35,9 +35,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  sessions  Session[]
-  auditLogs AuditLog[]
-  accounts  Account[] // OAuth provider accounts
+  sessions        Session[]
+  auditLogs       AuditLog[]
+  accounts        Account[] // OAuth provider accounts
+  lessonProgress  LessonProgress[]
+  quizAttempts    QuizAttempt[]
 
   @@index([email])
   @@index([username])
@@ -154,4 +156,86 @@ model OAuthState {
   @@index([state])
   @@index([expiresAt])
   @@map("oauth_states")
+}
+
+// VideoLesson Model - Stores video lesson information
+model VideoLesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  videoUrl    String   // Video file URL
+  duration    Int      // Duration in seconds
+  level       Int      // Lesson level (1, 2, 3, etc.)
+  order       Int      // Display order within the level
+
+  // Relations
+  quiz       Quiz?
+  progress   LessonProgress[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([level, order]) // Ensure unique ordering within each level
+  @@index([level])
+  @@map("video_lessons")
+}
+
+// LessonProgress Model - Tracks user progress on each lesson
+model LessonProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId        String
+  lesson          VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  // Progress tracking
+  completed       Boolean  @default(false)
+  watchedDuration Int      @default(0) // Seconds watched (for resume functionality)
+  completedAt     DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+  @@map("lesson_progress")
+}
+
+// Quiz Model - Stores quiz questions and settings
+model Quiz {
+  id           String   @id @default(cuid())
+  lessonId     String   @unique
+  lesson       VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  title        String
+  questions    Json     // Array of questions with options and correct answers
+  passingScore Int      @default(70) // Percentage required to pass
+
+  // Relations
+  attempts     QuizAttempt[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("quizzes")
+}
+
+// QuizAttempt Model - Tracks user quiz attempts
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  score       Int      // Score as percentage (0-100)
+  answers     Json     // User's answers for review
+  passed      Boolean  // Whether the user passed
+  completedAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([quizId])
+  @@index([completedAt])
+  @@map("quiz_attempts")
 }

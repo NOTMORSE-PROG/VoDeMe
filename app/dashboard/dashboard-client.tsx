@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Dashboard from "@/components/dashboard"
 import SynohitGame from "@/components/synohit-game"
 import HopRightGame from "@/components/hopright-game"
@@ -15,13 +15,27 @@ interface User {
   profilePicture: string | null
 }
 
-interface DashboardClientProps {
-  user: User
+interface Lesson {
+  id: string
+  title: string
+  description: string
+  duration: number
+  videoUrl: string
+  completed: boolean
+  watchedDuration: number
+  progress: number
 }
 
-export default function DashboardClient({ user }: DashboardClientProps) {
+interface DashboardClientProps {
+  user: User
+  lessons: Lesson[]
+}
+
+export default function DashboardClient({ user, lessons }: DashboardClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [page, setPage] = useState<"dashboard" | "synohit" | "hopright" | "wordstudyjournal" | "quiz">("dashboard")
+  const initialTab = searchParams.get('tab') as "games" | "lessons" | "quizzes" | "leaderboard" | null
 
   const handleLogout = async () => {
     await signOutAction()
@@ -53,6 +67,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
       onLogout={handleLogout}
       onPlayGame={(gameName) => setPage(gameName as any)}
       onNavigateToProfile={handleNavigateToProfile}
+      lessons={lessons}
+      initialTab={initialTab || undefined}
     />
   )
 }

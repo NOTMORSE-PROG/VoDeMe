@@ -2,14 +2,29 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { getProgress, getLevelStatus } from "@/lib/game-progress"
 import { getWordOfDay } from "@/lib/word-data"
+import { VideoLessonCard } from "@/components/video-lesson-card"
+
+interface Lesson {
+  id: string
+  title: string
+  description: string
+  duration: number
+  videoUrl: string
+  completed: boolean
+  watchedDuration: number
+  progress: number
+}
 
 interface DashboardProps {
   user: { email: string; name: string; profilePicture?: string }
   onLogout: () => void
   onPlayGame: (gameName: string) => void
   onNavigateToProfile: () => void
+  lessons: Lesson[]
+  initialTab?: "games" | "lessons" | "quizzes" | "leaderboard"
 }
 
 // Level Progress Indicator Component
@@ -42,8 +57,8 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   )
 }
 
-export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState("games")
+export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, initialTab }: DashboardProps) {
+  const [activeTab, setActiveTab] = useState(initialTab || "games")
   const [gameProgress, setGameProgress] = useState<{
     synohit: ReturnType<typeof getProgress>
     hopright: ReturnType<typeof getProgress>
@@ -244,6 +259,16 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
             }`}
           >
             🎮 Games
+          </button>
+          <button
+            onClick={() => setActiveTab("lessons")}
+            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+              activeTab === "lessons"
+                ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            🎬 Video Lessons
           </button>
           <button
             onClick={() => setActiveTab("quizzes")}
@@ -520,6 +545,27 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
                 }
               `}</style>
             </div>
+          </div>
+        )}
+
+        {/* Video Lessons Section */}
+        {activeTab === "lessons" && (
+          <div className="space-y-4">
+            {lessons.length === 0 ? (
+              <div className="bg-white rounded-xl p-12 text-center shadow-md">
+                <div className="text-6xl mb-4">🎬</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Video Lessons Yet</h3>
+                <p className="text-gray-600">Check back soon for vocabulary learning videos!</p>
+              </div>
+            ) : (
+              lessons.map((lesson) => (
+                <VideoLessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  videoUrl={lesson.videoUrl}
+                />
+              ))
+            )}
           </div>
         )}
 

@@ -14,6 +14,7 @@
     "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-neon": "^7.1.0",
     "@prisma/client": "5.22.0",
+    "@radix-ui/react-progress": "^1.1.8",
     "@radix-ui/react-slot": "1.1.1",
     "@uploadthing/react": "^7.3.3",
     "@upstash/ratelimit": "^2.0.7",
@@ -50,7 +51,11 @@
     "dotenv": "^17.2.3",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "tsx": "^4.21.0",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
