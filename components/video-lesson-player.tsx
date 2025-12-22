@@ -97,8 +97,8 @@ export function VideoLessonPlayer({
       const currentTime = videoRef.current.currentTime;
 
       // If user tries to seek beyond their max watched point, bring them back
-      // Using a smaller buffer (0.5s) to be more strict
-      if (currentTime > maxWatchedTime + 0.5) {
+      // No buffer allowed - strictly enforce the limit
+      if (currentTime > maxWatchedTime) {
         videoRef.current.currentTime = maxWatchedTime;
         toast.error('You cannot skip ahead. Please watch the video to continue.');
       }
@@ -110,8 +110,8 @@ export function VideoLessonPlayer({
     if (videoRef.current && !completed) {
       const currentTime = videoRef.current.currentTime;
 
-      // Double-check after seek completes
-      if (currentTime > maxWatchedTime + 0.5) {
+      // Double-check after seek completes - strictly enforce the limit
+      if (currentTime > maxWatchedTime) {
         videoRef.current.currentTime = maxWatchedTime;
       }
     }
