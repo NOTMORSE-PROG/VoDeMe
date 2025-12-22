@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Lock } from 'lucide-react';
+import { CheckCircle2, Lock, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
+import { LearningWallModal } from '@/components/learning-wall-modal';
 
 interface VideoLessonPlayerProps {
   lessonId: string;
@@ -37,12 +38,35 @@ export function VideoLessonPlayer({
   const [completed, setCompleted] = useState(isCompleted);
   const [isSaving, setIsSaving] = useState(false);
   const [actualDuration, setActualDuration] = useState(duration);
+  const [showLearningWall, setShowLearningWall] = useState(false);
+  const hasShownLearningWall = useRef(false);
 
   // In review mode, show current playback; otherwise show progress
   const displayTime = completed ? currentPlaybackTime : watchedDuration;
   const progressPercentage = completed
     ? 100
     : Math.round((watchedDuration / actualDuration) * 100);
+
+  // Load actual video duration in background (like VideoLessonCard)
+  useEffect(() => {
+    const video = document.createElement('video');
+    video.src = videoUrl;
+
+    const handleLoadedMetadata = () => {
+      if (video.duration && !isNaN(video.duration) && isFinite(video.duration)) {
+        const videoDuration = Math.floor(video.duration);
+        setActualDuration(videoDuration);
+      }
+    };
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.load();
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.src = '';
+    };
+  }, [videoUrl]);
 
   // Auto-save progress every 3 seconds (only when not in review mode)
   useEffect(() => {
@@ -56,9 +80,9 @@ export function VideoLessonPlayer({
     return () => clearInterval(interval);
   }, [lessonId, completed]);
 
-  // Handle video metadata loaded
+  // Handle video metadata loaded (backup if background load doesn't work)
   const handleLoadedMetadata = () => {
-    if (videoRef.current && videoRef.current.duration) {
+    if (videoRef.current && videoRef.current.duration && !isNaN(videoRef.current.duration) && isFinite(videoRef.current.duration)) {
       const videoDuration = Math.floor(videoRef.current.duration);
       setActualDuration(videoDuration);
     }
@@ -139,6 +163,12 @@ export function VideoLessonPlayer({
       if (isCompleted) {
         toast.success('Lesson completed! You can now take the quiz.');
         onComplete?.();
+
+        // Show Learning Wall modal on first completion in this session
+        if (!hasShownLearningWall.current) {
+          hasShownLearningWall.current = true;
+          setShowLearningWall(true);
+        }
       }
     } catch (error) {
       console.error('Error saving progress:', error);
@@ -226,6 +256,7 @@ export function VideoLessonPlayer({
               ref={videoRef}
               src={videoUrl}
               controls
+              preload="metadata"
               className="w-full h-full"
               onLoadedMetadata={handleLoadedMetadata}
               onTimeUpdate={handleTimeUpdate}
@@ -282,6 +313,36 @@ export function VideoLessonPlayer({
               </div>
             )}
           </div>
+
+          {/* Learning Wall Section - Shows when completed */}
+          {completed && (
+            <div className="relative overflow-hidden rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-cyan-50">
+              <div className="p-5">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 bg-blue-100 p-3 rounded-full">
+                      <MessageSquare className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">VoDeMe Learning Wall</h3>
+                      <p className="text-sm text-gray-600">Share what you learned with your classmates</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setShowLearningWall(true)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-6 text-base shadow-lg"
+                  >
+                    <MessageSquare className="h-5 w-5 mr-2" />
+                    Open Learning Wall
+                  </Button>
+                </div>
+              </div>
+
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-30 -z-10" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-200 rounded-full blur-3xl opacity-30 -z-10" />
+            </div>
+          )}
 
           {/* Quiz Section */}
           {hasQuiz && (
@@ -343,6 +404,14 @@ export function VideoLessonPlayer({
           )}
         </CardContent>
       </Card>
+
+      {/* Learning Wall Modal */}
+      <LearningWallModal
+        lessonId={lessonId}
+        lessonTitle={title}
+        open={showLearningWall}
+        onOpenChange={setShowLearningWall}
+      />
     </div>
   );
 }

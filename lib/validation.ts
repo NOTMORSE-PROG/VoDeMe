@@ -97,3 +97,14 @@ export const quizSubmissionSchema = z.object({
 });
 
 export type QuizSubmissionInput = z.infer<typeof quizSubmissionSchema>;
+
+// Learning Wall Post Schema
+export const learningWallPostSchema = z.object({
+  content: z
+    .string()
+    .min(10, 'Reflection must be at least 10 characters')
+    .max(500, 'Reflection must be less than 500 characters')
+    .trim(),
+});
+
+export type LearningWallPostInput = z.infer<typeof learningWallPostSchema>;

@@ -40,6 +40,8 @@ model User {
   accounts        Account[] // OAuth provider accounts
   lessonProgress  LessonProgress[]
   quizAttempts    QuizAttempt[]
+  learningWallPosts LearningWallPost[]
+  learningWallLikes LearningWallLike[]
 
   @@index([email])
   @@index([username])
@@ -171,6 +173,7 @@ model VideoLesson {
   // Relations
   quiz       Quiz?
   progress   LessonProgress[]
+  learningWallPosts LearningWallPost[]
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -238,4 +241,42 @@ model QuizAttempt {
   @@index([quizId])
   @@index([completedAt])
   @@map("quiz_attempts")
+}
+
+// LearningWallPost Model - Student reflections after completing lessons
+model LearningWallPost {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lessonId  String
+  lesson    VideoLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  content   String   @db.Text // Student's reflection/learning
+
+  // Relations
+  likes     LearningWallLike[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([lessonId])
+  @@index([createdAt])
+  @@map("learning_wall_posts")
+}
+
+// LearningWallLike Model - Likes on learning wall posts
+model LearningWallLike {
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId String
+  post   LearningWallPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId]) // User can only like a post once
+  @@index([userId])
+  @@index([postId])
+  @@map("learning_wall_likes")
 }
