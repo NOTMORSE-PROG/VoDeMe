@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Trophy, Home, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Trophy, Home, ArrowRight, ChevronLeft, ChevronRight, Award, Brain } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface QuizQuestion {
   id: string;
@@ -44,12 +45,34 @@ export function LessonQuiz({
   hasNextLesson,
 }: LessonQuizProps) {
   const router = useRouter();
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [direction, setDirection] = useState(0);
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isFirstQuestion = currentQuestionIndex === 0;
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const allQuestionsAnswered = Object.keys(answers).length === questions.length;
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const handleAnswerChange = (questionId: string, answer: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleNext = () => {
+    if (!isLastQuestion) {
+      setDirection(1);
+      setCurrentQuestionIndex((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (!isFirstQuestion) {
+      setDirection(-1);
+      setCurrentQuestionIndex((prev) => prev - 1);
+    }
   };
 
   const handleSubmit = async () => {
@@ -111,159 +134,360 @@ export function LessonQuiz({
 
   // Show results view
   if (results) {
+    const percentage = results.score;
+    const isPerfect = percentage === 100;
+    const isPassed = results.passed;
+
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {results.passed ? (
-              <>
-                <Trophy className="h-6 w-6 text-yellow-500" />
-                Quiz Completed!
-              </>
-            ) : (
-              <>
-                <XCircle className="h-6 w-6 text-red-500" />
-                Quiz Results
-              </>
-            )}
-          </CardTitle>
-          <CardDescription>
-            You scored {results.score}% ({results.correctAnswers}/{results.totalQuestions} correct)
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Alert variant={results.passed ? 'default' : 'destructive'}>
-            <AlertDescription>
-              {results.passed
-                ? `Congratulations! You passed the quiz with ${results.score}%. You can now continue to the next lesson.`
-                : `You need ${passingScore}% to pass. Review the lesson and try again!`}
-            </AlertDescription>
-          </Alert>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-2 border-primary/20 shadow-2xl">
+          <CardHeader className="text-center space-y-4 pb-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              className="flex justify-center"
+            >
+              {isPerfect ? (
+                <div className="relative">
+                  <Award className="h-20 w-20 text-yellow-500" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                    className="absolute inset-0"
+                  >
+                    <Trophy className="h-20 w-20 text-yellow-400 opacity-50" />
+                  </motion.div>
+                </div>
+              ) : isPassed ? (
+                <Trophy className="h-20 w-20 text-green-500" />
+              ) : (
+                <Brain className="h-20 w-20 text-orange-500" />
+              )}
+            </motion.div>
 
-          {/* Detailed Results */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Detailed Results</h3>
-            {results.results.map((result: any, index: number) => (
-              <Card key={result.questionId} className={result.isCorrect ? 'border-green-500' : 'border-red-500'}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-base">
-                      Question {index + 1}
-                    </CardTitle>
-                    {result.isCorrect ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                  <CardDescription>{result.question}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium">Your answer: </span>
-                    <Badge variant={result.isCorrect ? 'default' : 'destructive'}>
-                      {result.userAnswer || 'No answer'}
-                    </Badge>
-                  </div>
-                  {!result.isCorrect && (
-                    <div>
-                      <span className="text-sm font-medium">Correct answer: </span>
-                      <Badge variant="default">{result.correctAnswer}</Badge>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+            <div>
+              <CardTitle className="text-3xl font-bold mb-2">
+                {isPerfect ? '🎉 Perfect Score!' : isPassed ? '✨ Quiz Passed!' : '📚 Keep Learning!'}
+              </CardTitle>
+              <CardDescription className="text-lg">
+                You scored <span className="font-bold text-2xl text-primary">{results.score}%</span>
+                <span className="text-muted-foreground ml-2">
+                  ({results.correctAnswers}/{results.totalQuestions} correct)
+                </span>
+              </CardDescription>
+            </div>
+          </CardHeader>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={handleGoHome}>
-              <Home className="h-4 w-4 mr-2" />
-              Go Home
-            </Button>
-            {!results.passed && (
-              <Button onClick={handleRetry}>
-                Try Again
+          <CardContent className="space-y-6">
+            {/* Score visualization */}
+            <div className="relative">
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${percentage}%` }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                  className={`h-full rounded-full ${
+                    isPerfect
+                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
+                      : isPassed
+                      ? 'bg-gradient-to-r from-green-400 to-green-600'
+                      : 'bg-gradient-to-r from-orange-400 to-orange-600'
+                  }`}
+                />
+              </div>
+              <p className="text-center text-sm text-muted-foreground mt-2">
+                {isPassed
+                  ? `Great job! You passed with ${percentage}%`
+                  : `You need ${passingScore}% to pass. Keep trying!`}
+              </p>
+            </div>
+
+            {/* Detailed Results */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-lg flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5" />
+                Review Your Answers
+              </h3>
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {results.results.map((result: any, index: number) => (
+                  <motion.div
+                    key={result.questionId}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card
+                      className={`border-l-4 ${
+                        result.isCorrect ? 'border-l-green-500 bg-green-50/50' : 'border-l-red-500 bg-red-50/50'
+                      }`}
+                    >
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="font-mono">
+                                Q{index + 1}
+                              </Badge>
+                              {result.isCorrect ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <XCircle className="h-4 w-4 text-red-600" />
+                              )}
+                            </div>
+                            <CardDescription className="text-sm font-medium text-foreground">
+                              {result.question}
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">Your answer:</span>
+                          <Badge variant={result.isCorrect ? 'default' : 'destructive'} className="font-mono">
+                            {result.userAnswer || 'No answer'}
+                          </Badge>
+                        </div>
+                        {!result.isCorrect && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Correct answer:</span>
+                            <Badge variant="default" className="bg-green-600 font-mono">
+                              {result.correctAnswer}
+                            </Badge>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button variant="outline" onClick={handleGoHome} className="flex-1">
+                <Home className="h-4 w-4 mr-2" />
+                Go Home
               </Button>
-            )}
-            {results.passed && hasNextLesson && (
-              <Button onClick={handleNextLesson}>
-                Next Lesson
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {!results.passed && (
+                <Button onClick={handleRetry} className="flex-1">
+                  Try Again
+                </Button>
+              )}
+              {results.passed && hasNextLesson && (
+                <Button onClick={handleNextLesson} className="flex-1 bg-gradient-to-r from-green-600 to-green-700">
+                  Next Lesson
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
+  // Animation variants
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 300 : -300,
+      opacity: 0,
+    }),
+  };
+
   // Show quiz form
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>
-          Answer all questions to complete the quiz. Passing score: {passingScore}%
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Previous Attempts */}
-        {previousAttempts.length > 0 && (
+    <div className="space-y-6">
+      {/* Previous Attempts */}
+      {previousAttempts.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-muted/50 rounded-lg p-4"
+        >
+          <h3 className="text-sm font-medium mb-2">Previous Attempts</h3>
+          <div className="flex flex-wrap gap-2">
+            {previousAttempts.map((attempt, index) => (
+              <Badge key={attempt.id} variant={attempt.passed ? 'default' : 'secondary'}>
+                Attempt {previousAttempts.length - index}: {attempt.score}%
+              </Badge>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Progress Bar */}
+      <Card className="border-2 border-primary/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <CardTitle className="text-xl">{title}</CardTitle>
+            <Badge variant="outline" className="text-base font-mono px-3 py-1">
+              {currentQuestionIndex + 1}/{questions.length}
+            </Badge>
+          </div>
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Previous Attempts</h3>
-            <div className="flex flex-wrap gap-2">
-              {previousAttempts.map((attempt, index) => (
-                <Badge
-                  key={attempt.id}
-                  variant={attempt.passed ? 'default' : 'secondary'}
-                >
-                  Attempt {previousAttempts.length - index}: {attempt.score}%
-                </Badge>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Progress</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Passing score: {passingScore}% • {Object.keys(answers).length}/{questions.length} answered
+            </p>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          {/* Question Card with Animation */}
+          <div className="relative overflow-hidden min-h-[400px]">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={currentQuestionIndex}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="absolute w-full"
+              >
+                <Card className="border-2">
+                  <CardHeader>
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                        {currentQuestionIndex + 1}
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg leading-relaxed">
+                          {currentQuestion.question}
+                        </CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <RadioGroup
+                      value={answers[currentQuestion.id] || ''}
+                      onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
+                    >
+                      {currentQuestion.options.map((option, idx) => (
+                        <motion.div
+                          key={option.label}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                        >
+                          <label
+                            htmlFor={`${currentQuestion.id}-${option.label}`}
+                            className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              answers[currentQuestion.id] === option.label
+                                ? 'border-primary bg-primary/5 shadow-md'
+                                : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'
+                            }`}
+                          >
+                            <RadioGroupItem
+                              value={option.label}
+                              id={`${currentQuestion.id}-${option.label}`}
+                              className="flex-shrink-0"
+                            />
+                            <div className="flex-1">
+                              <span className="font-medium mr-2">{option.label}.</span>
+                              <span>{option.text}</span>
+                            </div>
+                          </label>
+                        </motion.div>
+                      ))}
+                    </RadioGroup>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={isFirstQuestion}
+              className="flex-1 sm:flex-initial"
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Previous
+            </Button>
+
+            <div className="hidden sm:flex gap-1">
+              {questions.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setDirection(idx > currentQuestionIndex ? 1 : -1);
+                    setCurrentQuestionIndex(idx);
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    idx === currentQuestionIndex
+                      ? 'bg-primary w-6'
+                      : answers[questions[idx].id]
+                      ? 'bg-primary/50'
+                      : 'bg-gray-300'
+                  }`}
+                  title={`Question ${idx + 1}${answers[questions[idx].id] ? ' (answered)' : ''}`}
+                />
               ))}
             </div>
-          </div>
-        )}
 
-        {/* Quiz Questions */}
-        {questions.map((question, index) => (
-          <Card key={question.id}>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Question {index + 1}
-              </CardTitle>
-              <CardDescription>{question.question}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup
-                value={answers[question.id] || ''}
-                onValueChange={(value) => handleAnswerChange(question.id, value)}
+            {isLastQuestion ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !allQuestionsAnswered}
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-green-700"
+                size="lg"
               >
-                {question.options.map((option) => (
-                  <div key={option.label} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.label} id={`${question.id}-${option.label}`} />
-                    <Label htmlFor={`${question.id}-${option.label}`} className="cursor-pointer">
-                      {option.label}. {option.text}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </CardContent>
-          </Card>
-        ))}
+                {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
+                <CheckCircle2 className="h-4 w-4 ml-2" />
+              </Button>
+            ) : (
+              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial">
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting || Object.keys(answers).length !== questions.length}
-            size="lg"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          {/* Answer Status */}
+          {!allQuestionsAnswered && (
+            <Alert>
+              <Brain className="h-4 w-4" />
+              <AlertDescription>
+                Please answer all {questions.length} questions before submitting.
+                {Object.keys(answers).length > 0 && (
+                  <span className="font-medium ml-1">
+                    ({questions.length - Object.keys(answers).length} remaining)
+                  </span>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

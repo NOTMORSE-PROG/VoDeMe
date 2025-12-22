@@ -44,25 +44,38 @@ export default async function LessonPage({
   const userProgress = lesson.progress[0];
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <div className="space-y-6">
-        <Button variant="ghost" asChild>
-          <Link href="/dashboard?tab=lessons">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Link>
-        </Button>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-purple-50">
+      <div className="container max-w-5xl mx-auto py-6 md:py-10 px-4">
+        <div className="space-y-6">
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              asChild
+            >
+              <Link href="/dashboard?tab=lessons" className="flex items-center gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                <span className="font-medium">Back to Lessons</span>
+              </Link>
+            </Button>
+            <span className="text-gray-400">/</span>
+            <span className="text-sm text-gray-600 font-medium truncate max-w-[300px]">
+              {lesson.title}
+            </span>
+          </div>
 
-        <VideoLessonPlayer
-          lessonId={lesson.id}
-          title={lesson.title}
-          description={lesson.description}
-          videoUrl={lesson.videoUrl}
-          duration={lesson.duration}
-          initialProgress={userProgress?.watchedDuration || 0}
-          hasQuiz={!!lesson.quiz}
-          isCompleted={userProgress?.completed || false}
-        />
+          {/* Video Player */}
+          <VideoLessonPlayer
+            lessonId={lesson.id}
+            title={lesson.title}
+            description={lesson.description}
+            videoUrl={lesson.videoUrl}
+            duration={lesson.duration}
+            initialProgress={userProgress?.watchedDuration || 0}
+            hasQuiz={!!lesson.quiz}
+            isCompleted={userProgress?.completed || false}
+          />
+        </div>
       </div>
     </div>
   );

@@ -54,10 +54,7 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
   };
 
   return (
-    <Link
-      href={`/lessons/${lesson.id}`}
-      className="block bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition cursor-pointer"
-    >
+    <div className="block bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -89,23 +86,34 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
             <span>⏱️</span>
             <span>{formatDuration(actualDuration)}</span>
           </div>
-          <button
-            className={`px-6 py-2 rounded-lg font-semibold transition ${
-              lesson.completed
-                ? 'bg-green-500 hover:bg-green-600 text-white'
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Link
+              href={`/lessons/${lesson.id}`}
+              className={`px-6 py-2 rounded-lg font-semibold transition text-center ${
+                lesson.completed
+                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                  : actualProgress > 0
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {lesson.completed
+                ? 'Review'
                 : actualProgress > 0
-                ? 'bg-orange-500 hover:bg-orange-600 text-white'
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
-          >
-            {lesson.completed
-              ? 'Review'
-              : actualProgress > 0
-              ? 'Continue'
-              : 'Start'}
-          </button>
+                ? 'Continue'
+                : 'Start'}
+            </Link>
+            {lesson.completed && (
+              <Link
+                href={`/lessons/${lesson.id}/quiz`}
+                className="px-6 py-2 rounded-lg font-semibold transition text-center bg-purple-500 hover:bg-purple-600 text-white whitespace-nowrap"
+              >
+                Take Quiz
+              </Link>
+            )}
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

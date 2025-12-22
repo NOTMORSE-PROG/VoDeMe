@@ -171,84 +171,178 @@ export function VideoLessonPlayer({
   }, [initialProgress, completed]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {title}
-          {completed && (
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-          )}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="aspect-video bg-black rounded-lg overflow-hidden">
-          <video
-            ref={videoRef}
-            src={videoUrl}
-            controls
-            className="w-full h-full"
-            onLoadedMetadata={handleLoadedMetadata}
-            onTimeUpdate={handleTimeUpdate}
-            onSeeking={handleSeeking}
-            onSeeked={handleSeeked}
-            onEnded={handleVideoEnd}
-          >
-            Your browser does not support the video tag.
-          </video>
+    <div className="space-y-6">
+      {/* Status Badge */}
+      {completed && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl w-fit">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <span className="text-sm font-semibold text-green-700">Lesson Completed!</span>
         </div>
+      )}
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              Progress: {progressPercentage}%
-            </span>
-            <span className="text-muted-foreground">
-              {Math.floor(displayTime / 60)}:{(displayTime % 60).toString().padStart(2, '0')} / {Math.floor(actualDuration / 60)}:{(actualDuration % 60).toString().padStart(2, '0')}
-            </span>
-          </div>
-          <Progress
-            value={progressPercentage}
-            className={`h-2 ${completed ? '[&>div]:bg-green-500' : ''}`}
-          />
-          {completed && (
-            <p className="text-xs text-green-600 font-medium">
-              Review Mode: You can freely navigate through the video
-            </p>
-          )}
-          {!completed && maxWatchedTime > 0 && (
-            <p className="text-xs text-orange-600 font-medium">
-              You can only rewind. Watch the video to unlock forward seeking.
-            </p>
-          )}
-        </div>
-
-        {hasQuiz && (
-          <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
-            {completed ? (
-              <div className="flex-1 flex items-center justify-between">
-                <span className="text-sm font-medium">Quiz unlocked! Test your knowledge.</span>
-                <Button asChild>
-                  <a href={`/lessons/${lessonId}/quiz`}>Take Quiz</a>
-                </Button>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center gap-2">
-                <Lock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  Complete the video to unlock the quiz
-                </span>
+      {/* Main Video Card */}
+      <Card className="overflow-hidden border-2 shadow-xl">
+        <CardHeader className="bg-gradient-to-br from-orange-50 via-white to-purple-50 border-b">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <CardTitle className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                {title}
+              </CardTitle>
+              <CardDescription className="text-base text-gray-600">
+                {description}
+              </CardDescription>
+            </div>
+            {completed && (
+              <div className="flex-shrink-0 bg-green-100 p-3 rounded-full">
+                <CheckCircle2 className="h-6 w-6 text-green-600" />
               </div>
             )}
           </div>
-        )}
 
-        {isSaving && (
-          <p className="text-xs text-muted-foreground text-center">
-            Saving progress...
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          {/* Lesson Info Pills */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-700">
+              <span>⏱️</span>
+              <span>{Math.floor(actualDuration / 60)}:{(actualDuration % 60).toString().padStart(2, '0')} min</span>
+            </div>
+            {completed ? (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 border border-green-200 rounded-full text-xs font-medium text-green-700">
+                <span>🎉</span>
+                <span>Review Mode</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 border border-orange-200 rounded-full text-xs font-medium text-orange-700">
+                <span>📚</span>
+                <span>Learning Mode</span>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-4 md:p-6 space-y-6">
+          {/* Video Player */}
+          <div className="aspect-video bg-black rounded-xl overflow-hidden shadow-2xl ring-4 ring-gray-100">
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              controls
+              className="w-full h-full"
+              onLoadedMetadata={handleLoadedMetadata}
+              onTimeUpdate={handleTimeUpdate}
+              onSeeking={handleSeeking}
+              onSeeked={handleSeeked}
+              onEnded={handleVideoEnd}
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          {/* Progress Section */}
+          <div className="space-y-3 p-4 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${completed ? 'bg-green-500 animate-pulse' : 'bg-orange-500'}`} />
+                <span className="text-sm font-semibold text-gray-700">
+                  Progress: {progressPercentage}%
+                </span>
+              </div>
+              <span className="text-sm font-mono font-medium text-gray-600 bg-white px-3 py-1 rounded-full border">
+                {Math.floor(displayTime / 60)}:{(displayTime % 60).toString().padStart(2, '0')} / {Math.floor(actualDuration / 60)}:{(actualDuration % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+
+            <div className="relative">
+              <Progress
+                value={progressPercentage}
+                className={`h-3 ${completed ? '[&>div]:bg-gradient-to-r [&>div]:from-green-500 [&>div]:to-emerald-500' : '[&>div]:bg-gradient-to-r [&>div]:from-orange-500 [&>div]:to-amber-500'}`}
+              />
+              {!completed && progressPercentage >= 95 && (
+                <div className="absolute -top-1 right-0 flex items-center gap-1 text-xs font-medium text-orange-600">
+                  <span className="animate-bounce">🎯</span>
+                  <span>Almost done!</span>
+                </div>
+              )}
+            </div>
+
+            {completed && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <p className="text-xs text-green-700 font-medium">
+                  🎉 Review Mode Active: You can freely navigate through the video
+                </p>
+              </div>
+            )}
+
+            {!completed && maxWatchedTime > 0 && (
+              <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <Lock className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <p className="text-xs text-orange-700 font-medium">
+                  🔒 You can only rewind. Watch the video to unlock forward seeking.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Quiz Section */}
+          {hasQuiz && (
+            <div className={`relative overflow-hidden rounded-xl border-2 ${completed ? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50' : 'border-gray-200 bg-gray-50'}`}>
+              <div className="p-5">
+                {completed ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 bg-purple-100 p-3 rounded-full">
+                        <span className="text-2xl">🎯</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">Quiz Unlocked!</h3>
+                        <p className="text-sm text-gray-600">Test your knowledge and earn your completion badge</p>
+                      </div>
+                    </div>
+                    <Button
+                      asChild
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 text-base shadow-lg"
+                    >
+                      <a href={`/lessons/${lessonId}/quiz`}>
+                        Take Quiz Now →
+                      </a>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="flex-shrink-0 bg-gray-200 p-3 rounded-full">
+                      <Lock className="h-5 w-5 text-gray-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-0.5">Quiz Locked</h3>
+                      <p className="text-xs text-gray-500">
+                        Complete the video lesson to unlock the quiz
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Decorative elements for completed state */}
+              {completed && (
+                <>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-200 rounded-full blur-3xl opacity-30 -z-10" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-200 rounded-full blur-3xl opacity-30 -z-10" />
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Saving Indicator */}
+          {isSaving && (
+            <div className="flex items-center justify-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+              <p className="text-xs text-blue-700 font-medium">
+                Saving your progress...
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

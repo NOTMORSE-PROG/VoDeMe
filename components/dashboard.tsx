@@ -271,16 +271,6 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
             🎬 Video Lessons
           </button>
           <button
-            onClick={() => setActiveTab("quizzes")}
-            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "quizzes"
-                ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
-                : "text-gray-600 hover:text-gray-800"
-            }`}
-          >
-            📝 Quizzes
-          </button>
-          <button
             onClick={() => setActiveTab("leaderboard")}
             className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
               activeTab === "leaderboard"
@@ -566,45 +556,6 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
                 />
               ))
             )}
-          </div>
-        )}
-
-        {/* Quizzes Section */}
-        {activeTab === "quizzes" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              {
-                title: "Synonyms Quiz",
-                desc: "Test your synonym knowledge",
-                emoji: "⚡",
-                onClick: () => onPlayGame("quiz"),
-              },
-              {
-                title: "Collocations Quiz",
-                desc: "Master word combinations",
-                emoji: "🎯",
-                onClick: () => onPlayGame("quiz"),
-              },
-              {
-                title: "Word Parts Quiz",
-                desc: "Learn prefixes and suffixes",
-                emoji: "🔨",
-                onClick: () => onPlayGame("quiz"),
-              },
-            ].map((quiz, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl p-5 sm:p-6 shadow-md hover:shadow-lg transition cursor-pointer"
-                onClick={quiz.onClick}
-              >
-                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{quiz.emoji}</div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{quiz.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{quiz.desc}</p>
-                <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition text-sm sm:text-base">
-                  Start Quiz
-                </button>
-              </div>
-            ))}
           </div>
         )}
 

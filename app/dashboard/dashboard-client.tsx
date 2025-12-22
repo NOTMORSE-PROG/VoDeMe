@@ -6,7 +6,6 @@ import Dashboard from "@/components/dashboard"
 import SynohitGame from "@/components/synohit-game"
 import HopRightGame from "@/components/hopright-game"
 import WordPartsGame from "@/components/word-parts-game"
-import QuizGame from "@/components/quiz-game"
 import { signOutAction } from "@/app/auth/actions"
 
 interface User {
@@ -34,8 +33,8 @@ interface DashboardClientProps {
 export default function DashboardClient({ user, lessons }: DashboardClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [page, setPage] = useState<"dashboard" | "synohit" | "hopright" | "wordstudyjournal" | "quiz">("dashboard")
-  const initialTab = searchParams.get('tab') as "games" | "lessons" | "quizzes" | "leaderboard" | null
+  const [page, setPage] = useState<"dashboard" | "synohit" | "hopright" | "wordstudyjournal">("dashboard")
+  const initialTab = searchParams.get('tab') as "games" | "lessons" | "leaderboard" | null
 
   const handleLogout = async () => {
     await signOutAction()
@@ -55,10 +54,6 @@ export default function DashboardClient({ user, lessons }: DashboardClientProps)
 
   if (page === "wordstudyjournal") {
     return <WordPartsGame onBack={() => setPage("dashboard")} />
-  }
-
-  if (page === "quiz") {
-    return <QuizGame onBack={() => setPage("dashboard")} />
   }
 
   return (
