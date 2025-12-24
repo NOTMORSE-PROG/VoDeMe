@@ -19,12 +19,14 @@ async function main() {
   // Lesson 1: Synonyms
   const lesson1 = await prisma.videoLesson.upsert({
     where: { level_order: { level: 1, order: 1 } },
-    update: {},
+    update: {
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtywVX4ZTub8GT5Xpe2vwW497oAKaMY3jOJVBs',
+    },
     create: {
       title: 'Understanding Synonyms',
       description:
         'Learn how words with similar meanings can be used effectively in different contexts. This lesson demonstrates the importance of choosing the right synonym to convey precise meaning and enhance your vocabulary.',
-      videoUrl: VIDEO_URL,
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtywVX4ZTub8GT5Xpe2vwW497oAKaMY3jOJVBs',
       duration: 180, // 3 minutes
       level: 1,
       order: 1,
@@ -212,12 +214,14 @@ async function main() {
   // Lesson 2: Collocations
   const lesson2 = await prisma.videoLesson.upsert({
     where: { level_order: { level: 1, order: 2 } },
-    update: {},
+    update: {
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtfBj9piR2bOrpxNEa7F95mUoZXwezK4RM21ys',
+    },
     create: {
       title: 'Mastering Collocations',
       description:
         'Explore common word pairings and their types. This lesson shows how collocations work together naturally in English, helping you sound more fluent and native-like in your language use.',
-      videoUrl: VIDEO_URL,
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtfBj9piR2bOrpxNEa7F95mUoZXwezK4RM21ys',
       duration: 240, // 4 minutes
       level: 1,
       order: 2,
@@ -405,12 +409,14 @@ async function main() {
   // Lesson 3: Word Parts (Prefixes, Suffixes, and Affixes)
   const lesson3 = await prisma.videoLesson.upsert({
     where: { level_order: { level: 1, order: 3 } },
-    update: {},
+    update: {
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtuVN2FpEpY5V6xKCBSaOQXnZG7UFimTkJEoNc',
+    },
     create: {
       title: 'Word Parts: Prefixes, Suffixes, and Affixes',
       description:
         'Understand how word parts work together to create meaning. Learn about derivation versus inflection, common affix meanings, and how to build your vocabulary through word analysis.',
-      videoUrl: VIDEO_URL,
+      videoUrl: 'https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtuVN2FpEpY5V6xKCBSaOQXnZG7UFimTkJEoNc',
       duration: 210, // 3.5 minutes
       level: 1,
       order: 3,
