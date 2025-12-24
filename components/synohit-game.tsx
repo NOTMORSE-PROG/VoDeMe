@@ -643,10 +643,6 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
       audio.play().catch(() => {})
     } else {
       setFeedback(`Wrong! The correct answer is "${shuffledOptions[correctAnswerIndex]}"`)
-      // Play wrong sound
-      const wrongAudio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3")
-      wrongAudio.volume = 0.3
-      wrongAudio.play().catch(() => {})
     }
   }
 
