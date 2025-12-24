@@ -73,3 +73,38 @@ export const passwordChangeSchema = z
   });
 
 export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>;
+
+// Video Lesson Progress Update Schema
+export const lessonProgressUpdateSchema = z.object({
+  watchedDuration: z.number().min(0, 'Watched duration must be positive'),
+  completed: z.boolean().optional(),
+});
+
+export type LessonProgressUpdateInput = z.infer<typeof lessonProgressUpdateSchema>;
+
+// Quiz Answer Schema
+export const quizAnswerSchema = z.object({
+  questionId: z.string(),
+  selectedAnswer: z.string(),
+});
+
+export type QuizAnswerInput = z.infer<typeof quizAnswerSchema>;
+
+// Quiz Submission Schema
+export const quizSubmissionSchema = z.object({
+  quizId: z.string(),
+  answers: z.array(quizAnswerSchema).min(1, 'At least one answer is required'),
+});
+
+export type QuizSubmissionInput = z.infer<typeof quizSubmissionSchema>;
+
+// Learning Wall Post Schema
+export const learningWallPostSchema = z.object({
+  content: z
+    .string()
+    .min(10, 'Reflection must be at least 10 characters')
+    .max(500, 'Reflection must be less than 500 characters')
+    .trim(),
+});
+
+export type LearningWallPostInput = z.infer<typeof learningWallPostSchema>;

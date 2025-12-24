@@ -2,14 +2,32 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { getProgress, getLevelStatus } from "@/lib/game-progress"
 import { getWordOfDay } from "@/lib/word-data"
+import { VideoLessonCard } from "@/components/video-lesson-card"
+
+interface Lesson {
+  id: string
+  title: string
+  description: string
+  duration: number
+  videoUrl: string
+  completed: boolean
+  watchedDuration: number
+  progress: number
+}
 
 interface DashboardProps {
   user: { email: string; name: string; profilePicture?: string }
   onLogout: () => void
   onPlayGame: (gameName: string) => void
   onNavigateToProfile: () => void
+  lessons: Lesson[]
+  lessonsCompleted: number
+  quizzesCompleted: number
+  totalPoints: number
+  initialTab?: "games" | "lessons" | "quizzes" | "leaderboard"
 }
 
 // Level Progress Indicator Component
@@ -17,8 +35,13 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   const [levels, setLevels] = useState<("locked" | "unlocked" | "completed")[]>([])
 
   useEffect(() => {
-    const levelStatuses = [1, 2, 3].map(level => getLevelStatus(gameName, level))
-    setLevels(levelStatuses)
+    const loadStatuses = async () => {
+      const status1 = await getLevelStatus(gameName, 1)
+      const status2 = await getLevelStatus(gameName, 2)
+      const status3 = await getLevelStatus(gameName, 3)
+      setLevels([status1, status2, status3])
+    }
+    loadStatuses()
   }, [gameName])
 
   return (
@@ -42,8 +65,8 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   )
 }
 
-export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState("games")
+export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, lessonsCompleted, quizzesCompleted, totalPoints, initialTab }: DashboardProps) {
+  const [activeTab, setActiveTab] = useState(initialTab || "games")
   const [gameProgress, setGameProgress] = useState<{
     synohit: ReturnType<typeof getProgress>
     hopright: ReturnType<typeof getProgress>
@@ -170,17 +193,17 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">⭐</div>
             <p className="text-gray-600 text-xs sm:text-sm">Total Points</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">2,450</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{totalPoints.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🔥</div>
-            <p className="text-gray-600 text-xs sm:text-sm">Current Streak</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">12 days</p>
+            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">📚</div>
+            <p className="text-gray-600 text-xs sm:text-sm">Lessons Completed</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{lessonsCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🎮</div>
-            <p className="text-gray-600 text-xs sm:text-sm">Games Played</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">45</p>
+            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">✅</div>
+            <p className="text-gray-600 text-xs sm:text-sm">Quizzes Completed</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{quizzesCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🏆</div>
@@ -246,14 +269,14 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
             🎮 Games
           </button>
           <button
-            onClick={() => setActiveTab("quizzes")}
+            onClick={() => setActiveTab("lessons")}
             className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "quizzes"
+              activeTab === "lessons"
                 ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            📝 Quizzes
+            🎬 Video Lessons
           </button>
           <button
             onClick={() => setActiveTab("leaderboard")}
@@ -523,42 +546,24 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           </div>
         )}
 
-        {/* Quizzes Section */}
-        {activeTab === "quizzes" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              {
-                title: "Synonyms Quiz",
-                desc: "Test your synonym knowledge",
-                emoji: "⚡",
-                onClick: () => onPlayGame("quiz"),
-              },
-              {
-                title: "Collocations Quiz",
-                desc: "Master word combinations",
-                emoji: "🎯",
-                onClick: () => onPlayGame("quiz"),
-              },
-              {
-                title: "Word Parts Quiz",
-                desc: "Learn prefixes and suffixes",
-                emoji: "🔨",
-                onClick: () => onPlayGame("quiz"),
-              },
-            ].map((quiz, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl p-5 sm:p-6 shadow-md hover:shadow-lg transition cursor-pointer"
-                onClick={quiz.onClick}
-              >
-                <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">{quiz.emoji}</div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">{quiz.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{quiz.desc}</p>
-                <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition text-sm sm:text-base">
-                  Start Quiz
-                </button>
+        {/* Video Lessons Section */}
+        {activeTab === "lessons" && (
+          <div className="space-y-4">
+            {lessons.length === 0 ? (
+              <div className="bg-white rounded-xl p-12 text-center shadow-md">
+                <div className="text-6xl mb-4">🎬</div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">No Video Lessons Yet</h3>
+                <p className="text-gray-600">Check back soon for vocabulary learning videos!</p>
               </div>
-            ))}
+            ) : (
+              lessons.map((lesson) => (
+                <VideoLessonCard
+                  key={lesson.id}
+                  lesson={lesson}
+                  videoUrl={lesson.videoUrl}
+                />
+              ))
+            )}
           </div>
         )}
 

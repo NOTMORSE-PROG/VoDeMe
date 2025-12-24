@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import React from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import { toast } from "sonner"
 
 interface Question {
   target: string
@@ -543,6 +544,28 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([])
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([])
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number>(0)
+  const [levelStatuses, setLevelStatuses] = useState<Record<number, "locked" | "unlocked" | "completed">>({
+    1: "unlocked",
+    2: "locked",
+    3: "locked"
+  })
+
+  // Load level statuses when entering level select
+  useEffect(() => {
+    if (gameState === "levelSelect") {
+      const loadStatuses = async () => {
+        const status1 = await getLevelStatus("synohit", 1)
+        const status2 = await getLevelStatus("synohit", 2)
+        const status3 = await getLevelStatus("synohit", 3)
+        setLevelStatuses({
+          1: status1,
+          2: status2,
+          3: status3
+        })
+      }
+      loadStatuses()
+    }
+  }, [gameState])
 
   // Shuffle function using Fisher-Yates algorithm
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -581,12 +604,12 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     setGameState("levelSelect")
   }
 
-  const handleLevelSelect = (level: number) => {
-    const levelStatus = getLevelStatus("synohit", level)
+  const handleLevelSelect = async (level: number) => {
+    const levelStatus = await getLevelStatus("synohit", level)
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      alert(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${level - 1} to unlock it.`)
+      toast.error(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${level - 1} to unlock it.`)
       return
     }
 
@@ -594,7 +617,9 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     setCurrentLevel(level)
     setCurrentQuestion(0)
     setScore(0)
+    setAnswered(false)
     setSelectedAnswer(null)
+    setFeedback("")
     const questions = getLevelQuestions(level)
     setShuffledQuestions(questions)
     if (questions[0]) {
@@ -625,7 +650,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestion < shuffledQuestions.length - 1) {
       const nextQuestionIndex = currentQuestion + 1
       setCurrentQuestion(nextQuestionIndex)
@@ -637,7 +662,20 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
       // Level complete - Save progress
       const finalScore = answered && selectedAnswer === correctAnswerIndex ? score + 1 : score
       setLevelScores({ ...levelScores, [currentLevel]: finalScore })
-      saveLevelProgress("synohit", currentLevel, finalScore, 10)
+
+      try {
+        const result = await saveLevelProgress("synohit", currentLevel, finalScore, 10)
+
+        if (!result.isFirstAttempt) {
+          toast.info(
+            `Practice attempt completed! Recorded score: ${(result.recordedScore ?? 0) * 10} pts. Current score: ${(result.currentScore ?? 0) * 10} pts`,
+            { duration: 5000 }
+          )
+        }
+      } catch (error) {
+        console.error('Error saving progress:', error)
+        toast.error('Failed to save progress')
+      }
 
       if (currentLevel < 3) {
         setGameState("levelComplete")
@@ -647,13 +685,13 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     }
   }
 
-  const handleNextLevel = () => {
+  const handleNextLevel = async () => {
     const nextLevel = currentLevel + 1
-    const levelStatus = getLevelStatus("synohit", nextLevel)
+    const levelStatus = await getLevelStatus("synohit", nextLevel)
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      alert(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${nextLevel - 1} to unlock it.`)
+      toast.error(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${nextLevel - 1} to unlock it.`)
       return
     }
 
@@ -759,14 +797,10 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
   // Level Selection Screen
   if (gameState === "levelSelect") {
-    const level1Status = getLevelStatus("synohit", 1)
-    const level2Status = getLevelStatus("synohit", 2)
-    const level3Status = getLevelStatus("synohit", 3)
-
     const levelConfig = [
-      { level: 1, title: "Level 1", subtitle: "Simple Synonyms", emoji: "🌱", color: "from-green-400 to-green-600", status: level1Status },
-      { level: 2, title: "Level 2", subtitle: "Complex Synonyms", emoji: "🌿", color: "from-yellow-400 to-orange-500", status: level2Status },
-      { level: 3, title: "Level 3", subtitle: "Contextual Synonyms", emoji: "🌳", color: "from-red-400 to-red-600", status: level3Status },
+      { level: 1, title: "Level 1", subtitle: "Simple Synonyms", emoji: "🌱", color: "from-green-400 to-green-600", status: levelStatuses[1] },
+      { level: 2, title: "Level 2", subtitle: "Complex Synonyms", emoji: "🌿", color: "from-yellow-400 to-orange-500", status: levelStatuses[2] },
+      { level: 3, title: "Level 3", subtitle: "Contextual Synonyms", emoji: "🌳", color: "from-red-400 to-red-600", status: levelStatuses[3] },
     ]
 
     return (
@@ -801,7 +835,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
                   className={`
                     relative bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-2xl p-6 shadow-2xl
                     transform transition-all duration-300
-                    ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
                     animate-slide-up
                   `}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -874,9 +908,9 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             </div>
 
             <div className={`bg-gradient-to-r rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 ${passed ? "from-green-100 to-green-50 border-green-300" : "from-red-100 to-red-50 border-red-300"}`}>
-              <p className={`text-4xl sm:text-6xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score}/10</p>
+              <p className={`text-4xl sm:text-6xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
               <p className={`text-sm sm:text-base font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Level ${currentLevel + 1} Unlocked!` : `Need ${MIN_SCORE_TO_PASS}/10 to unlock next level`}
+                {passed ? `🎊 Level ${currentLevel + 1} Unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
               </p>
             </div>
 
@@ -936,12 +970,12 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             <div className="text-6xl sm:text-8xl mb-3 sm:mb-4 animate-bounce-in">🏆</div>
             <div className="bg-gradient-to-r from-yellow-200 via-orange-200 to-yellow-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-yellow-400">
               <p className="text-xs sm:text-sm text-amber-700 mb-1 sm:mb-2 font-semibold">Final Score</p>
-              <p className="text-4xl sm:text-5xl font-bold text-orange-600">{totalScore}/30</p>
+              <p className="text-4xl sm:text-5xl font-bold text-orange-600">{totalScore * 10} pts</p>
             </div>
             <div className="bg-amber-100 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-left space-y-1.5 sm:space-y-2 border-2 border-amber-300">
-              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 1:</span> <span className="font-bold">{levelScores[1]}/10</span></p>
-              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 2:</span> <span className="font-bold">{levelScores[2]}/10</span></p>
-              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 3:</span> <span className="font-bold">{levelScores[3]}/10</span></p>
+              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 1:</span> <span className="font-bold">{levelScores[1] * 10} pts</span></p>
+              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 2:</span> <span className="font-bold">{levelScores[2] * 10} pts</span></p>
+              <p className="text-amber-800 flex justify-between text-sm sm:text-base"><span>Level 3:</span> <span className="font-bold">{levelScores[3] * 10} pts</span></p>
             </div>
             <div className="space-y-2 sm:space-y-3">
               <button
@@ -1004,7 +1038,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
               <span className="text-amber-900 font-bold text-sm sm:text-base">❓ {currentQuestion + 1}/10</span>
             </div>
             <div className="bg-gradient-to-r from-orange-100 to-orange-50 border-2 border-orange-700 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 shadow-md">
-              <span className="text-orange-900 font-bold text-sm sm:text-base">⭐ Score: {score}</span>
+              <span className="text-orange-900 font-bold text-sm sm:text-base">⭐ {score * 10} pts</span>
             </div>
           </div>
 
