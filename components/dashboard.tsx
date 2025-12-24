@@ -77,6 +77,13 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
     wordstudyjournal: { currentLevel: 1, levels: [] }
   })
 
+  // Update active tab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
+
   // Load game progress on mount
   useEffect(() => {
     setGameProgress({
