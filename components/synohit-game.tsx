@@ -549,6 +549,21 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('synohit-muted')
+      return saved === 'true'
+    }
+    return false
+  })
+
+  const toggleMute = () => {
+    const newMuted = !isMuted
+    setIsMuted(newMuted)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('synohit-muted', String(newMuted))
+    }
+  }
 
   // Load level statuses when entering level select
   useEffect(() => {
@@ -639,10 +654,18 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 2000)
       // Play success sound
-      const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_d3d346ba65.mp3")
-      audio.play().catch(() => {})
+      if (!isMuted) {
+        const audio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3")
+        audio.play().catch(() => {})
+      }
     } else {
       setFeedback(`Wrong! The correct answer is "${shuffledOptions[correctAnswerIndex]}"`)
+      // Play wrong sound
+      if (!isMuted) {
+        const wrongAudio = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
+        wrongAudio.volume = 0.3
+        wrongAudio.play().catch(() => {})
+      }
     }
   }
 
@@ -743,6 +766,15 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             </button>
           )}
 
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </button>
+
           {/* Title Sign */}
           <div className="mb-4 sm:mb-8 animate-fade-in">
             <WoodenSign size="large">
@@ -808,6 +840,15 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95"
           >
             <span>←</span> <span className="hidden sm:inline">Back</span>
+          </button>
+
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
           </button>
 
           {/* Title */}
@@ -1023,6 +1064,15 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm"
           >
             <span>←</span> <span className="hidden sm:inline">Levels</span>
+          </button>
+
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
           </button>
 
           {/* Header Stats with Enhanced Design */}

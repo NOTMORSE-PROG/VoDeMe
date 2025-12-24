@@ -470,6 +470,21 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('hopright-muted')
+      return saved === 'true'
+    }
+    return false
+  })
+
+  const toggleMute = () => {
+    const newMuted = !isMuted
+    setIsMuted(newMuted)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hopright-muted', String(newMuted))
+    }
+  }
 
   // Load level statuses when entering level select
   useEffect(() => {
@@ -580,12 +595,14 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
       setCharacterPosition(characterPosition + 1)
 
       // Play hop sound effect
-      try {
-        const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3")
-        audio.volume = 0.4
-        audio.play().catch(() => {})
-      } catch (e) {
-        console.log("Audio not supported")
+      if (!isMuted) {
+        try {
+          const audio = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3")
+          audio.volume = 0.4
+          audio.play().catch(() => {})
+        } catch (e) {
+          console.log("Audio not supported")
+        }
       }
 
       setTimeout(() => setIsHopping(false), 600)
@@ -594,12 +611,14 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
       setIsWrong(true)
 
       // Play wrong sound
-      try {
-        const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
-        audio.volume = 0.3
-        audio.play().catch(() => {})
-      } catch (e) {
-        console.log("Audio not supported")
+      if (!isMuted) {
+        try {
+          const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3")
+          audio.volume = 0.3
+          audio.play().catch(() => {})
+        } catch (e) {
+          console.log("Audio not supported")
+        }
       }
 
       setTimeout(() => setIsWrong(false), 500)
@@ -729,6 +748,15 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
             </button>
           )}
 
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </button>
+
           {/* Title */}
           <div className="text-center mb-8 animate-bounce-in">
             <div className="text-6xl mb-4">🐸</div>
@@ -813,6 +841,15 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
               ← Back
             </button>
           )}
+
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </button>
 
           {/* Title */}
           <div className="text-center mb-8 animate-bounce-in">
@@ -1054,8 +1091,18 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
             ← Back
           </button>
 
-          <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-teal-700 font-bold">⭐ {score * 10} pts</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm"
+              title={isMuted ? "Unmute sounds" : "Mute sounds"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+
+            <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
+              <span className="text-teal-700 font-bold">⭐ {score * 10} pts</span>
+            </div>
           </div>
         </div>
 

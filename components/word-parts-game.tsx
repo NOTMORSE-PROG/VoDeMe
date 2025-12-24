@@ -599,6 +599,21 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('wordstudyjournal-muted')
+      return saved === 'true'
+    }
+    return false
+  })
+
+  const toggleMute = () => {
+    const newMuted = !isMuted
+    setIsMuted(newMuted)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wordstudyjournal-muted', String(newMuted))
+    }
+  }
 
   // Load level statuses when entering level select
   useEffect(() => {
@@ -694,11 +709,11 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     setIsWriting(true)
 
     if (isCorrect) {
-      playSuccessSound()
+      if (!isMuted) playSuccessSound()
       setScore(s => s + 1)
       setHandEmotion("happy")
     } else {
-      playWrongSound()
+      if (!isMuted) playWrongSound()
       setHandEmotion("sad")
     }
 
@@ -718,11 +733,11 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     setIsWriting(true)
 
     if (isCorrect) {
-      playSuccessSound()
+      if (!isMuted) playSuccessSound()
       setScore(s => s + 1)
       setHandEmotion("happy")
     } else {
-      playWrongSound()
+      if (!isMuted) playWrongSound()
       setHandEmotion("sad")
     }
 
@@ -740,11 +755,11 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     setIsWriting(true)
 
     if (isCorrect) {
-      playSuccessSound()
+      if (!isMuted) playSuccessSound()
       setScore(s => s + 1)
       setHandEmotion("happy")
     } else {
-      playWrongSound()
+      if (!isMuted) playWrongSound()
       setHandEmotion("sad")
     }
 
@@ -878,6 +893,15 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             </button>
           )}
 
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-4 right-4 z-30 bg-amber-700/90 hover:bg-amber-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </button>
+
           {/* Title on Chalkboard */}
           <div className="absolute top-8 sm:top-10 md:top-12 left-1/2 -translate-x-1/2 text-center z-20 px-4 w-full">
             <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg mb-1 sm:mb-2" style={{ fontFamily: "'Permanent Marker', cursive" }}>
@@ -966,6 +990,15 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
               ← Back
             </button>
           )}
+
+          {/* Mute Button - Top Right */}
+          <button
+            onClick={toggleMute}
+            className="absolute top-4 right-4 z-30 bg-amber-700/90 hover:bg-amber-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            title={isMuted ? "Unmute sounds" : "Mute sounds"}
+          >
+            {isMuted ? "🔇" : "🔊"}
+          </button>
 
           {/* Title on Chalkboard */}
           <div className="absolute top-8 sm:top-10 md:top-12 left-1/2 -translate-x-1/2 text-center z-20 px-4">
@@ -1283,7 +1316,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
               // Wrong split - show error
               setUserSegments(createdSegments)
               setSplitError(true)
-              playWrongSound()
+              if (!isMuted) playWrongSound()
               setHandEmotion("sad")
               setTimeout(() => setHandEmotion("neutral"), 2000)
             }
@@ -1334,9 +1367,18 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             ← Menu
           </button>
 
-          {/* Star score - top right */}
-          <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+          {/* Top right controls */}
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="bg-amber-700/90 hover:bg-amber-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm"
+              title={isMuted ? "Unmute sounds" : "Mute sounds"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+            <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
+              <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+            </div>
           </div>
 
           {/* Level progress - centered below menu/star */}
@@ -1374,11 +1416,11 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 </div>
 
                 {/* Clickable Word with Split Boundaries */}
-                <div className="flex items-center justify-center flex-wrap gap-0">
+                <div className="flex items-center justify-center overflow-x-auto gap-0 max-w-full px-2">
                   {item.target.split('').map((letter, index) => (
-                    <div key={index} className="inline-flex items-center">
+                    <div key={index} className="inline-flex items-center flex-shrink-0">
                       {/* Letter */}
-                      <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 px-1">
+                      <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 px-0.5 sm:px-1">
                         {letter}
                       </span>
 
@@ -1387,7 +1429,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                         <button
                           onClick={() => handleSplitClick(index + 1)}
                           className={`
-                            relative w-1 h-12 sm:h-14 md:h-16 mx-0.5 transition-all cursor-pointer
+                            relative w-1 h-10 sm:h-12 md:h-14 lg:h-16 mx-0.5 transition-all cursor-pointer
                             ${splitPoints.includes(index + 1)
                               ? "bg-orange-500 scale-x-150 shadow-lg"
                               : "bg-gray-300 hover:bg-amber-400 hover:scale-x-125"
@@ -1395,7 +1437,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                           `}
                         >
                           {splitPoints.includes(index + 1) && (
-                            <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-orange-500 text-xl">
+                            <span className="absolute -top-5 sm:-top-6 left-1/2 -translate-x-1/2 text-orange-500 text-base sm:text-lg md:text-xl">
                               ✂️
                             </span>
                           )}
@@ -1498,7 +1540,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
-                    playWritingSound()
+                    if (!isMuted) playWritingSound()
                     const segmentText = draggingSegment === "prefix" ? userSegments.prefix : draggingSegment === "base" ? userSegments.base : userSegments.suffix
                     setPlacements(prev => ({ ...prev, prefix: segmentText || null }))
                     setDraggingSegment(null)
@@ -1515,7 +1557,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
-                    playWritingSound()
+                    if (!isMuted) playWritingSound()
                     const segmentText = draggingSegment === "prefix" ? userSegments.prefix : draggingSegment === "base" ? userSegments.base : userSegments.suffix
                     setPlacements(prev => ({ ...prev, base: segmentText || null }))
                     setDraggingSegment(null)
@@ -1532,7 +1574,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
-                    playWritingSound()
+                    if (!isMuted) playWritingSound()
                     const segmentText = draggingSegment === "prefix" ? userSegments.prefix : draggingSegment === "base" ? userSegments.base : userSegments.suffix
                     setPlacements(prev => ({ ...prev, suffix: segmentText || null }))
                     setDraggingSegment(null)
@@ -1606,9 +1648,18 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             ← Menu
           </button>
 
-          {/* Star score - top right */}
-          <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+          {/* Top right controls */}
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="bg-amber-700/90 hover:bg-amber-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm"
+              title={isMuted ? "Unmute sounds" : "Mute sounds"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+            <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
+              <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+            </div>
           </div>
 
           {/* Level progress - centered below menu/star */}
@@ -1653,7 +1704,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingStickyNote && !submitted) {
-                    playWritingSound()
+                    if (!isMuted) playWritingSound()
                     setStickyNotePlacement("derived")
                     setDraggingStickyNote(false)
                   }
@@ -1669,7 +1720,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingStickyNote && !submitted) {
-                    playWritingSound()
+                    if (!isMuted) playWritingSound()
                     setStickyNotePlacement("inflected")
                     setDraggingStickyNote(false)
                   }
@@ -1763,9 +1814,18 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             ← Menu
           </button>
 
-          {/* Star score - top right */}
-          <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+          {/* Top right controls */}
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+            <button
+              onClick={toggleMute}
+              className="bg-amber-700/90 hover:bg-amber-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm"
+              title={isMuted ? "Unmute sounds" : "Mute sounds"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+            <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
+              <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
+            </div>
           </div>
 
           {/* Level progress - centered below menu/star */}
@@ -1802,7 +1862,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                   onDrop={(e) => {
                     e.preventDefault()
                     if (draggingWord && !submitted) {
-                      playWritingSound()
+                      if (!isMuted) playWritingSound()
                       setSentenceBlank(draggingWord)
                       setDraggingWord(null)
                     }
