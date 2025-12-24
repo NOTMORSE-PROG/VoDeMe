@@ -96,30 +96,61 @@ export async function POST(
       };
     });
 
-    const score = Math.round((correctAnswers / quizQuestions.length) * 100);
-    const passed = score >= quiz.passingScore;
+    // Calculate score: 20 points per correct answer
+    const POINTS_PER_QUESTION = 20;
+    const score = correctAnswers * POINTS_PER_QUESTION;
+    const maxScore = quizQuestions.length * POINTS_PER_QUESTION;
+    const percentage = Math.round((score / maxScore) * 100);
+    const passed = percentage >= quiz.passingScore;
 
-    // Save quiz attempt
-    const attempt = await db.quizAttempt.create({
-      data: {
+    // Check if user already has attempts for this quiz
+    const existingAttempts = await db.quizAttempt.findMany({
+      where: {
         userId: auth.userId,
         quizId: quiz.id,
-        score,
-        answers: answers,
-        passed,
+      },
+      orderBy: {
+        completedAt: 'asc',
       },
     });
+
+    const isFirstAttempt = existingAttempts.length === 0;
+    let attempt;
+
+    // Only save if this is the first attempt
+    if (isFirstAttempt) {
+      attempt = await db.quizAttempt.create({
+        data: {
+          userId: auth.userId,
+          quizId: quiz.id,
+          score,
+          answers: answers,
+          passed,
+        },
+      });
+    } else {
+      // Use the first attempt for the recorded score
+      attempt = existingAttempts[0];
+    }
 
     return NextResponse.json({
       attempt: {
         id: attempt.id,
-        score,
-        passed,
+        score: isFirstAttempt ? score : attempt.score,
+        passed: isFirstAttempt ? passed : attempt.passed,
         passingScore: quiz.passingScore,
-        correctAnswers,
+        correctAnswers: isFirstAttempt ? correctAnswers : undefined,
         totalQuestions: quizQuestions.length,
-        results: detailedResults,
+        maxScore: maxScore,
+        percentage: isFirstAttempt ? percentage : Math.round((attempt.score / maxScore) * 100),
+        results: isFirstAttempt ? detailedResults : undefined,
         completedAt: attempt.completedAt,
+        isFirstAttempt,
+        recordedScore: attempt.score,
+        currentScore: score,
+        currentPercentage: percentage,
+        currentCorrectAnswers: correctAnswers,
+        currentResults: detailedResults,
       },
     });
   } catch (error) {

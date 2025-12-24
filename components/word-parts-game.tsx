@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
 import WordStudyTutorial from "./word-study-tutorial"
+import { toast } from "sonner"
 
 // Game Data Types
 interface Level1Item {
@@ -593,6 +594,28 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   const [isWriting, setIsWriting] = useState(false)
   const [handEmotion, setHandEmotion] = useState<"neutral" | "happy" | "sad">("neutral")
   const [showTutorial, setShowTutorial] = useState(false)
+  const [levelStatuses, setLevelStatuses] = useState<Record<number, "locked" | "unlocked" | "completed">>({
+    1: "unlocked",
+    2: "locked",
+    3: "locked"
+  })
+
+  // Load level statuses when entering level select
+  useEffect(() => {
+    if (gameState === "levelSelect") {
+      const loadStatuses = async () => {
+        const status1 = await getLevelStatus("wordstudyjournal", 1)
+        const status2 = await getLevelStatus("wordstudyjournal", 2)
+        const status3 = await getLevelStatus("wordstudyjournal", 3)
+        setLevelStatuses({
+          1: status1,
+          2: status2,
+          3: status3
+        })
+      }
+      loadStatuses()
+    }
+  }, [gameState])
 
   // Level 1 state - drag and drop with manual word splitting
   const [draggingSegment, setDraggingSegment] = useState<"prefix" | "base" | "suffix" | null>(null)
@@ -731,7 +754,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   }
 
   // Handle next item
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentItem < 9) {
       setCurrentItem(prev => prev + 1)
       setSubmitted(false)
@@ -748,7 +771,20 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     } else {
       // Level complete - save progress
       setLevelScores(prev => ({ ...prev, [currentLevel]: score }))
-      saveLevelProgress("wordstudyjournal", currentLevel, score, 10)
+
+      try {
+        const result = await saveLevelProgress("wordstudyjournal", currentLevel, score, 10)
+
+        if (!result.isFirstAttempt) {
+          toast.info(
+            `Practice attempt completed! Recorded score: ${(result.recordedScore ?? 0) * 10} pts. Current score: ${(result.currentScore ?? 0) * 10} pts`,
+            { duration: 5000 }
+          )
+        }
+      } catch (error) {
+        console.error('Error saving progress:', error)
+        toast.error('Failed to save progress')
+      }
 
       if (currentLevel < 3) {
         setGameState("levelComplete")
@@ -759,13 +795,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   }
 
   // Handle next level
-  const handleNextLevel = () => {
+  const handleNextLevel = async () => {
     const nextLevel = (currentLevel + 1) as 1 | 2 | 3
-    const levelStatus = getLevelStatus("wordstudyjournal", nextLevel)
+    const levelStatus = await getLevelStatus("wordstudyjournal", nextLevel)
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      alert(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${currentLevel} to unlock it.`)
+      toast.error(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${currentLevel} to unlock it.`)
       return
     }
 
@@ -797,12 +833,12 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     setDraggingWord(null)
   }
 
-  const handleLevelSelect = (level: 1 | 2 | 3) => {
-    const levelStatus = getLevelStatus("wordstudyjournal", level)
+  const handleLevelSelect = async (level: 1 | 2 | 3) => {
+    const levelStatus = await getLevelStatus("wordstudyjournal", level)
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      alert(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in Level ${level - 1} to unlock it.`)
+      toast.error(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${level - 1} to unlock it.`)
       return
     }
 
@@ -912,14 +948,10 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
   // Level Selection Screen
   if (gameState === "levelSelect") {
-    const level1Status = getLevelStatus("wordstudyjournal", 1)
-    const level2Status = getLevelStatus("wordstudyjournal", 2)
-    const level3Status = getLevelStatus("wordstudyjournal", 3)
-
     const levelConfig = [
-      { level: 1, title: "Level 1", subtitle: "Deconstruction", emoji: "✏️", color: "from-yellow-400 to-yellow-600", status: level1Status },
-      { level: 2, title: "Level 2", subtitle: "Classification", emoji: "📝", color: "from-pink-400 to-pink-600", status: level2Status },
-      { level: 3, title: "Level 3", subtitle: "Application", emoji: "📚", color: "from-blue-400 to-blue-600", status: level3Status },
+      { level: 1, title: "Level 1", subtitle: "Deconstruction", emoji: "✏️", color: "from-yellow-400 to-yellow-600", status: levelStatuses[1] },
+      { level: 2, title: "Level 2", subtitle: "Classification", emoji: "📝", color: "from-pink-400 to-pink-600", status: levelStatuses[2] },
+      { level: 3, title: "Level 3", subtitle: "Application", emoji: "📚", color: "from-blue-400 to-blue-600", status: levelStatuses[3] },
     ]
 
     return (
@@ -956,7 +988,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                     className={`
                       relative bg-white/95 backdrop-blur rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xl border-2 sm:border-4 border-amber-400
                       transform transition-all duration-300 w-full
-                      ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                      ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
                       animate-pop-in
                     `}
                     style={{ animationDelay: `${index * 0.1}s` }}
@@ -988,7 +1020,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                     {/* Lock Message */}
                     {isLocked && (
                       <p className="text-[10px] sm:text-xs text-gray-600 mt-2 sm:mt-3">
-                        Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS}/10 to unlock
+                        Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS * 10} pts to unlock
                       </p>
                     )}
                   </button>
@@ -1013,7 +1045,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           {/* Instructions */}
           <div className="mt-4 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center">
             <p className="text-amber-700 font-semibold">
-              🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
+              🎯 Complete each level with at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next one!
             </p>
           </div>
 
@@ -1063,15 +1095,15 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
             <div className={`bg-gradient-to-r rounded-2xl p-6 my-6 ${passed ? "from-green-100 to-emerald-100" : "from-red-100 to-red-50"}`}>
               <p className="text-gray-600 text-sm mb-2">Your Score</p>
-              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score}/10</p>
+              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
               <p className={`text-sm font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Level ${nextLevelNum} Unlocked!` : `Need ${MIN_SCORE_TO_PASS}/10 to unlock next level`}
+                {passed ? `🎊 Level ${nextLevelNum} Unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
               </p>
             </div>
 
             {!passed && (
               <p className="text-sm text-gray-700 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
-                Keep trying! You need at least {MIN_SCORE_TO_PASS} correct answers to unlock Level {nextLevelNum}.
+                Keep trying! You need at least {MIN_SCORE_TO_PASS * 10} pts to unlock Level {nextLevelNum}.
               </p>
             )}
 
@@ -1138,21 +1170,21 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
             <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-6 my-6">
               <p className="text-gray-600 text-sm mb-2">Final Score</p>
-              <p className="text-5xl font-bold text-orange-600">{finalScore}/30</p>
+              <p className="text-5xl font-bold text-orange-600">{finalScore * 10} pts</p>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
               <p className="flex justify-between text-gray-700">
                 <span>Level 1 (Deconstruction):</span>
-                <span className="font-bold text-yellow-600">{levelScores[1]}/10</span>
+                <span className="font-bold text-yellow-600">{levelScores[1] * 10} pts</span>
               </p>
               <p className="flex justify-between text-gray-700">
                 <span>Level 2 (Classification):</span>
-                <span className="font-bold text-pink-600">{levelScores[2]}/10</span>
+                <span className="font-bold text-pink-600">{levelScores[2] * 10} pts</span>
               </p>
               <p className="flex justify-between text-gray-700">
                 <span>Level 3 (Application):</span>
-                <span className="font-bold text-blue-600">{score}/10</span>
+                <span className="font-bold text-blue-600">{score * 10} pts</span>
               </p>
             </div>
 
@@ -1304,7 +1336,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
           {/* Star score - top right */}
           <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score}</span>
+            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
           </div>
 
           {/* Level progress - centered below menu/star */}
@@ -1576,7 +1608,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
           {/* Star score - top right */}
           <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score}</span>
+            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
           </div>
 
           {/* Level progress - centered below menu/star */}
@@ -1733,7 +1765,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
           {/* Star score - top right */}
           <div className="absolute top-4 right-4 z-30 bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-amber-700 font-bold">⭐ {score}</span>
+            <span className="text-amber-700 font-bold">⭐ {score * 10} pts</span>
           </div>
 
           {/* Level progress - centered below menu/star */}

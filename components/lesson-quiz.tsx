@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Trophy, Home, ArrowRight, ChevronLeft, ChevronRight, Award, Brain } from 'lucide-react';
+import { CheckCircle2, XCircle, Trophy, Home, ArrowRight, ChevronLeft, ChevronRight, Award, Brain, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +33,7 @@ interface LessonQuizProps {
   passingScore: number;
   previousAttempts: QuizAttempt[];
   hasNextLesson?: boolean;
+  returnUrl?: string;
 }
 
 export function LessonQuiz({
@@ -43,6 +44,7 @@ export function LessonQuiz({
   passingScore,
   previousAttempts,
   hasNextLesson,
+  returnUrl = '/dashboard?tab=lessons',
 }: LessonQuizProps) {
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -50,12 +52,57 @@ export function LessonQuiz({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [direction, setDirection] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(60); // 60 seconds per question
 
   const currentQuestion = questions[currentQuestionIndex];
   const isFirstQuestion = currentQuestionIndex === 0;
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
   const allQuestionsAnswered = Object.keys(answers).length === questions.length;
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+
+  // Timer countdown effect
+  useEffect(() => {
+    // Reset timer when question changes
+    setTimeRemaining(60);
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    // Don't run timer if quiz is submitted or if results are showing
+    if (results || isSubmitting) return;
+
+    // Countdown timer
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // Time's up - auto-submit current answer or move to next
+          if (!answers[currentQuestion.id]) {
+            toast.warning(`Time's up for question ${currentQuestionIndex + 1}!`);
+          }
+
+          // Auto-advance to next question or submit
+          if (!isLastQuestion) {
+            setDirection(1);
+            setCurrentQuestionIndex((prev) => prev + 1);
+          } else {
+            // Last question - auto-submit if all answered
+            if (allQuestionsAnswered) {
+              handleSubmit();
+            }
+          }
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentQuestionIndex, results, isSubmitting, answers, currentQuestion.id, isLastQuestion, allQuestionsAnswered]);
+
+  const getTimerColor = () => {
+    if (timeRemaining > 30) return 'text-green-600';
+    if (timeRemaining > 10) return 'text-yellow-600';
+    return 'text-red-600';
+  };
 
   const handleAnswerChange = (questionId: string, answer: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
@@ -106,10 +153,23 @@ export function LessonQuiz({
       const data = await response.json();
       setResults(data.attempt);
 
-      if (data.attempt.passed) {
-        toast.success(`Congratulations! You passed with ${data.attempt.score}%`);
+      if (!data.attempt.isFirstAttempt) {
+        toast.info(
+          `This is a practice attempt. Your recorded score is ${data.attempt.recordedScore} pts (${Math.round(
+            (data.attempt.recordedScore / data.attempt.maxScore) * 100
+          )}%). Current score: ${data.attempt.currentScore} pts (${data.attempt.currentPercentage}%)`,
+          { duration: 5000 }
+        );
       } else {
-        toast.error(`You scored ${data.attempt.score}%. Try again!`);
+        if (data.attempt.passed) {
+          toast.success(
+            `Congratulations! You passed with ${data.attempt.score} pts (${data.attempt.percentage}%)`
+          );
+        } else {
+          toast.error(
+            `You scored ${data.attempt.score} pts (${data.attempt.percentage}%). Try again!`
+          );
+        }
       }
     } catch (error: any) {
       console.error('Error submitting quiz:', error);
@@ -125,18 +185,22 @@ export function LessonQuiz({
   };
 
   const handleGoHome = () => {
-    router.push('/dashboard?tab=lessons');
+    router.push(returnUrl);
   };
 
   const handleNextLesson = () => {
-    router.push('/dashboard?tab=lessons');
+    router.push(returnUrl);
   };
 
   // Show results view
   if (results) {
-    const percentage = results.score;
+    const isFirstAttempt = results.isFirstAttempt !== false;
+    const score = isFirstAttempt ? results.score : results.currentScore;
+    const percentage = isFirstAttempt ? results.percentage : results.currentPercentage;
+    const recordedScore = results.recordedScore || results.score;
+    const recordedPercentage = Math.round((recordedScore / results.maxScore) * 100);
     const isPerfect = percentage === 100;
-    const isPassed = results.passed;
+    const isPassed = isFirstAttempt ? results.passed : percentage >= passingScore;
 
     return (
       <motion.div
@@ -172,13 +236,41 @@ export function LessonQuiz({
 
             <div>
               <CardTitle className="text-3xl font-bold mb-2">
-                {isPerfect ? '🎉 Perfect Score!' : isPassed ? '✨ Quiz Passed!' : '📚 Keep Learning!'}
+                {!isFirstAttempt
+                  ? '🔄 Practice Attempt'
+                  : isPerfect
+                  ? '🎉 Perfect Score!'
+                  : isPassed
+                  ? '✨ Quiz Passed!'
+                  : '📚 Keep Learning!'}
               </CardTitle>
               <CardDescription className="text-lg">
-                You scored <span className="font-bold text-2xl text-primary">{results.score}%</span>
-                <span className="text-muted-foreground ml-2">
-                  ({results.correctAnswers}/{results.totalQuestions} correct)
-                </span>
+                {!isFirstAttempt ? (
+                  <>
+                    <div className="mb-2">
+                      <span className="font-bold text-xl text-primary">
+                        Current Score: {score} pts ({percentage}%)
+                      </span>
+                      <span className="text-muted-foreground ml-2">
+                        ({results.currentCorrectAnswers}/{results.totalQuestions} correct)
+                      </span>
+                    </div>
+                    <div className="text-yellow-600 font-semibold">
+                      ⚠️ Recorded Score: {recordedScore} pts ({recordedPercentage}%){' '}
+                      <span className="text-xs">(Only first attempt counts)</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    You scored{' '}
+                    <span className="font-bold text-2xl text-primary">
+                      {score} pts ({percentage}%)
+                    </span>
+                    <span className="text-muted-foreground ml-2">
+                      ({results.correctAnswers}/{results.totalQuestions} correct)
+                    </span>
+                  </>
+                )}
               </CardDescription>
             </div>
           </CardHeader>
@@ -211,10 +303,10 @@ export function LessonQuiz({
             <div className="space-y-3">
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5" />
-                Review Your Answers
+                Review Your Answers {!isFirstAttempt && '(Practice)'}
               </h3>
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {results.results.map((result: any, index: number) => (
+                {(isFirstAttempt ? results.results : results.currentResults)?.map((result: any, index: number) => (
                   <motion.div
                     key={result.questionId}
                     initial={{ opacity: 0, x: -20 }}
@@ -310,21 +402,31 @@ export function LessonQuiz({
   // Show quiz form
   return (
     <div className="space-y-6">
-      {/* Previous Attempts */}
+      {/* Previous Attempts Warning */}
       {previousAttempts.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-muted/50 rounded-lg p-4"
         >
-          <h3 className="text-sm font-medium mb-2">Previous Attempts</h3>
-          <div className="flex flex-wrap gap-2">
-            {previousAttempts.map((attempt, index) => (
-              <Badge key={attempt.id} variant={attempt.passed ? 'default' : 'secondary'}>
-                Attempt {previousAttempts.length - index}: {attempt.score}%
-              </Badge>
-            ))}
-          </div>
+          <Alert className="border-yellow-500 bg-yellow-50">
+            <Brain className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              <div className="font-semibold mb-1">⚠️ Only First Attempt Recorded</div>
+              <div className="text-sm">
+                You can retake this quiz for practice, but only your first attempt's score will be saved and count
+                towards your progress. This is a practice attempt.
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <span className="text-xs font-medium">Previous attempts:</span>
+                {previousAttempts.map((attempt, index) => (
+                  <Badge key={attempt.id} variant={attempt.passed ? 'default' : 'secondary'} className="text-xs">
+                    #{previousAttempts.length - index}: {attempt.score} pts
+                    {index === previousAttempts.length - 1 && ' (Recorded)'}
+                  </Badge>
+                ))}
+              </div>
+            </AlertDescription>
+          </Alert>
         </motion.div>
       )}
 
@@ -333,9 +435,44 @@ export function LessonQuiz({
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between mb-2">
             <CardTitle className="text-xl">{title}</CardTitle>
-            <Badge variant="outline" className="text-base font-mono px-3 py-1">
-              {currentQuestionIndex + 1}/{questions.length}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={
+                  timeRemaining <= 10
+                    ? {
+                        scale: [1, 1.1, 1],
+                        rotate: [0, -5, 5, -5, 0],
+                      }
+                    : {}
+                }
+                transition={
+                  timeRemaining <= 10
+                    ? {
+                        duration: 0.5,
+                        repeat: Infinity,
+                        repeatDelay: 0.5,
+                      }
+                    : {}
+                }
+              >
+                <Badge
+                  variant="outline"
+                  className={`text-base font-mono px-3 py-1 border-2 transition-all ${
+                    timeRemaining <= 10
+                      ? 'bg-red-50 border-red-500 text-red-700 shadow-lg shadow-red-200'
+                      : timeRemaining <= 30
+                      ? 'bg-yellow-50 border-yellow-500 text-yellow-700'
+                      : 'bg-green-50 border-green-500 text-green-700'
+                  }`}
+                >
+                  <Clock className={`h-4 w-4 mr-1 ${timeRemaining <= 10 ? 'animate-pulse' : ''}`} />
+                  {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, '0')}
+                </Badge>
+              </motion.div>
+              <Badge variant="outline" className="text-base font-mono px-3 py-1">
+                {currentQuestionIndex + 1}/{questions.length}
+              </Badge>
+            </div>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm text-muted-foreground">

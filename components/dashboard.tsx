@@ -24,6 +24,9 @@ interface DashboardProps {
   onPlayGame: (gameName: string) => void
   onNavigateToProfile: () => void
   lessons: Lesson[]
+  lessonsCompleted: number
+  quizzesCompleted: number
+  totalPoints: number
   initialTab?: "games" | "lessons" | "quizzes" | "leaderboard"
 }
 
@@ -32,8 +35,13 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   const [levels, setLevels] = useState<("locked" | "unlocked" | "completed")[]>([])
 
   useEffect(() => {
-    const levelStatuses = [1, 2, 3].map(level => getLevelStatus(gameName, level))
-    setLevels(levelStatuses)
+    const loadStatuses = async () => {
+      const status1 = await getLevelStatus(gameName, 1)
+      const status2 = await getLevelStatus(gameName, 2)
+      const status3 = await getLevelStatus(gameName, 3)
+      setLevels([status1, status2, status3])
+    }
+    loadStatuses()
   }, [gameName])
 
   return (
@@ -57,7 +65,7 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   )
 }
 
-export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, initialTab }: DashboardProps) {
+export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, lessonsCompleted, quizzesCompleted, totalPoints, initialTab }: DashboardProps) {
   const [activeTab, setActiveTab] = useState(initialTab || "games")
   const [gameProgress, setGameProgress] = useState<{
     synohit: ReturnType<typeof getProgress>
@@ -185,17 +193,17 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">⭐</div>
             <p className="text-gray-600 text-xs sm:text-sm">Total Points</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">2,450</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{totalPoints.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🔥</div>
-            <p className="text-gray-600 text-xs sm:text-sm">Current Streak</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">12 days</p>
+            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">📚</div>
+            <p className="text-gray-600 text-xs sm:text-sm">Lessons Completed</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{lessonsCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🎮</div>
-            <p className="text-gray-600 text-xs sm:text-sm">Games Played</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">45</p>
+            <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">✅</div>
+            <p className="text-gray-600 text-xs sm:text-sm">Quizzes Completed</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{quizzesCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🏆</div>

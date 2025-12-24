@@ -61,5 +61,49 @@ export default async function DashboardPage() {
     };
   });
 
-  return <DashboardClient user={user} lessons={lessonsWithProgress} />;
+  // Calculate stats
+  const lessonsCompleted = lessonsWithProgress.filter(lesson => lesson.completed).length;
+
+  const quizzesCompleted = await db.quizAttempt.count({
+    where: {
+      userId: auth.userId,
+      passed: true,
+    },
+  });
+
+  // Get quiz scores for total points calculation
+  const quizAttempts = await db.quizAttempt.findMany({
+    where: {
+      userId: auth.userId,
+      passed: true,
+    },
+    select: {
+      score: true,
+    },
+  });
+
+  // Get game scores
+  const gameProgress = await db.gameProgress.findMany({
+    where: {
+      userId: auth.userId,
+    },
+    select: {
+      score: true, // Score out of 10
+    },
+  });
+
+  // Calculate total points
+  // - Quiz scores (0-100 per quiz)
+  // - Game scores (converted: score out of 10 → multiply by 10 to get 0-100 scale)
+  const quizPoints = quizAttempts.reduce((sum, attempt) => sum + attempt.score, 0);
+  const gamePoints = gameProgress.reduce((sum, progress) => sum + (progress.score * 10), 0);
+  const totalPoints = quizPoints + gamePoints;
+
+  return <DashboardClient
+    user={user}
+    lessons={lessonsWithProgress}
+    lessonsCompleted={lessonsCompleted}
+    quizzesCompleted={quizzesCompleted}
+    totalPoints={totalPoints}
+  />;
 }

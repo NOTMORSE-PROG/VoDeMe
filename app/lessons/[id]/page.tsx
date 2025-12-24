@@ -55,7 +55,7 @@ export default async function LessonPage({
             >
               <Link href="/dashboard?tab=lessons" className="flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                <span className="font-medium">Back to Lessons</span>
+                <span className="font-medium">Back to Dashboard</span>
               </Link>
             </Button>
             <span className="text-gray-400">/</span>

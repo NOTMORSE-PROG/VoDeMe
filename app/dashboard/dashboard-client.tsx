@@ -28,9 +28,12 @@ interface Lesson {
 interface DashboardClientProps {
   user: User
   lessons: Lesson[]
+  lessonsCompleted: number
+  quizzesCompleted: number
+  totalPoints: number
 }
 
-export default function DashboardClient({ user, lessons }: DashboardClientProps) {
+export default function DashboardClient({ user, lessons, lessonsCompleted, quizzesCompleted, totalPoints }: DashboardClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [page, setPage] = useState<"dashboard" | "synohit" | "hopright" | "wordstudyjournal">("dashboard")
@@ -44,16 +47,21 @@ export default function DashboardClient({ user, lessons }: DashboardClientProps)
     router.push("/profile")
   }
 
+  const handleBackFromGame = () => {
+    setPage("dashboard")
+    router.push("/dashboard?tab=games")
+  }
+
   if (page === "synohit") {
-    return <SynohitGame onBack={() => setPage("dashboard")} />
+    return <SynohitGame onBack={handleBackFromGame} />
   }
 
   if (page === "hopright") {
-    return <HopRightGame onBack={() => setPage("dashboard")} />
+    return <HopRightGame onBack={handleBackFromGame} />
   }
 
   if (page === "wordstudyjournal") {
-    return <WordPartsGame onBack={() => setPage("dashboard")} />
+    return <WordPartsGame onBack={handleBackFromGame} />
   }
 
   return (
@@ -63,6 +71,9 @@ export default function DashboardClient({ user, lessons }: DashboardClientProps)
       onPlayGame={(gameName) => setPage(gameName as any)}
       onNavigateToProfile={handleNavigateToProfile}
       lessons={lessons}
+      lessonsCompleted={lessonsCompleted}
+      quizzesCompleted={quizzesCompleted}
+      totalPoints={totalPoints}
       initialTab={initialTab || undefined}
     />
   )

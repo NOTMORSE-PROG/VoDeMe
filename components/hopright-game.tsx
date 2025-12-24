@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import { toast } from "sonner"
 
 // Game data for all 30 stages
 interface Stage {
@@ -464,6 +465,28 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
   const [levelScores, setLevelScores] = useState({ easy: 0, medium: 0, hard: 0 })
   const [stageStartTime, setStageStartTime] = useState<number>(Date.now())
   const [showReminder, setShowReminder] = useState(false)
+  const [levelStatuses, setLevelStatuses] = useState<Record<number, "locked" | "unlocked" | "completed">>({
+    1: "unlocked",
+    2: "locked",
+    3: "locked"
+  })
+
+  // Load level statuses when entering level select
+  useEffect(() => {
+    if (gameState === "levelSelect") {
+      const loadStatuses = async () => {
+        const status1 = await getLevelStatus("hopright", 1)
+        const status2 = await getLevelStatus("hopright", 2)
+        const status3 = await getLevelStatus("hopright", 3)
+        setLevelStatuses({
+          1: status1,
+          2: status2,
+          3: status3
+        })
+      }
+      loadStatuses()
+    }
+  }, [gameState])
   const reminderTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reminderAudioRef = useRef<HTMLAudioElement | null>(null)
 
@@ -589,7 +612,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
   }
 
   // Handle next stage
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStage < shuffledStages.length - 1) {
       // Next stage
       setCurrentStage(currentStage + 1)
@@ -606,7 +629,20 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
       const finalScore = answered && selectedAnswer === correctAnswerIndex ? score + 1 : score
       setLevelScores({ ...levelScores, [currentLevel]: finalScore })
       setTotalScore(totalScore + finalScore)
-      saveLevelProgress("hopright", getLevelNumber(currentLevel), finalScore, 10)
+
+      try {
+        const result = await saveLevelProgress("hopright", getLevelNumber(currentLevel), finalScore, 10)
+
+        if (!result.isFirstAttempt) {
+          toast.info(
+            `Practice attempt completed! Recorded score: ${(result.recordedScore ?? 0) * 10} pts. Current score: ${(result.currentScore ?? 0) * 10} pts`,
+            { duration: 5000 }
+          )
+        }
+      } catch (error) {
+        console.error('Error saving progress:', error)
+        toast.error('Failed to save progress')
+      }
 
       if (currentLevel === "easy") {
         setGameState("levelComplete")
@@ -619,13 +655,13 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
   }
 
   // Handle next level
-  const handleNextLevel = () => {
+  const handleNextLevel = async () => {
     const nextLevelNum = currentLevel === "easy" ? 2 : 3
-    const levelStatus = getLevelStatus("hopright", nextLevelNum)
+    const levelStatus = await getLevelStatus("hopright", nextLevelNum)
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      alert(`Level ${nextLevelNum} is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in the previous level to unlock it.`)
+      toast.error(`Level ${nextLevelNum} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in the previous level to unlock it.`)
       return
     }
 
@@ -665,13 +701,13 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     setHoveredIndex(null)
   }
 
-  const handleLevelSelect = (level: "easy" | "medium" | "hard") => {
+  const handleLevelSelect = async (level: "easy" | "medium" | "hard") => {
     const levelNum = { easy: 1, medium: 2, hard: 3 }[level]
-    const levelStatus = getLevelStatus("hopright", levelNum)
+    const levelStatus = await getLevelStatus("hopright", levelNum)
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      alert(`This level is locked! You need to score at least ${MIN_SCORE_TO_PASS}/10 in the previous level to unlock it.`)
+      toast.error(`This level is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in the previous level to unlock it.`)
       return
     }
 
@@ -719,7 +755,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
               </div>
               <div className="flex items-start gap-3 bg-cyan-50 p-3 rounded-xl">
                 <span className="text-2xl">⭐</span>
-                <p className="text-gray-700">+1 point for correct answers, game continues either way</p>
+                <p className="text-gray-700">+10 point for correct answers, game continues either way</p>
               </div>
               <div className="flex items-start gap-3 bg-sky-50 p-3 rounded-xl">
                 <span className="text-2xl">📈</span>
@@ -759,14 +795,10 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
   // Level Selection Screen
   if (gameState === "levelSelect") {
-    const easyStatus = getLevelStatus("hopright", 1)
-    const mediumStatus = getLevelStatus("hopright", 2)
-    const hardStatus = getLevelStatus("hopright", 3)
-
     const levelConfig = [
-      { level: "easy" as const, levelNum: 1, title: "Easy", subtitle: "10 Basic Collocations", emoji: "🐸", color: "from-green-400 to-green-600", status: easyStatus },
-      { level: "medium" as const, levelNum: 2, title: "Medium", subtitle: "10 Intermediate Collocations", emoji: "🐰", color: "from-yellow-400 to-orange-500", status: mediumStatus },
-      { level: "hard" as const, levelNum: 3, title: "Hard", subtitle: "10 Advanced Collocations", emoji: "🦁", color: "from-red-400 to-red-600", status: hardStatus },
+      { level: "easy" as const, levelNum: 1, title: "Easy", subtitle: "10 Basic Collocations", emoji: "🐸", color: "from-green-400 to-green-600", status: levelStatuses[1] },
+      { level: "medium" as const, levelNum: 2, title: "Medium", subtitle: "10 Intermediate Collocations", emoji: "🐰", color: "from-yellow-400 to-orange-500", status: levelStatuses[2] },
+      { level: "hard" as const, levelNum: 3, title: "Hard", subtitle: "10 Advanced Collocations", emoji: "🦁", color: "from-red-400 to-red-600", status: levelStatuses[3] },
     ]
 
     return (
@@ -804,7 +836,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
                   className={`
                     relative bg-white/95 backdrop-blur rounded-3xl p-8 shadow-2xl border-4 border-teal-400
                     transform transition-all duration-300
-                    ${isLocked ? "opacity-60 cursor-not-allowed" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
                     animate-slide-up
                   `}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -836,7 +868,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
                   {/* Lock Message */}
                   {isLocked && (
                     <p className="text-xs text-gray-600 mt-3">
-                      Complete {config.levelNum === 2 ? "Easy" : "Medium"} level with {MIN_SCORE_TO_PASS}/10 to unlock
+                      Complete {config.levelNum === 2 ? "Easy" : "Medium"} level with {MIN_SCORE_TO_PASS * 10} pts to unlock
                     </p>
                   )}
                 </button>
@@ -847,7 +879,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {/* Instructions */}
           <div className="mt-8 bg-white/90 backdrop-blur border-2 border-teal-400 rounded-xl p-4 max-w-2xl text-center">
             <p className="text-teal-700 font-semibold">
-              🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
+              🎯 Complete each level with at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next one!
             </p>
           </div>
         </div>
@@ -899,15 +931,15 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
             <div className={`bg-gradient-to-r rounded-2xl p-6 my-6 ${passed ? "from-green-100 to-green-50" : "from-red-100 to-red-50"}`}>
               <p className="text-gray-600 text-sm mb-2">Your Score</p>
-              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score}/10</p>
+              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
               <p className={`text-sm font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Next level unlocked!` : `Need ${MIN_SCORE_TO_PASS}/10 to unlock next level`}
+                {passed ? `🎊 Next level unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
               </p>
             </div>
 
             {!passed && (
               <p className="text-sm text-gray-700 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
-                Keep trying! You need at least {MIN_SCORE_TO_PASS} correct answers to unlock the next level.
+                Keep trying! You need at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next level.
               </p>
             )}
 
@@ -963,21 +995,21 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
             <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-2xl p-6 my-6">
               <p className="text-gray-600 text-sm mb-2">Final Score</p>
-              <p className="text-5xl font-bold text-orange-600">{finalScore}/30</p>
+              <p className="text-5xl font-bold text-orange-600">{finalScore * 10} pts</p>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
               <p className="flex justify-between text-gray-700">
                 <span>Easy Level:</span>
-                <span className="font-bold text-green-600">{levelScores.easy}/10</span>
+                <span className="font-bold text-green-600">{levelScores.easy * 10} pts</span>
               </p>
               <p className="flex justify-between text-gray-700">
                 <span>Medium Level:</span>
-                <span className="font-bold text-yellow-600">{levelScores.medium}/10</span>
+                <span className="font-bold text-yellow-600">{levelScores.medium * 10} pts</span>
               </p>
               <p className="flex justify-between text-gray-700">
                 <span>Hard Level:</span>
-                <span className="font-bold text-red-600">{score}/10</span>
+                <span className="font-bold text-red-600">{score * 10} pts</span>
               </p>
             </div>
 
@@ -1023,7 +1055,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           </button>
 
           <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 shadow-lg">
-            <span className="text-teal-700 font-bold">⭐ Score: {score}</span>
+            <span className="text-teal-700 font-bold">⭐ {score * 10} pts</span>
           </div>
         </div>
 

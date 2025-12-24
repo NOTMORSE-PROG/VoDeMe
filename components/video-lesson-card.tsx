@@ -105,7 +105,7 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
             </Link>
             {lesson.completed && (
               <Link
-                href={`/lessons/${lesson.id}/quiz`}
+                href={`/lessons/${lesson.id}/quiz?from=dashboard`}
                 className="px-6 py-2 rounded-lg font-semibold transition text-center bg-purple-500 hover:bg-purple-600 text-white whitespace-nowrap"
               >
                 Take Quiz

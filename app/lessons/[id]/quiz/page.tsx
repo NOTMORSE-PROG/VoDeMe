@@ -10,8 +10,10 @@ import Link from 'next/link';
 
 export default async function QuizPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const auth = await verifyAuth();
   if (!auth) {
@@ -19,6 +21,10 @@ export default async function QuizPage({
   }
 
   const { id } = await params;
+  const { from } = await searchParams;
+
+  // Determine return URL based on where user came from
+  const returnUrl = from === 'dashboard' ? '/dashboard?tab=lessons' : `/lessons/${id}`;
 
   // Fetch lesson with quiz and user progress
   const lesson = await db.videoLesson.findUnique({
@@ -53,9 +59,9 @@ export default async function QuizPage({
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <div className="space-y-6">
           <Button variant="ghost" asChild>
-            <Link href="/dashboard?tab=lessons">
+            <Link href={returnUrl}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {from === 'dashboard' ? 'Back to Dashboard' : 'Back to Lesson'}
             </Link>
           </Button>
 
@@ -77,9 +83,9 @@ export default async function QuizPage({
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <div className="space-y-6">
           <Button variant="ghost" asChild>
-            <Link href="/dashboard?tab=lessons">
+            <Link href={returnUrl}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {from === 'dashboard' ? 'Back to Dashboard' : 'Back to Lesson'}
             </Link>
           </Button>
 
@@ -115,9 +121,9 @@ export default async function QuizPage({
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <div className="space-y-6">
         <Button variant="ghost" asChild>
-          <Link href={`/lessons/${id}`}>
+          <Link href={returnUrl}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Lesson
+            {from === 'dashboard' ? 'Back to Dashboard' : 'Back to Lesson'}
           </Link>
         </Button>
 
@@ -134,6 +140,7 @@ export default async function QuizPage({
             completedAt: a.completedAt.toISOString(),
           }))}
           hasNextLesson={!!nextLesson}
+          returnUrl={returnUrl}
         />
       </div>
     </div>
