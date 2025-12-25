@@ -176,15 +176,9 @@ export function LessonQuiz({
           { duration: 5000 }
         );
       } else {
-        if (data.attempt.passed) {
-          toast.success(
-            `Congratulations! You passed with ${data.attempt.score} pts (${data.attempt.percentage}%)`
-          );
-        } else {
-          toast.error(
-            `You scored ${data.attempt.score} pts (${data.attempt.percentage}%). Try again!`
-          );
-        }
+        toast.success(
+          `Quiz complete! You scored ${data.attempt.score} pts (${data.attempt.percentage}%)`
+        );
       }
     } catch (error: any) {
       console.error('Error submitting quiz:', error);
@@ -217,7 +211,6 @@ export function LessonQuiz({
     const recordedScore = results.recordedScore || results.score;
     const recordedPercentage = Math.round((recordedScore / results.maxScore) * 100);
     const isPerfect = percentage === 100;
-    const isPassed = isFirstAttempt ? results.passed : percentage >= passingScore;
 
     return (
       <motion.div
@@ -244,10 +237,8 @@ export function LessonQuiz({
                     <Trophy className="h-20 w-20 text-yellow-400 opacity-50" />
                   </motion.div>
                 </div>
-              ) : isPassed ? (
-                <Trophy className="h-20 w-20 text-green-500" />
               ) : (
-                <Brain className="h-20 w-20 text-orange-500" />
+                <Trophy className="h-20 w-20 text-blue-500" />
               )}
             </motion.div>
 
@@ -257,9 +248,7 @@ export function LessonQuiz({
                   ? '🔄 Practice Attempt'
                   : isPerfect
                   ? '🎉 Perfect Score!'
-                  : isPassed
-                  ? '✨ Quiz Passed!'
-                  : '📚 Keep Learning!'}
+                  : '📊 Quiz Complete!'}
               </CardTitle>
               <CardDescription className="text-lg">
                 {!isFirstAttempt ? (
@@ -303,16 +292,12 @@ export function LessonQuiz({
                   className={`h-full rounded-full ${
                     isPerfect
                       ? 'bg-gradient-to-r from-yellow-400 to-yellow-600'
-                      : isPassed
-                      ? 'bg-gradient-to-r from-green-400 to-green-600'
-                      : 'bg-gradient-to-r from-orange-400 to-orange-600'
+                      : 'bg-gradient-to-r from-blue-400 to-purple-600'
                   }`}
                 />
               </div>
               <p className="text-center text-sm text-muted-foreground mt-2">
-                {isPassed
-                  ? `Great job! You passed with ${percentage}%`
-                  : `You need ${passingScore}% to pass. Keep trying!`}
+                Your final score: {percentage}%
               </p>
             </div>
 
@@ -403,13 +388,11 @@ export function LessonQuiz({
                 <Home className="h-4 w-4 mr-2" />
                 Go Home
               </Button>
-              {!results.passed && (
-                <Button onClick={handleRetry} className="flex-1">
-                  Try Again
-                </Button>
-              )}
-              {results.passed && hasNextLesson && (
-                <Button onClick={handleNextLesson} className="flex-1 bg-gradient-to-r from-green-600 to-green-700">
+              <Button onClick={handleRetry} variant="outline" className="flex-1">
+                Try Again
+              </Button>
+              {hasNextLesson && (
+                <Button onClick={handleNextLesson} className="flex-1 bg-gradient-to-r from-blue-600 to-purple-700">
                   Next Lesson
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -548,7 +531,7 @@ export function LessonQuiz({
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              Passing score: {passingScore}% • {Object.keys(answers).length}/{questions.length} answered
+              {Object.keys(answers).length}/{questions.length} answered
             </p>
           </div>
         </CardHeader>
