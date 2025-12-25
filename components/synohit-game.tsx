@@ -916,9 +916,12 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           </div>
 
           {/* Instructions */}
-          <div className="mt-8 bg-amber-50/90 backdrop-blur border-2 border-amber-700 rounded-xl p-4 max-w-2xl mx-4 text-center">
+          <div className="mt-8 bg-amber-50/90 backdrop-blur border-2 border-amber-700 rounded-xl p-4 max-w-2xl mx-4 text-center space-y-2">
             <p className="text-amber-900 font-semibold text-sm sm:text-base">
               🎯 Complete each level to unlock the next one!
+            </p>
+            <p className="text-amber-700 text-xs sm:text-sm">
+              ⓘ Only your first attempt at each level will be recorded for scoring
             </p>
           </div>
         </div>

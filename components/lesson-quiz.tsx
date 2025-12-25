@@ -533,9 +533,14 @@ export function LessonQuiz({
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {Object.keys(answers).length}/{questions.length} answered
-            </p>
+            <div className="flex items-center justify-between text-xs">
+              <p className="text-muted-foreground">
+                {Object.keys(answers).length}/{questions.length} answered
+              </p>
+              <p className="text-blue-600 font-medium">
+                ⓘ First attempt only
+              </p>
+            </div>
           </div>
         </CardHeader>
 

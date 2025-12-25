@@ -917,9 +917,12 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           </div>
 
           {/* Instructions */}
-          <div className="mt-8 bg-white/90 backdrop-blur border-2 border-teal-400 rounded-xl p-4 max-w-2xl text-center">
+          <div className="mt-8 bg-white/90 backdrop-blur border-2 border-teal-400 rounded-xl p-4 max-w-2xl text-center space-y-2">
             <p className="text-teal-700 font-semibold">
               🎯 Complete each level to unlock the next one!
+            </p>
+            <p className="text-teal-600 text-xs sm:text-sm">
+              ⓘ Only your first attempt at each level will be recorded for scoring
             </p>
           </div>
         </div>

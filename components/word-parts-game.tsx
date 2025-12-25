@@ -1079,9 +1079,12 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           </div>
 
           {/* Instructions */}
-          <div className="mt-4 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center">
+          <div className="mt-4 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center space-y-2">
             <p className="text-amber-700 font-semibold">
               🎯 Complete each level to unlock the next one!
+            </p>
+            <p className="text-amber-600 text-xs sm:text-sm">
+              ⓘ Only your first attempt at each level will be recorded for scoring
             </p>
           </div>
 
