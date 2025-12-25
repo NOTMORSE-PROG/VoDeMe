@@ -75,16 +75,29 @@ export async function POST(
       );
     }
 
+    // Time-based scoring rubric
+    const calculatePointsForTime = (timeTaken: number): number => {
+      if (timeTaken <= 15) return 20;
+      if (timeTaken <= 30) return 15;
+      if (timeTaken <= 45) return 10;
+      if (timeTaken <= 60) return 5;
+      return 0; // Over time limit
+    };
+
     // Calculate score
     const quizQuestions = quiz.questions as any[];
     let correctAnswers = 0;
+    let totalScore = 0;
 
     const detailedResults = quizQuestions.map((question: any) => {
       const userAnswer = answers.find((a) => a.questionId === question.id);
       const isCorrect = userAnswer?.selectedAnswer === question.correctAnswer;
+      const timeTaken = userAnswer?.timeTaken ?? 60; // Default to 60 if not provided
+      const pointsEarned = isCorrect ? calculatePointsForTime(timeTaken) : 0;
 
       if (isCorrect) {
         correctAnswers++;
+        totalScore += pointsEarned;
       }
 
       return {
@@ -93,13 +106,15 @@ export async function POST(
         userAnswer: userAnswer?.selectedAnswer,
         correctAnswer: question.correctAnswer,
         isCorrect,
+        timeTaken,
+        pointsEarned,
       };
     });
 
-    // Calculate score: 20 points per correct answer
-    const POINTS_PER_QUESTION = 20;
-    const score = correctAnswers * POINTS_PER_QUESTION;
-    const maxScore = quizQuestions.length * POINTS_PER_QUESTION;
+    // Calculate max score and percentage
+    const MAX_POINTS_PER_QUESTION = 20;
+    const maxScore = quizQuestions.length * MAX_POINTS_PER_QUESTION;
+    const score = totalScore;
     const percentage = Math.round((score / maxScore) * 100);
     const passed = percentage >= quiz.passingScore;
 

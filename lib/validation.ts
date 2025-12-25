@@ -86,6 +86,7 @@ export type LessonProgressUpdateInput = z.infer<typeof lessonProgressUpdateSchem
 export const quizAnswerSchema = z.object({
   questionId: z.string(),
   selectedAnswer: z.string(),
+  timeTaken: z.number().min(0).max(60).optional(), // Time taken in seconds (0-60)
 });
 
 export type QuizAnswerInput = z.infer<typeof quizAnswerSchema>;

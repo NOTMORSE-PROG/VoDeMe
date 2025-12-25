@@ -54,17 +54,17 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
   };
 
   return (
-    <div className="block bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="block bg-white rounded-xl p-4 sm:p-6 shadow-md hover:shadow-lg transition">
+      <div className="flex flex-col gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-xl font-bold text-gray-800">{lesson.title}</h3>
-            {lesson.completed && <span className="text-green-500 text-2xl">✓</span>}
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800">{lesson.title}</h3>
+            {lesson.completed && <span className="text-green-500 text-xl sm:text-2xl">✓</span>}
           </div>
           <p className="text-gray-600 text-sm mb-3">{lesson.description}</p>
 
           {actualProgress > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-1 mb-3">
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span>Progress</span>
                 <span>{lesson.completed ? '100' : actualProgress}%</span>
@@ -81,15 +81,15 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-gray-500 flex items-center gap-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="text-sm text-gray-500 flex items-center gap-1 order-2 sm:order-1">
             <span>⏱️</span>
             <span>{formatDuration(actualDuration)}</span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
             <Link
               href={`/lessons/${lesson.id}`}
-              className={`px-6 py-2 rounded-lg font-semibold transition text-center ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base ${
                 lesson.completed
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : actualProgress > 0
@@ -106,7 +106,7 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
             {lesson.completed && (
               <Link
                 href={`/lessons/${lesson.id}/quiz?from=dashboard`}
-                className="px-6 py-2 rounded-lg font-semibold transition text-center bg-purple-500 hover:bg-purple-600 text-white whitespace-nowrap"
+                className="px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base bg-purple-500 hover:bg-purple-600 text-white"
               >
                 Take Quiz
               </Link>

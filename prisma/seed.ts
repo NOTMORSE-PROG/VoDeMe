@@ -165,7 +165,7 @@ async function main() {
         },
         {
           id: 'q12',
-          question: '"Peter is a very handsome man, so a lot of people admire him." What is the synonym for the underlined word?',
+          question: '"Peter is a very handsome man, so a <u>lot</u> of people admire him." What is the synonym for the underlined word?',
           options: [
             { label: 'A', text: 'few' },
             { label: 'B', text: 'many' },
