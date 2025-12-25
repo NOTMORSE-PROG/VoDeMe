@@ -49,6 +49,8 @@ export function LessonQuiz({
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answerTimes, setAnswerTimes] = useState<Record<string, number>>({}); // Track time taken per question
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now()); // Track when question was shown
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [direction, setDirection] = useState(0);
@@ -62,8 +64,9 @@ export function LessonQuiz({
 
   // Timer countdown effect
   useEffect(() => {
-    // Reset timer when question changes
+    // Reset timer and start time when question changes
     setTimeRemaining(60);
+    setQuestionStartTime(Date.now());
   }, [currentQuestionIndex]);
 
   useEffect(() => {
@@ -74,6 +77,11 @@ export function LessonQuiz({
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
+          // Time's up - record time if not already recorded
+          if (!answerTimes[currentQuestion.id]) {
+            setAnswerTimes((prevTimes) => ({ ...prevTimes, [currentQuestion.id]: 60 }));
+          }
+
           // Time's up - auto-submit current answer or move to next
           if (!answers[currentQuestion.id]) {
             toast.warning(`Time's up for question ${currentQuestionIndex + 1}!`);
@@ -106,6 +114,12 @@ export function LessonQuiz({
 
   const handleAnswerChange = (questionId: string, answer: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+
+    // Record time taken for this answer (only if not already answered)
+    if (!answerTimes[questionId]) {
+      const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000); // Convert to seconds
+      setAnswerTimes((prev) => ({ ...prev, [questionId]: timeTaken }));
+    }
   };
 
   const handleNext = () => {
@@ -141,6 +155,7 @@ export function LessonQuiz({
           answers: Object.entries(answers).map(([questionId, selectedAnswer]) => ({
             questionId,
             selectedAnswer,
+            timeTaken: answerTimes[questionId] || 60, // Default to 60 if no time recorded
           })),
         }),
       });
@@ -181,7 +196,9 @@ export function LessonQuiz({
 
   const handleRetry = () => {
     setAnswers({});
+    setAnswerTimes({});
     setResults(null);
+    setCurrentQuestionIndex(0);
   };
 
   const handleGoHome = () => {
@@ -330,10 +347,31 @@ export function LessonQuiz({
                               ) : (
                                 <XCircle className="h-4 w-4 text-red-600" />
                               )}
+                              <Badge
+                                variant="secondary"
+                                className={`font-mono text-xs ${
+                                  result.timeTaken <= 15
+                                    ? 'bg-green-100 text-green-700'
+                                    : result.timeTaken <= 30
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : result.timeTaken <= 45
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-orange-100 text-orange-700'
+                                }`}
+                              >
+                                <Clock className="h-3 w-3 mr-1" />
+                                {result.timeTaken}s
+                              </Badge>
+                              {result.isCorrect && (
+                                <Badge variant="default" className="font-mono text-xs bg-purple-600">
+                                  +{result.pointsEarned} pts
+                                </Badge>
+                              )}
                             </div>
-                            <CardDescription className="text-sm font-medium text-foreground">
-                              {result.question}
-                            </CardDescription>
+                            <CardDescription
+                              className="text-sm font-medium text-foreground [&_u]:underline [&_u]:decoration-2 [&_u]:underline-offset-2"
+                              dangerouslySetInnerHTML={{ __html: result.question }}
+                            />
                           </div>
                         </div>
                       </CardHeader>
@@ -402,6 +440,28 @@ export function LessonQuiz({
   // Show quiz form
   return (
     <div className="space-y-6">
+      {/* Time-Based Scoring Info */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Alert className="border-blue-500 bg-blue-50">
+          <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <div className="font-semibold mb-1 text-xs sm:text-sm">⏱️ Time-Based Scoring</div>
+            <div className="text-xs sm:text-sm mb-2">
+              Answer quickly to earn more points! Each correct answer can earn up to 20 points based on your speed:
+            </div>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
+              <Badge className="bg-green-600 text-xs">0-15s: 20 pts</Badge>
+              <Badge className="bg-blue-600 text-xs">16-30s: 15 pts</Badge>
+              <Badge className="bg-yellow-600 text-xs">31-45s: 10 pts</Badge>
+              <Badge className="bg-orange-600 text-xs">46-60s: 5 pts</Badge>
+            </div>
+          </AlertDescription>
+        </Alert>
+      </motion.div>
+
       {/* Previous Attempts Warning */}
       {previousAttempts.length > 0 && (
         <motion.div
@@ -409,14 +469,14 @@ export function LessonQuiz({
           animate={{ opacity: 1, y: 0 }}
         >
           <Alert className="border-yellow-500 bg-yellow-50">
-            <Brain className="h-4 w-4 text-yellow-600" />
+            <Brain className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-800">
-              <div className="font-semibold mb-1">⚠️ Only First Attempt Recorded</div>
-              <div className="text-sm">
+              <div className="font-semibold mb-1 text-xs sm:text-sm">⚠️ Only First Attempt Recorded</div>
+              <div className="text-xs sm:text-sm">
                 You can retake this quiz for practice, but only your first attempt's score will be saved and count
                 towards your progress. This is a practice attempt.
               </div>
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5 sm:gap-2">
                 <span className="text-xs font-medium">Previous attempts:</span>
                 {previousAttempts.map((attempt, index) => (
                   <Badge key={attempt.id} variant={attempt.passed ? 'default' : 'secondary'} className="text-xs">
@@ -432,10 +492,10 @@ export function LessonQuiz({
 
       {/* Progress Bar */}
       <Card className="border-2 border-primary/20">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between mb-2">
-            <CardTitle className="text-xl">{title}</CardTitle>
-            <div className="flex items-center gap-3">
+        <CardHeader className="pb-3 sm:pb-4 p-3 sm:p-6">
+          <div className="flex items-center justify-between mb-2 gap-2">
+            <CardTitle className="text-base sm:text-xl">{title}</CardTitle>
+            <div className="flex items-center gap-1.5 sm:gap-3">
               <motion.div
                 animate={
                   timeRemaining <= 10
@@ -457,7 +517,7 @@ export function LessonQuiz({
               >
                 <Badge
                   variant="outline"
-                  className={`text-base font-mono px-3 py-1 border-2 transition-all ${
+                  className={`text-xs sm:text-base font-mono px-2 sm:px-3 py-0.5 sm:py-1 border-2 transition-all ${
                     timeRemaining <= 10
                       ? 'bg-red-50 border-red-500 text-red-700 shadow-lg shadow-red-200'
                       : timeRemaining <= 30
@@ -465,11 +525,11 @@ export function LessonQuiz({
                       : 'bg-green-50 border-green-500 text-green-700'
                   }`}
                 >
-                  <Clock className={`h-4 w-4 mr-1 ${timeRemaining <= 10 ? 'animate-pulse' : ''}`} />
+                  <Clock className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 ${timeRemaining <= 10 ? 'animate-pulse' : ''}`} />
                   {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, '0')}
                 </Badge>
               </motion.div>
-              <Badge variant="outline" className="text-base font-mono px-3 py-1">
+              <Badge variant="outline" className="text-xs sm:text-base font-mono px-2 sm:px-3 py-0.5 sm:py-1">
                 {currentQuestionIndex + 1}/{questions.length}
               </Badge>
             </div>
@@ -493,9 +553,9 @@ export function LessonQuiz({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
           {/* Question Card with Animation */}
-          <div className="relative overflow-hidden min-h-[400px]">
+          <div className="relative">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={currentQuestionIndex}
@@ -505,22 +565,23 @@ export function LessonQuiz({
                 animate="center"
                 exit="exit"
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="absolute w-full"
+                className="w-full"
               >
                 <Card className="border-2">
-                  <CardHeader>
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+                  <CardHeader className="p-3 sm:p-6">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm sm:text-lg">
                         {currentQuestionIndex + 1}
                       </div>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg leading-relaxed">
-                          {currentQuestion.question}
-                        </CardTitle>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle
+                          className="text-sm sm:text-lg leading-relaxed break-words [&_u]:underline [&_u]:decoration-2 [&_u]:underline-offset-2"
+                          dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
+                        />
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-2 sm:space-y-3">
                     <RadioGroup
                       value={answers[currentQuestion.id] || ''}
                       onValueChange={(value) => handleAnswerChange(currentQuestion.id, value)}
@@ -534,7 +595,7 @@ export function LessonQuiz({
                         >
                           <label
                             htmlFor={`${currentQuestion.id}-${option.label}`}
-                            className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                            className={`flex items-start space-x-3 p-3 sm:p-4 rounded-lg border-2 cursor-pointer transition-all ${
                               answers[currentQuestion.id] === option.label
                                 ? 'border-primary bg-primary/5 shadow-md'
                                 : 'border-gray-200 hover:border-primary/50 hover:bg-gray-50'
@@ -543,11 +604,11 @@ export function LessonQuiz({
                             <RadioGroupItem
                               value={option.label}
                               id={`${currentQuestion.id}-${option.label}`}
-                              className="flex-shrink-0"
+                              className="flex-shrink-0 mt-0.5"
                             />
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <span className="font-medium mr-2">{option.label}.</span>
-                              <span>{option.text}</span>
+                              <span className="break-words">{option.text}</span>
                             </div>
                           </label>
                         </motion.div>
@@ -560,15 +621,16 @@ export function LessonQuiz({
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between gap-3 pt-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-3 pt-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={isFirstQuestion}
-              className="flex-1 sm:flex-initial"
+              className="flex-1 sm:flex-initial text-sm sm:text-base"
             >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
+              <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Previous</span>
+              <span className="inline xs:hidden">Prev</span>
             </Button>
 
             <div className="hidden sm:flex gap-1">
@@ -595,16 +657,16 @@ export function LessonQuiz({
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !allQuestionsAnswered}
-                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-green-700"
-                size="lg"
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-green-700 text-sm sm:text-base"
+                size="default"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Quiz'}
-                <CheckCircle2 className="h-4 w-4 ml-2" />
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+                <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial">
+              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial text-sm sm:text-base">
                 Next
-                <ChevronRight className="h-4 w-4 ml-2" />
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>
             )}
           </div>
@@ -612,8 +674,8 @@ export function LessonQuiz({
           {/* Answer Status */}
           {!allQuestionsAnswered && (
             <Alert>
-              <Brain className="h-4 w-4" />
-              <AlertDescription>
+              <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+              <AlertDescription className="text-xs sm:text-sm">
                 Please answer all {questions.length} questions before submitting.
                 {Object.keys(answers).length > 0 && (
                   <span className="font-medium ml-1">
