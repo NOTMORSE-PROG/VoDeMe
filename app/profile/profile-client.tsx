@@ -110,7 +110,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                 title="Back to Dashboard"
               >
                 <svg
@@ -131,7 +131,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
             </div>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition"
+              className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
             >
               Logout
             </button>
@@ -180,7 +180,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
               {user.profilePicture && (
                 <button
                   onClick={handleDeletePicture}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition"
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition cursor-pointer"
                 >
                   Remove
                 </button>
@@ -251,7 +251,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                 <button
                   type="button"
                   onClick={handleEditClick}
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition"
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition cursor-pointer"
                 >
                   Edit Profile
                 </button>
@@ -260,7 +260,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                   <button
                     type="submit"
                     disabled={isProfilePending || !hasChanges}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {isProfilePending ? "Saving..." : "Save Changes"}
                   </button>
@@ -268,7 +268,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                     type="button"
                     onClick={handleCancelClick}
                     disabled={isProfilePending}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition disabled:opacity-50"
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -285,7 +285,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                 {!isChangingPassword && (
                   <button
                     onClick={() => setIsChangingPassword(true)}
-                    className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                    className="text-sm text-orange-600 hover:text-orange-700 font-medium cursor-pointer"
                   >
                     Update
                   </button>
@@ -361,7 +361,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                   <button
                     type="submit"
                     disabled={isPasswordPending}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-lg transition disabled:opacity-50"
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-lg transition disabled:opacity-50 cursor-pointer"
                   >
                     {isPasswordPending ? "Changing..." : "Change Password"}
                   </button>
@@ -369,7 +369,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                     type="button"
                     onClick={() => setIsChangingPassword(false)}
                     disabled={isPasswordPending}
-                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-lg transition disabled:opacity-50"
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 rounded-lg transition disabled:opacity-50 cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -403,7 +403,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
                 <button
                   onClick={handleUnlinkGoogle}
                   disabled={!hasPassword}
-                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   title={!hasPassword ? "Set a password before unlinking Google" : ""}
                 >
                   Unlink
@@ -411,7 +411,7 @@ export default function ProfileClient({ user, hasPassword, linkedProviders }: Pr
               ) : (
                 <button
                   onClick={handleLinkGoogle}
-                  className="px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition"
+                  className="px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 rounded-lg transition cursor-pointer"
                 >
                   Connect
                 </button>

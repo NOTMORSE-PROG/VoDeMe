@@ -20,13 +20,13 @@ export default function Header() {
         </div>
 
         <div className="hidden md:flex items-center gap-8">
-          <a href="#features" className="text-slate-700 hover:text-orange-500 transition font-medium">
+          <a href="#features" className="text-slate-700 hover:text-orange-500 transition font-medium cursor-pointer">
             Features
           </a>
-          <a href="#games" className="text-slate-700 hover:text-orange-500 transition font-medium">
+          <a href="#games" className="text-slate-700 hover:text-orange-500 transition font-medium cursor-pointer">
             Games
           </a>
-          <a href="#learn" className="text-slate-700 hover:text-orange-500 transition font-medium">
+          <a href="#learn" className="text-slate-700 hover:text-orange-500 transition font-medium cursor-pointer">
             Learn
           </a>
           <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold">
@@ -34,20 +34,20 @@ export default function Header() {
           </Button>
         </div>
 
-        <button className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+        <button className="md:hidden cursor-pointer" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
         {mobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-b border-sky-100 md:hidden">
             <div className="flex flex-col p-4 gap-4">
-              <a href="#features" className="text-slate-700 font-medium">
+              <a href="#features" className="text-slate-700 font-medium cursor-pointer">
                 Features
               </a>
-              <a href="#games" className="text-slate-700 font-medium">
+              <a href="#games" className="text-slate-700 font-medium cursor-pointer">
                 Games
               </a>
-              <a href="#learn" className="text-slate-700 font-medium">
+              <a href="#learn" className="text-slate-700 font-medium cursor-pointer">
                 Learn
               </a>
               <Button className="w-full bg-gradient-to-r from-orange-500 to-orange-600">Sign In</Button>

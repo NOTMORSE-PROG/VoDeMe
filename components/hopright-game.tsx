@@ -745,7 +745,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
             >
               ← Back
             </button>
@@ -754,7 +754,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {/* Mute Button - Top Right */}
           <button
             onClick={toggleMute}
-            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm cursor-pointer"
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -796,7 +796,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
             <button
               onClick={() => setGameState("levelSelect")}
-              className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl transition-all text-xl shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95"
+              className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl transition-all text-xl shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 cursor-pointer"
             >
               🐸 Start Hopping!
             </button>
@@ -839,7 +839,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
             >
               ← Back
             </button>
@@ -848,7 +848,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {/* Mute Button - Top Right */}
           <button
             onClick={toggleMute}
-            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm"
+            className="absolute top-4 right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all text-xl backdrop-blur-sm cursor-pointer"
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -875,8 +875,8 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
                   disabled={isLocked}
                   className={`
                     relative bg-white/95 backdrop-blur rounded-3xl p-8 shadow-2xl border-4 border-teal-400
-                    transform transition-all duration-300
-                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    transform transition-all duration-300 cursor-pointer
+                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl active:scale-95"}
                     animate-slide-up
                   `}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -997,26 +997,26 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
               {currentLevel !== "hard" && (
                 <button
                   onClick={handleNextLevel}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg cursor-pointer"
                 >
                   Continue to {nextLevel} →
                 </button>
               )}
               <button
                 onClick={() => handleLevelSelect(currentLevel)}
-                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg cursor-pointer"
               >
                 Retry {currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1)}
               </button>
               <button
                 onClick={handleBackToLevelSelect}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg"
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg cursor-pointer"
               >
                 Select Level
               </button>
               <button
                 onClick={handleRestart}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all"
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all cursor-pointer"
               >
                 Main Menu
               </button>
@@ -1062,20 +1062,20 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
             <div className="space-y-3">
               <button
                 onClick={handleBackToLevelSelect}
-                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg cursor-pointer"
               >
                 Select Level 🐸
               </button>
               <button
                 onClick={handleRestart}
-                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all text-lg"
+                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all text-lg cursor-pointer"
               >
                 Main Menu
               </button>
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all"
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-xl transition-all cursor-pointer"
                 >
                   Back to Dashboard
                 </button>
@@ -1095,7 +1095,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
         <div className="flex justify-between items-start mb-4">
           <button
             onClick={handleRestart}
-            className="bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm"
+            className="bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
           >
             ← Back
           </button>
@@ -1103,7 +1103,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={toggleMute}
-              className="bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm"
+              className="bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 rounded-full shadow-lg transition-all text-lg backdrop-blur-sm cursor-pointer"
               title={isMuted ? "Unmute sounds" : "Mute sounds"}
             >
               {isMuted ? "🔇" : "🔊"}
@@ -1192,7 +1192,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
               <button
                 onClick={handleNext}
-                className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all text-lg shadow-lg"
+                className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all text-lg shadow-lg cursor-pointer"
               >
                 {currentStage < 9 ? "Next Stage →" : "Complete Level →"}
               </button>

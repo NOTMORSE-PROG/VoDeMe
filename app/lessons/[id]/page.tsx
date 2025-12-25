@@ -24,9 +24,16 @@ export default async function LessonPage({
     where: { id },
     include: {
       quiz: {
-        select: {
-          id: true,
-          title: true,
+        include: {
+          attempts: {
+            where: {
+              userId: auth.userId,
+            },
+            orderBy: {
+              completedAt: 'desc',
+            },
+            take: 1,
+          },
         },
       },
       progress: {
@@ -74,6 +81,7 @@ export default async function LessonPage({
             initialProgress={userProgress?.watchedDuration || 0}
             hasQuiz={!!lesson.quiz}
             isCompleted={userProgress?.completed || false}
+            quizCompleted={!!lesson.quiz?.attempts && lesson.quiz.attempts.length > 0}
           />
         </div>
       </div>

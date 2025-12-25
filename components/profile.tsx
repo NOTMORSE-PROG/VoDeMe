@@ -96,7 +96,7 @@ export default function Profile({ user, onUpdateProfile, onBack }: ProfileProps)
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
+              className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
               title="Back to Dashboard"
             >
               <svg
@@ -159,7 +159,7 @@ export default function Profile({ user, onUpdateProfile, onBack }: ProfileProps)
                 {profilePicture && (
                   <button
                     onClick={handleRemoveImage}
-                    className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition"
+                    className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transition cursor-pointer"
                     title="Remove Photo"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ export default function Profile({ user, onUpdateProfile, onBack }: ProfileProps)
                 {!isEditing && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-700 font-semibold text-sm"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-600 hover:text-orange-700 font-semibold text-sm cursor-pointer"
                   >
                     Edit
                   </button>
@@ -273,13 +273,13 @@ export default function Profile({ user, onUpdateProfile, onBack }: ProfileProps)
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleSave}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg cursor-pointer"
                 >
                   Save Changes
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition"
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg transition cursor-pointer"
                 >
                   Cancel
                 </button>

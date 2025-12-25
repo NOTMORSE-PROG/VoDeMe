@@ -34,6 +34,7 @@ interface LessonQuizProps {
   previousAttempts: QuizAttempt[];
   hasNextLesson?: boolean;
   returnUrl?: string;
+  initialResults?: any;
 }
 
 export function LessonQuiz({
@@ -45,6 +46,7 @@ export function LessonQuiz({
   previousAttempts,
   hasNextLesson,
   returnUrl = '/dashboard?tab=lessons',
+  initialResults,
 }: LessonQuizProps) {
   const router = useRouter();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -52,7 +54,7 @@ export function LessonQuiz({
   const [answerTimes, setAnswerTimes] = useState<Record<string, number>>({}); // Track time taken per question
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now()); // Track when question was shown
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<any>(initialResults || null);
   const [direction, setDirection] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(60); // 60 seconds per question
 
@@ -193,6 +195,9 @@ export function LessonQuiz({
     setAnswerTimes({});
     setResults(null);
     setCurrentQuestionIndex(0);
+    setDirection(0);
+    setTimeRemaining(60);
+    setQuestionStartTime(Date.now());
   };
 
   const handleGoHome = () => {
@@ -387,15 +392,12 @@ export function LessonQuiz({
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button variant="outline" onClick={handleGoHome} className="flex-1">
+              <Button variant="outline" onClick={handleGoHome} className="flex-1 cursor-pointer">
                 <Home className="h-4 w-4 mr-2" />
                 Go Home
               </Button>
-              <Button onClick={handleRetry} variant="outline" className="flex-1">
-                Try Again
-              </Button>
               {hasNextLesson && (
-                <Button onClick={handleNextLesson} className="flex-1 bg-gradient-to-r from-blue-600 to-purple-700">
+                <Button onClick={handleNextLesson} className="flex-1 bg-gradient-to-r from-blue-600 to-purple-700 cursor-pointer">
                   Next Lesson
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -617,7 +619,7 @@ export function LessonQuiz({
               variant="outline"
               onClick={handlePrevious}
               disabled={isFirstQuestion}
-              className="flex-1 sm:flex-initial text-sm sm:text-base"
+              className="flex-1 sm:flex-initial text-sm sm:text-base cursor-pointer"
             >
               <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden xs:inline">Previous</span>
@@ -632,7 +634,7 @@ export function LessonQuiz({
                     setDirection(idx > currentQuestionIndex ? 1 : -1);
                     setCurrentQuestionIndex(idx);
                   }}
-                  className={`w-2 h-2 rounded-full transition-all ${
+                  className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                     idx === currentQuestionIndex
                       ? 'bg-primary w-6'
                       : answers[questions[idx].id]
@@ -648,14 +650,14 @@ export function LessonQuiz({
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting || !allQuestionsAnswered}
-                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-green-700 text-sm sm:text-base"
+                className="flex-1 sm:flex-initial bg-gradient-to-r from-green-600 to-green-700 text-sm sm:text-base cursor-pointer"
                 size="default"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit'}
                 <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial text-sm sm:text-base">
+              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial text-sm sm:text-base cursor-pointer">
                 Next
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>

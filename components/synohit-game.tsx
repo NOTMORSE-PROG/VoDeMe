@@ -763,7 +763,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95"
+              className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95 cursor-pointer"
             >
               <span>←</span> <span className="hidden sm:inline">Back</span>
             </button>
@@ -772,7 +772,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Mute Button - Top Right */}
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm cursor-pointer"
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -816,7 +816,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
             <button
               onClick={handleStartGame}
-              className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all text-lg sm:text-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95"
+              className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 hover:from-orange-600 hover:via-orange-700 hover:to-orange-800 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-xl transition-all text-lg sm:text-xl shadow-lg hover:shadow-2xl transform hover:scale-105 active:scale-95 cursor-pointer"
             >
               🎮 Start Game
             </button>
@@ -840,7 +840,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Back Button */}
           <button
             onClick={handleGoBack}
-            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95"
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm active:scale-95 cursor-pointer"
           >
             <span>←</span> <span className="hidden sm:inline">Back</span>
           </button>
@@ -848,7 +848,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Mute Button - Top Right */}
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm cursor-pointer"
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -874,8 +874,8 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
                   disabled={isLocked}
                   className={`
                     relative bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-2xl p-6 shadow-2xl
-                    transform transition-all duration-300
-                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl cursor-pointer active:scale-95"}
+                    transform transition-all duration-300 cursor-pointer
+                    ${isLocked ? "opacity-60 cursor-not-allowed grayscale" : "hover:scale-105 hover:shadow-xl active:scale-95"}
                     animate-slide-up
                   `}
                   style={{ animationDelay: `${index * 0.1}s` }}
@@ -974,7 +974,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
               {currentLevel < 3 && (
                 <button
                   onClick={handleNextLevel}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102 cursor-pointer"
                 >
                   Continue to Level {currentLevel + 1} →
                 </button>
@@ -982,19 +982,19 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
               <div className="flex gap-2 sm:gap-3">
                 <button
                   onClick={() => handleLevelSelect(currentLevel)}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
+                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95 cursor-pointer"
                 >
                   Retry
                 </button>
                 <button
                   onClick={handleBackToLevelSelect}
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95 cursor-pointer"
                 >
                   Levels
                 </button>
                 <button
                   onClick={handleGoBack}
-                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95"
+                  className="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl transition-all shadow-lg text-sm sm:text-base active:scale-95 cursor-pointer"
                 >
                   Menu
                 </button>
@@ -1026,13 +1026,13 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
             <div className="space-y-2 sm:space-y-3">
               <button
                 onClick={handleBackToLevelSelect}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95 transform hover:scale-102"
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95 transform hover:scale-102 cursor-pointer"
               >
                 Select Level
               </button>
               <button
                 onClick={handleGoBack}
-                className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95"
+                className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg active:scale-95 cursor-pointer"
               >
                 Main Menu
               </button>
@@ -1070,7 +1070,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Go Back Button - Top Left */}
           <button
             onClick={handleBackToLevelSelect}
-            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm"
+            className="absolute top-3 left-3 sm:top-4 sm:left-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all flex items-center gap-1 sm:gap-2 text-sm sm:text-base backdrop-blur-sm cursor-pointer"
           >
             <span>←</span> <span className="hidden sm:inline">Levels</span>
           </button>
@@ -1078,7 +1078,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Mute Button - Top Right */}
           <button
             onClick={toggleMute}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 bg-gray-700/90 hover:bg-gray-800 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 rounded-full shadow-lg transition-all text-lg sm:text-xl backdrop-blur-sm cursor-pointer"
             title={isMuted ? "Unmute sounds" : "Mute sounds"}
           >
             {isMuted ? "🔇" : "🔊"}
@@ -1149,7 +1149,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {answered && (
             <button
               onClick={handleNext}
-              className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 text-white font-bold py-3 sm:py-4 px-8 sm:px-10 rounded-xl transition-all text-base sm:text-lg shadow-lg transform hover:scale-105 active:scale-95 border-2 border-amber-900"
+              className="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 text-white font-bold py-3 sm:py-4 px-8 sm:px-10 rounded-xl transition-all text-base sm:text-lg shadow-lg transform hover:scale-105 active:scale-95 border-2 border-amber-900 cursor-pointer"
             >
               {currentQuestion < shuffledQuestions.length - 1 ? "Next Question →" : "Complete Level →"}
             </button>

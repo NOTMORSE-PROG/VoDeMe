@@ -17,6 +17,7 @@ interface VideoLessonPlayerProps {
   initialProgress: number;
   hasQuiz: boolean;
   isCompleted?: boolean;
+  quizCompleted?: boolean;
   onComplete?: () => void;
 }
 
@@ -29,6 +30,7 @@ export function VideoLessonPlayer({
   initialProgress,
   hasQuiz,
   isCompleted = false,
+  quizCompleted = false,
   onComplete,
 }: VideoLessonPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -330,7 +332,7 @@ export function VideoLessonPlayer({
                   </div>
                   <Button
                     onClick={() => setShowLearningWall(true)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-6 text-base shadow-lg"
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-6 text-base shadow-lg cursor-pointer"
                   >
                     <MessageSquare className="h-5 w-5 mr-2" />
                     Open Learning Wall
@@ -352,19 +354,23 @@ export function VideoLessonPlayer({
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0 bg-purple-100 p-3 rounded-full">
-                        <span className="text-2xl">🎯</span>
+                        <span className="text-2xl">{quizCompleted ? '✅' : '🎯'}</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 mb-1">Quiz Unlocked!</h3>
-                        <p className="text-sm text-gray-600">Test your knowledge and earn your completion badge</p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">
+                          {quizCompleted ? 'Quiz Completed!' : 'Quiz Unlocked!'}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {quizCompleted ? 'Review your quiz results' : 'Test your knowledge and earn your completion badge'}
+                        </p>
                       </div>
                     </div>
                     <Button
                       asChild
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 text-base shadow-lg"
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-6 text-base shadow-lg cursor-pointer"
                     >
-                      <a href={`/lessons/${lessonId}/quiz`}>
-                        Take Quiz Now →
+                      <a href={`/lessons/${lessonId}/quiz`} className="cursor-pointer">
+                        {quizCompleted ? 'View Quiz Results →' : 'Take Quiz Now →'}
                       </a>
                     </Button>
                   </div>

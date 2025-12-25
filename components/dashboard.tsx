@@ -16,6 +16,8 @@ interface Lesson {
   completed: boolean
   watchedDuration: number
   progress: number
+  hasQuiz?: boolean
+  quizCompleted?: boolean
 }
 
 interface DashboardProps {
@@ -138,7 +140,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
               </div>
               <button
                 onClick={onNavigateToProfile}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition text-sm sm:text-base flex items-center gap-2"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition text-sm sm:text-base flex items-center gap-2 cursor-pointer"
                 title="Profile Settings"
               >
                 {user.profilePicture ? (
@@ -166,7 +168,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
               </button>
               <button
                 onClick={onLogout}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition text-sm sm:text-base"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition text-sm sm:text-base cursor-pointer"
               >
                 Logout
               </button>
@@ -223,7 +225,6 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
         <div className="mb-8 bg-white rounded-2xl p-6 sm:p-8 shadow-md border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-xs text-orange-600 font-semibold mb-1">Word {wordOfDay.index} of 52</p>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{wordOfDay.word}</h2>
               <p className="text-sm sm:text-base text-gray-600">{wordOfDay.pronunciation} • {wordOfDay.wordClass}</p>
             </div>
@@ -267,7 +268,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
         <div className="flex gap-2 sm:gap-4 mb-6 sm:mb-8 border-b-2 border-gray-200 overflow-x-auto overflow-y-clip">
           <button
             onClick={() => setActiveTab("games")}
-            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base cursor-pointer ${
               activeTab === "games"
                 ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
@@ -277,7 +278,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           </button>
           <button
             onClick={() => setActiveTab("lessons")}
-            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base cursor-pointer ${
               activeTab === "lessons"
                 ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"
@@ -287,7 +288,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           </button>
           <button
             onClick={() => setActiveTab("leaderboard")}
-            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base ${
+            className={`pb-3 sm:pb-4 px-4 sm:px-6 font-semibold transition whitespace-nowrap text-sm sm:text-base cursor-pointer ${
               activeTab === "leaderboard"
                 ? "text-orange-600 border-b-4 border-orange-600 -mb-[2px]"
                 : "text-gray-600 hover:text-gray-800"

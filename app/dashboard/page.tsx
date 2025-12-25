@@ -44,11 +44,26 @@ export default async function DashboardPage() {
           watchedDuration: true,
         },
       },
+      quiz: {
+        include: {
+          attempts: {
+            where: {
+              userId: auth.userId,
+            },
+            orderBy: {
+              completedAt: 'desc',
+            },
+            take: 1,
+          },
+        },
+      },
     },
   });
 
   const lessonsWithProgress = lessons.map((lesson) => {
     const userProgress = lesson.progress[0];
+    const hasQuiz = !!lesson.quiz;
+    const quizCompleted = hasQuiz && lesson.quiz.attempts && lesson.quiz.attempts.length > 0;
     return {
       id: lesson.id,
       title: lesson.title,
@@ -58,6 +73,8 @@ export default async function DashboardPage() {
       completed: userProgress?.completed || false,
       watchedDuration: userProgress?.watchedDuration || 0,
       progress: userProgress ? Math.round((userProgress.watchedDuration / lesson.duration) * 100) : 0,
+      hasQuiz,
+      quizCompleted,
     };
   });
 

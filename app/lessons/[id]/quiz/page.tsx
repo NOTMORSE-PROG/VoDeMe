@@ -117,6 +117,67 @@ export default async function QuizPage({
 
   const quizQuestions = lesson.quiz.questions as any[];
 
+  // Get the most recent attempt with full results
+  const mostRecentAttempt = lesson.quiz.attempts[0];
+  let initialResults = null;
+
+  if (mostRecentAttempt) {
+    // Reconstruct results from stored answers and quiz questions
+    const isFirstAttempt = lesson.quiz.attempts.length === 1;
+    const storedAnswers = mostRecentAttempt.answers as any[];
+
+    // Time-based scoring rubric (same as in submit API)
+    const calculatePointsForTime = (timeTaken: number): number => {
+      if (timeTaken <= 15) return 20;
+      if (timeTaken <= 30) return 15;
+      if (timeTaken <= 45) return 10;
+      if (timeTaken <= 60) return 5;
+      return 0;
+    };
+
+    // Reconstruct detailed results
+    const results = quizQuestions.map((question: any) => {
+      const userAnswer = storedAnswers.find((a) => a.questionId === question.id);
+      const isCorrect = userAnswer?.selectedAnswer === question.correctAnswer;
+      const timeTaken = userAnswer?.timeTaken ?? 60;
+      const pointsEarned = isCorrect ? calculatePointsForTime(timeTaken) : 0;
+
+      return {
+        questionId: question.id,
+        question: question.question,
+        userAnswer: userAnswer?.selectedAnswer,
+        correctAnswer: question.correctAnswer,
+        isCorrect,
+        timeTaken,
+        pointsEarned,
+      };
+    });
+
+    // Calculate stats from the reconstructed results
+    const correctAnswers = results.filter(r => r.isCorrect).length;
+    const MAX_POINTS_PER_QUESTION = 20;
+    const maxScore = quizQuestions.length * MAX_POINTS_PER_QUESTION;
+    const percentage = Math.round((mostRecentAttempt.score / maxScore) * 100);
+
+    initialResults = {
+      id: mostRecentAttempt.id,
+      score: mostRecentAttempt.score,
+      maxScore: maxScore,
+      percentage: percentage,
+      correctAnswers: correctAnswers,
+      totalQuestions: quizQuestions.length,
+      passed: mostRecentAttempt.passed,
+      isFirstAttempt,
+      results,
+      // For subsequent attempts, include both current and recorded scores
+      currentScore: mostRecentAttempt.score,
+      currentPercentage: percentage,
+      currentCorrectAnswers: correctAnswers,
+      currentResults: results,
+      recordedScore: lesson.quiz.attempts[lesson.quiz.attempts.length - 1].score,
+    };
+  }
+
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <div className="space-y-6">
@@ -141,6 +202,7 @@ export default async function QuizPage({
           }))}
           hasNextLesson={!!nextLesson}
           returnUrl={returnUrl}
+          initialResults={initialResults}
         />
       </div>
     </div>

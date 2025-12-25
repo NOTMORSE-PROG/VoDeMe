@@ -23,6 +23,8 @@ interface Lesson {
   completed: boolean
   watchedDuration: number
   progress: number
+  hasQuiz?: boolean
+  quizCompleted?: boolean
 }
 
 interface DashboardClientProps {

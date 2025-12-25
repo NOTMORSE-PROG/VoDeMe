@@ -12,6 +12,8 @@ interface VideoLessonCardProps {
     completed: boolean;
     watchedDuration: number;
     progress: number;
+    hasQuiz?: boolean;
+    quizCompleted?: boolean;
   };
   videoUrl: string;
 }
@@ -89,7 +91,7 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
           <div className="flex flex-col sm:flex-row gap-2 order-1 sm:order-2">
             <Link
               href={`/lessons/${lesson.id}`}
-              className={`px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base cursor-pointer ${
                 lesson.completed
                   ? 'bg-green-500 hover:bg-green-600 text-white'
                   : actualProgress > 0
@@ -103,12 +105,12 @@ export function VideoLessonCard({ lesson, videoUrl }: VideoLessonCardProps) {
                 ? 'Continue'
                 : 'Start'}
             </Link>
-            {lesson.completed && (
+            {lesson.completed && lesson.hasQuiz && (
               <Link
                 href={`/lessons/${lesson.id}/quiz?from=dashboard`}
-                className="px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base bg-purple-500 hover:bg-purple-600 text-white"
+                className="px-4 sm:px-6 py-2.5 sm:py-2 rounded-lg font-semibold transition text-center text-sm sm:text-base bg-purple-500 hover:bg-purple-600 text-white cursor-pointer"
               >
-                Take Quiz
+                {lesson.quizCompleted ? 'View Results' : 'Take Quiz'}
               </Link>
             )}
           </div>
