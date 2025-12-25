@@ -20,8 +20,6 @@ export class AuthenticationError extends Error {
   }
 }
 
-const MIN_SCORE_TO_PASS = 7 // Need at least 7/10 to unlock next level
-
 // Cache for game progress to reduce API calls
 let progressCache: GameProgress | null = null
 let cacheTimestamp = 0
@@ -62,7 +60,7 @@ async function fetchProgressFromAPI(): Promise<GameProgress> {
     })
 
     // Update current level (next level after highest completed)
-    if (record.completed && record.score >= MIN_SCORE_TO_PASS) {
+    if (record.completed) {
       const nextLevel = record.level + 1
       if (nextLevel > gameProgress[record.gameName].currentLevel) {
         gameProgress[record.gameName].currentLevel = nextLevel
@@ -128,8 +126,8 @@ export async function isLevelUnlocked(gameName: string, level: number): Promise<
   const progress = await getProgress(gameName)
   const previousLevel = progress.levels.find(l => l.level === level - 1)
 
-  // Previous level must be completed with passing score
-  return previousLevel ? previousLevel.completed && previousLevel.score >= MIN_SCORE_TO_PASS : false
+  // Previous level must be completed
+  return previousLevel ? previousLevel.completed : false
 }
 
 // Get the highest unlocked level
@@ -217,7 +215,7 @@ export async function getLevelStatus(gameName: string, level: number): Promise<"
   const progress = await getProgress(gameName)
   const levelProgress = progress.levels.find(l => l.level === level)
 
-  if (levelProgress?.completed && levelProgress.score >= MIN_SCORE_TO_PASS) {
+  if (levelProgress?.completed) {
     return "completed"
   }
 
@@ -273,5 +271,3 @@ export async function migrateLocalStorageToDatabase(): Promise<void> {
     console.error('Error migrating localStorage data:', error)
   }
 }
-
-export { MIN_SCORE_TO_PASS }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import { saveLevelProgress, getLevelStatus, getStarRating } from "@/lib/game-progress"
 import WordStudyTutorial from "./word-study-tutorial"
 import { toast } from "sonner"
 
@@ -599,6 +599,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [attemptInfo, setAttemptInfo] = useState<{ isFirstAttempt: boolean; recordedScore?: number } | null>(null)
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('wordstudyjournal-muted')
@@ -789,6 +790,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
       try {
         const result = await saveLevelProgress("wordstudyjournal", currentLevel, score, 10)
+        setAttemptInfo({ isFirstAttempt: result.isFirstAttempt, recordedScore: result.recordedScore })
 
         if (!result.isFirstAttempt) {
           toast.info(
@@ -799,6 +801,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
       } catch (error) {
         console.error('Error saving progress:', error)
         toast.error('Failed to save progress')
+        setAttemptInfo(null)
       }
 
       if (currentLevel < 3) {
@@ -816,7 +819,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${currentLevel} to unlock it.`)
+      toast.error(`Level ${nextLevel} is locked! Complete Level ${currentLevel} to unlock it.`)
       return
     }
 
@@ -853,7 +856,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${level - 1} to unlock it.`)
+      toast.error(`Level ${level} is locked! Complete Level ${level - 1} to unlock it.`)
       return
     }
 
@@ -1053,7 +1056,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                     {/* Lock Message */}
                     {isLocked && (
                       <p className="text-[10px] sm:text-xs text-gray-600 mt-2 sm:mt-3">
-                        Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS * 10} pts to unlock
+                        Complete Level {config.level - 1} to unlock
                       </p>
                     )}
                   </button>
@@ -1078,7 +1081,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           {/* Instructions */}
           <div className="mt-4 bg-amber-50/90 backdrop-blur border-2 border-amber-400 rounded-xl p-4 max-w-2xl text-center">
             <p className="text-amber-700 font-semibold">
-              🎯 Complete each level with at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next one!
+              🎯 Complete each level to unlock the next one!
             </p>
           </div>
 
@@ -1104,14 +1107,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   if (gameState === "levelComplete") {
     const levelNames = { 1: "Deconstruction", 2: "Classification", 3: "Application" }
     const nextLevelNum = (currentLevel + 1) as 2 | 3
-    const passed = score >= MIN_SCORE_TO_PASS
     const stars = getStarRating(score, 10)
 
     return (
       <ClassroomBackground>
         <div className="min-h-screen flex flex-col items-center justify-center p-4 pt-56">
           <div className="bg-white/95 backdrop-blur rounded-3xl p-8 max-w-md shadow-2xl border-4 border-green-400 text-center animate-pop-in">
-            <div className="text-6xl mb-4 animate-bounce">{passed ? "🎉" : "😔"}</div>
+            <div className="text-6xl mb-4 animate-bounce">🎉</div>
             <h2 className="text-3xl font-bold text-green-700 mb-2">
               Level {currentLevel} Complete!
             </h2>
@@ -1126,29 +1128,33 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
               ))}
             </div>
 
-            <div className={`bg-gradient-to-r rounded-2xl p-6 my-6 ${passed ? "from-green-100 to-emerald-100" : "from-red-100 to-red-50"}`}>
+            <div className="bg-gradient-to-r from-blue-100 to-purple-50 rounded-2xl p-6 my-6">
               <p className="text-gray-600 text-sm mb-2">Your Score</p>
-              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
-              <p className={`text-sm font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Level ${nextLevelNum} Unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
+              <p className="text-5xl font-bold text-blue-600">{score * 10} pts</p>
+              <p className="text-sm font-semibold mt-2 text-blue-700">
+                {currentLevel < 3 ? `🎊 Level ${nextLevelNum} Unlocked!` : '🏆 All Levels Complete!'}
               </p>
+              {attemptInfo && !attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                  ⓘ Only first attempt is recorded ({(attemptInfo.recordedScore ?? 0) * 10} pts)
+                </p>
+              )}
+              {attemptInfo && attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-green-600 mt-2">
+                  ✓ First attempt - Score recorded!
+                </p>
+              )}
             </div>
 
-            {!passed && (
-              <p className="text-sm text-gray-700 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
-                Keep trying! You need at least {MIN_SCORE_TO_PASS * 10} pts to unlock Level {nextLevelNum}.
-              </p>
-            )}
-
-            {passed && (
-              <p className="text-lg text-gray-600 mb-6">Ready for Level {nextLevelNum}: {levelNames[nextLevelNum]}?</p>
-            )}
+            <p className="text-lg text-gray-600 mb-6">
+              {currentLevel < 3 ? `Ready for Level ${nextLevelNum}: ${levelNames[nextLevelNum]}?` : 'Congratulations on completing all levels!'}
+            </p>
 
             <div className="space-y-3">
-              {passed && (
+              {currentLevel < 3 && (
                 <button
                   onClick={handleNextLevel}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
                 >
                   Continue to Level {nextLevelNum} →
                 </button>

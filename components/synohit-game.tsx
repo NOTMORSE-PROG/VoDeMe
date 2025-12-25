@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import React from "react"
-import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import { saveLevelProgress, getLevelStatus, getStarRating } from "@/lib/game-progress"
 import { toast } from "sonner"
 
 interface Question {
@@ -549,6 +549,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [attemptInfo, setAttemptInfo] = useState<{ isFirstAttempt: boolean; recordedScore?: number } | null>(null)
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('synohit-muted')
@@ -684,6 +685,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
       try {
         const result = await saveLevelProgress("synohit", currentLevel, finalScore, 10)
+        setAttemptInfo({ isFirstAttempt: result.isFirstAttempt, recordedScore: result.recordedScore })
 
         if (!result.isFirstAttempt) {
           toast.info(
@@ -694,6 +696,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
       } catch (error) {
         console.error('Error saving progress:', error)
         toast.error('Failed to save progress')
+        setAttemptInfo(null)
       }
 
       if (currentLevel < 3) {
@@ -904,7 +907,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
                   {/* Lock Message */}
                   {isLocked && (
                     <p className="text-xs text-amber-600 mt-3">
-                      Complete Level {config.level - 1} with {MIN_SCORE_TO_PASS}/10 to unlock
+                      Complete Level {config.level - 1} to unlock
                     </p>
                   )}
                 </button>
@@ -915,7 +918,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
           {/* Instructions */}
           <div className="mt-8 bg-amber-50/90 backdrop-blur border-2 border-amber-700 rounded-xl p-4 max-w-2xl mx-4 text-center">
             <p className="text-amber-900 font-semibold text-sm sm:text-base">
-              🎯 Complete each level with at least {MIN_SCORE_TO_PASS}/10 to unlock the next one!
+              🎯 Complete each level to unlock the next one!
             </p>
           </div>
         </div>
@@ -924,7 +927,6 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
   }
 
   if (gameState === "levelComplete") {
-    const passed = score >= MIN_SCORE_TO_PASS
     const stars = getStarRating(score, 10)
     const nextLevelStatus = getLevelStatus("synohit", currentLevel + 1)
 
@@ -933,7 +935,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
         <div className="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
           <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-4 border-amber-800 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl text-center max-w-[95%] sm:max-w-md animate-fade-in">
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-amber-900">Level {currentLevel} Complete!</h2>
-            <div className="text-6xl sm:text-8xl mb-3 sm:mb-4 animate-bounce-in">{passed ? "🎉" : "😔"}</div>
+            <div className="text-6xl sm:text-8xl mb-3 sm:mb-4 animate-bounce-in">🎉</div>
 
             {/* Star Rating */}
             <div className="flex justify-center gap-1 sm:gap-2 mb-3 sm:mb-4">
@@ -944,28 +946,32 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
               ))}
             </div>
 
-            <div className={`bg-gradient-to-r rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 ${passed ? "from-green-100 to-green-50 border-green-300" : "from-red-100 to-red-50 border-red-300"}`}>
-              <p className={`text-4xl sm:text-6xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
-              <p className={`text-sm sm:text-base font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Level ${currentLevel + 1} Unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
+            <div className="bg-gradient-to-r from-blue-100 to-purple-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border-2 border-blue-300">
+              <p className="text-4xl sm:text-6xl font-bold text-blue-600">{score * 10} pts</p>
+              <p className="text-sm sm:text-base font-semibold mt-2 text-blue-700">
+                {currentLevel < 3 ? `🎊 Level ${currentLevel + 1} Unlocked!` : '🏆 All Levels Complete!'}
               </p>
+              {attemptInfo && !attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                  ⓘ Only first attempt is recorded ({(attemptInfo.recordedScore ?? 0) * 10} pts)
+                </p>
+              )}
+              {attemptInfo && attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-green-600 mt-2">
+                  ✓ First attempt - Score recorded!
+                </p>
+              )}
             </div>
 
-            {!passed && (
-              <p className="text-sm sm:text-base text-amber-800 mb-4 sm:mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
-                Keep trying! You need at least {MIN_SCORE_TO_PASS} correct answers to unlock Level {currentLevel + 1}.
-              </p>
-            )}
-
-            {passed && (
-              <p className="text-base sm:text-lg text-amber-700 mb-4 sm:mb-6 font-medium">Ready for the next challenge?</p>
-            )}
+            <p className="text-base sm:text-lg text-amber-700 mb-4 sm:mb-6 font-medium">
+              {currentLevel < 3 ? 'Ready for the next challenge?' : 'Congratulations on completing all levels!'}
+            </p>
 
             <div className="space-y-2 sm:space-y-3">
-              {passed && currentLevel < 3 && (
+              {currentLevel < 3 && (
                 <button
                   onClick={handleNextLevel}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl transition-all text-base sm:text-lg shadow-lg hover:shadow-xl active:scale-95 transform hover:scale-102"
                 >
                   Continue to Level {currentLevel + 1} →
                 </button>

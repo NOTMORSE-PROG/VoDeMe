@@ -275,6 +275,9 @@ export function LessonQuiz({
                     <span className="text-muted-foreground ml-2">
                       ({results.correctAnswers}/{results.totalQuestions} correct)
                     </span>
+                    <div className="text-green-600 font-semibold mt-2 text-sm">
+                      ✓ First attempt - Score recorded!
+                    </div>
                   </>
                 )}
               </CardDescription>

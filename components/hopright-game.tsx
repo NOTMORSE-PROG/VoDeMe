@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { saveLevelProgress, getLevelStatus, getStarRating, MIN_SCORE_TO_PASS } from "@/lib/game-progress"
+import { saveLevelProgress, getLevelStatus, getStarRating } from "@/lib/game-progress"
 import { toast } from "sonner"
 
 // Game data for all 30 stages
@@ -470,6 +470,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
     2: "locked",
     3: "locked"
   })
+  const [attemptInfo, setAttemptInfo] = useState<{ isFirstAttempt: boolean; recordedScore?: number } | null>(null)
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('hopright-muted')
@@ -651,6 +652,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
       try {
         const result = await saveLevelProgress("hopright", getLevelNumber(currentLevel), finalScore, 10)
+        setAttemptInfo({ isFirstAttempt: result.isFirstAttempt, recordedScore: result.recordedScore })
 
         if (!result.isFirstAttempt) {
           toast.info(
@@ -661,6 +663,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
       } catch (error) {
         console.error('Error saving progress:', error)
         toast.error('Failed to save progress')
+        setAttemptInfo(null)
       }
 
       if (currentLevel === "easy") {
@@ -680,7 +683,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`Level ${nextLevelNum} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in the previous level to unlock it.`)
+      toast.error(`Level ${nextLevelNum} is locked! Complete the previous level to unlock it.`)
       return
     }
 
@@ -726,7 +729,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`This level is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in the previous level to unlock it.`)
+      toast.error(`This level is locked! Complete the previous level to unlock it.`)
       return
     }
 
@@ -905,7 +908,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
                   {/* Lock Message */}
                   {isLocked && (
                     <p className="text-xs text-gray-600 mt-3">
-                      Complete {config.levelNum === 2 ? "Easy" : "Medium"} level with {MIN_SCORE_TO_PASS * 10} pts to unlock
+                      Complete {config.levelNum === 2 ? "Easy" : "Medium"} level to unlock
                     </p>
                   )}
                 </button>
@@ -916,7 +919,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {/* Instructions */}
           <div className="mt-8 bg-white/90 backdrop-blur border-2 border-teal-400 rounded-xl p-4 max-w-2xl text-center">
             <p className="text-teal-700 font-semibold">
-              🎯 Complete each level with at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next one!
+              🎯 Complete each level to unlock the next one!
             </p>
           </div>
         </div>
@@ -945,14 +948,13 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
   // Level Complete Screen
   if (gameState === "levelComplete") {
     const nextLevel = currentLevel === "easy" ? "Medium" : "Hard"
-    const passed = score >= MIN_SCORE_TO_PASS
     const stars = getStarRating(score, 10)
 
     return (
       <NatureBackground>
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
           <div className="bg-white/95 backdrop-blur rounded-3xl p-8 max-w-md shadow-2xl border-4 border-teal-400 text-center animate-fade-in">
-            <div className="text-6xl mb-4 animate-bounce">{passed ? "🎉" : "😔"}</div>
+            <div className="text-6xl mb-4 animate-bounce">🎉</div>
             <h2 className="text-3xl font-bold text-teal-700 mb-2">
               {currentLevel.charAt(0).toUpperCase() + currentLevel.slice(1)} Level Complete!
             </h2>
@@ -966,29 +968,33 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
               ))}
             </div>
 
-            <div className={`bg-gradient-to-r rounded-2xl p-6 my-6 ${passed ? "from-green-100 to-green-50" : "from-red-100 to-red-50"}`}>
+            <div className="bg-gradient-to-r from-blue-100 to-purple-50 rounded-2xl p-6 my-6">
               <p className="text-gray-600 text-sm mb-2">Your Score</p>
-              <p className={`text-5xl font-bold ${passed ? "text-green-600" : "text-red-600"}`}>{score * 10} pts</p>
-              <p className={`text-sm font-semibold mt-2 ${passed ? "text-green-700" : "text-red-700"}`}>
-                {passed ? `🎊 Next level unlocked!` : `Need ${MIN_SCORE_TO_PASS * 10} pts to unlock next level`}
+              <p className="text-5xl font-bold text-blue-600">{score * 10} pts</p>
+              <p className="text-sm font-semibold mt-2 text-blue-700">
+                {currentLevel !== "hard" ? `🎊 Next level unlocked!` : '🏆 All Levels Complete!'}
               </p>
+              {attemptInfo && !attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                  ⓘ Only first attempt is recorded ({(attemptInfo.recordedScore ?? 0) * 10} pts)
+                </p>
+              )}
+              {attemptInfo && attemptInfo.isFirstAttempt && (
+                <p className="text-xs sm:text-sm text-green-600 mt-2">
+                  ✓ First attempt - Score recorded!
+                </p>
+              )}
             </div>
 
-            {!passed && (
-              <p className="text-sm text-gray-700 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-300">
-                Keep trying! You need at least {MIN_SCORE_TO_PASS * 10} pts to unlock the next level.
-              </p>
-            )}
-
-            {passed && (
-              <p className="text-lg text-gray-600 mb-6">Ready for {nextLevel} level?</p>
-            )}
+            <p className="text-lg text-gray-600 mb-6">
+              {currentLevel !== "hard" ? `Ready for ${nextLevel} level?` : 'Congratulations on completing all levels!'}
+            </p>
 
             <div className="space-y-3">
-              {passed && currentLevel !== "hard" && (
+              {currentLevel !== "hard" && (
                 <button
                   onClick={handleNextLevel}
-                  className="w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-lg shadow-lg"
                 >
                   Continue to {nextLevel} →
                 </button>
