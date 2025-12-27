@@ -1183,7 +1183,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             </div>
           </div>
 
-          <CharacterHand isWriting={false} emotion={passed ? "happy" : "neutral"} />
+          <CharacterHand isWriting={false} emotion="happy" />
         </div>
 
         <style jsx>{`

@@ -49,7 +49,48 @@ export function LessonQuiz({
   initialResults,
 }: LessonQuizProps) {
   const router = useRouter();
+
+  // Shuffle function (Fisher-Yates algorithm) - shuffles text but keeps labels A, B, C, D
+  const shuffleOptions = (question: QuizQuestion) => {
+    // Find the correct answer text first
+    const correctOption = question.options.find(opt => opt.label === question.correctAnswer);
+    const correctText = correctOption?.text;
+
+    // Extract all option texts
+    const texts = question.options.map(opt => opt.text);
+
+    // Shuffle the texts using Fisher-Yates
+    for (let i = texts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [texts[i], texts[j]] = [texts[j], texts[i]];
+    }
+
+    // Reassign shuffled texts to A, B, C, D labels
+    const shuffledOptions = question.options.map((opt, index) => ({
+      label: opt.label, // Keep original labels (A, B, C, D)
+      text: texts[index], // Assign shuffled text
+    }));
+
+    // Find the new label that has the correct text
+    const newCorrectLabel = shuffledOptions.find(opt => opt.text === correctText)?.label || question.correctAnswer;
+
+    return {
+      ...question,
+      options: shuffledOptions,
+      correctAnswer: newCorrectLabel, // Update correct answer to new label
+    };
+  };
+
+  // Shuffle all questions' options on mount (and allow reshuffling on retry)
+  // Start with unshuffled questions to avoid hydration mismatch
+  const [shuffledQuestions, setShuffledQuestions] = useState(questions);
+
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // Shuffle on client-side mount only (avoids hydration mismatch)
+  useEffect(() => {
+    setShuffledQuestions(questions.map(shuffleOptions));
+  }, []); // Only run once on mount
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [answerTimes, setAnswerTimes] = useState<Record<string, number>>({}); // Track time taken per question
   const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now()); // Track when question was shown
@@ -58,11 +99,11 @@ export function LessonQuiz({
   const [direction, setDirection] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(60); // 60 seconds per question
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const currentQuestion = shuffledQuestions[currentQuestionIndex];
   const isFirstQuestion = currentQuestionIndex === 0;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const allQuestionsAnswered = Object.keys(answers).length === questions.length;
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const isLastQuestion = currentQuestionIndex === shuffledQuestions.length - 1;
+  const allQuestionsAnswered = Object.keys(answers).length === shuffledQuestions.length;
+  const progress = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
 
   // Timer countdown effect
   useEffect(() => {
@@ -140,7 +181,7 @@ export function LessonQuiz({
 
   const handleSubmit = async () => {
     // Check if all questions are answered
-    if (Object.keys(answers).length !== questions.length) {
+    if (Object.keys(answers).length !== shuffledQuestions.length) {
       toast.error('Please answer all questions before submitting');
       return;
     }
@@ -154,11 +195,31 @@ export function LessonQuiz({
         },
         body: JSON.stringify({
           quizId,
-          answers: Object.entries(answers).map(([questionId, selectedAnswer]) => ({
-            questionId,
-            selectedAnswer,
-            timeTaken: answerTimes[questionId] || 60, // Default to 60 if no time recorded
-          })),
+          answers: Object.entries(answers).map(([questionId, selectedAnswer]) => {
+            // Find the shuffled question
+            const shuffledQ = shuffledQuestions.find(q => q.id === questionId);
+            // Find the original question
+            const originalQ = questions.find(q => q.id === questionId);
+
+            if (shuffledQ && originalQ) {
+              // Get the text of the selected answer from shuffled question
+              const selectedText = shuffledQ.options.find(opt => opt.label === selectedAnswer)?.text;
+              // Find which original label had this text
+              const originalLabel = originalQ.options.find(opt => opt.text === selectedText)?.label;
+
+              return {
+                questionId,
+                selectedAnswer: originalLabel || selectedAnswer, // Use original label for API
+                timeTaken: answerTimes[questionId] || 60,
+              };
+            }
+
+            return {
+              questionId,
+              selectedAnswer,
+              timeTaken: answerTimes[questionId] || 60,
+            };
+          }),
         }),
       });
 
@@ -191,6 +252,8 @@ export function LessonQuiz({
   };
 
   const handleRetry = () => {
+    // Reshuffle the questions for a new attempt
+    setShuffledQuestions(questions.map(shuffleOptions));
     setAnswers({});
     setAnswerTimes({});
     setResults(null);
@@ -316,7 +379,29 @@ export function LessonQuiz({
                 Review Your Answers {!isFirstAttempt && '(Practice)'}
               </h3>
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {(isFirstAttempt ? results.results : results.currentResults)?.map((result: any, index: number) => (
+                {(isFirstAttempt ? results.results : results.currentResults)?.map((result: any, index: number) => {
+                  // Map the original labels back to what the user saw (shuffled labels)
+                  const shuffledQ = shuffledQuestions.find(q => q.id === result.questionId);
+                  const originalQ = questions.find(q => q.id === result.questionId);
+
+                  let displayUserAnswer = result.userAnswer;
+                  let displayCorrectAnswer = result.correctAnswer;
+                  let userAnswerText = '';
+                  let correctAnswerText = '';
+
+                  if (shuffledQ && originalQ && result.userAnswer) {
+                    // Find the text for the original user answer
+                    userAnswerText = originalQ.options.find(opt => opt.label === result.userAnswer)?.text || '';
+                    // Find which shuffled label had this text
+                    displayUserAnswer = shuffledQ.options.find(opt => opt.text === userAnswerText)?.label || result.userAnswer;
+
+                    // Find the text for the correct answer
+                    correctAnswerText = originalQ.options.find(opt => opt.label === result.correctAnswer)?.text || '';
+                    // Find which shuffled label had this text
+                    displayCorrectAnswer = shuffledQ.options.find(opt => opt.text === correctAnswerText)?.label || result.correctAnswer;
+                  }
+
+                  return (
                   <motion.div
                     key={result.questionId}
                     initial={{ opacity: 0, x: -20 }}
@@ -369,24 +454,25 @@ export function LessonQuiz({
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0 space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-2">
                           <span className="text-sm font-medium">Your answer:</span>
                           <Badge variant={result.isCorrect ? 'default' : 'destructive'} className="font-mono">
-                            {result.userAnswer || 'No answer'}
+                            {displayUserAnswer || 'No answer'}
                           </Badge>
                         </div>
                         {!result.isCorrect && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-start gap-2">
                             <span className="text-sm font-medium">Correct answer:</span>
                             <Badge variant="default" className="bg-green-600 font-mono">
-                              {result.correctAnswer}
+                              {displayCorrectAnswer}
                             </Badge>
                           </div>
                         )}
                       </CardContent>
                     </Card>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -518,7 +604,7 @@ export function LessonQuiz({
                 </Badge>
               </motion.div>
               <Badge variant="outline" className="text-xs sm:text-base font-mono px-2 sm:px-3 py-0.5 sm:py-1">
-                {currentQuestionIndex + 1}/{questions.length}
+                {currentQuestionIndex + 1}/{shuffledQuestions.length}
               </Badge>
             </div>
           </div>
@@ -537,7 +623,7 @@ export function LessonQuiz({
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">
-                {Object.keys(answers).length}/{questions.length} answered
+                {Object.keys(answers).length}/{shuffledQuestions.length} answered
               </p>
               <p className="text-xs text-blue-600 font-medium">
                 ⓘ Only your first attempt will be recorded for scoring
@@ -627,7 +713,7 @@ export function LessonQuiz({
             </Button>
 
             <div className="hidden sm:flex gap-1">
-              {questions.map((_, idx) => (
+              {shuffledQuestions.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
@@ -637,11 +723,11 @@ export function LessonQuiz({
                   className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
                     idx === currentQuestionIndex
                       ? 'bg-primary w-6'
-                      : answers[questions[idx].id]
+                      : answers[shuffledQuestions[idx].id]
                       ? 'bg-primary/50'
                       : 'bg-gray-300'
                   }`}
-                  title={`Question ${idx + 1}${answers[questions[idx].id] ? ' (answered)' : ''}`}
+                  title={`Question ${idx + 1}${answers[shuffledQuestions[idx].id] ? ' (answered)' : ''}`}
                 />
               ))}
             </div>
@@ -669,10 +755,10 @@ export function LessonQuiz({
             <Alert>
               <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
               <AlertDescription className="text-xs sm:text-sm">
-                Please answer all {questions.length} questions before submitting.
+                Please answer all {shuffledQuestions.length} questions before submitting.
                 {Object.keys(answers).length > 0 && (
                   <span className="font-medium ml-1">
-                    ({questions.length - Object.keys(answers).length} remaining)
+                    ({shuffledQuestions.length - Object.keys(answers).length} remaining)
                   </span>
                 )}
               </AlertDescription>

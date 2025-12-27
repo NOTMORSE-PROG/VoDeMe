@@ -6,6 +6,7 @@ import Link from "next/link"
 import { getProgress, getLevelStatus } from "@/lib/game-progress"
 import { getWordOfDay } from "@/lib/word-data"
 import { VideoLessonCard } from "@/components/video-lesson-card"
+import { getLeaderboard, getUserRank, type LeaderboardEntry } from "@/lib/leaderboard"
 
 interface Lesson {
   id: string
@@ -70,14 +71,17 @@ function LevelIndicator({ gameName }: { gameName: string }) {
 export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, lessonsCompleted, quizzesCompleted, totalPoints, initialTab }: DashboardProps) {
   const [activeTab, setActiveTab] = useState(initialTab || "games")
   const [gameProgress, setGameProgress] = useState<{
-    synohit: ReturnType<typeof getProgress>
-    hopright: ReturnType<typeof getProgress>
-    wordstudyjournal: ReturnType<typeof getProgress>
+    synohit: { currentLevel: number; levels: any[] }
+    hopright: { currentLevel: number; levels: any[] }
+    wordstudyjournal: { currentLevel: number; levels: any[] }
   }>({
     synohit: { currentLevel: 1, levels: [] },
     hopright: { currentLevel: 1, levels: [] },
     wordstudyjournal: { currentLevel: 1, levels: [] }
   })
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false)
+  const [userRank, setUserRank] = useState(0)
 
   // Update active tab when initialTab prop changes
   useEffect(() => {
@@ -88,11 +92,30 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
 
   // Load game progress on mount
   useEffect(() => {
-    setGameProgress({
-      synohit: getProgress("synohit"),
-      hopright: getProgress("hopright"),
-      wordstudyjournal: getProgress("wordstudyjournal")
-    })
+    const loadProgress = async () => {
+      const [synohitProgress, hoprightProgress, wordstudyjournalProgress] = await Promise.all([
+        getProgress("synohit"),
+        getProgress("hopright"),
+        getProgress("wordstudyjournal")
+      ])
+      setGameProgress({
+        synohit: synohitProgress,
+        hopright: hoprightProgress,
+        wordstudyjournal: wordstudyjournalProgress
+      })
+    }
+    loadProgress()
+  }, [])
+
+  // Load leaderboard data
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      const data = await getLeaderboard()
+      setLeaderboard(data)
+      const rank = getUserRank(data, user.email)
+      setUserRank(rank)
+    }
+    loadLeaderboard()
   }, [])
 
   // Grass styles for HopRight card (client-side only to avoid hydration mismatch)
@@ -217,7 +240,9 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🏆</div>
             <p className="text-gray-600 text-xs sm:text-sm">Rank</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">#8</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">
+              {userRank > 0 ? `#${userRank}` : '-'}
+            </p>
           </div>
         </div>
 
@@ -578,34 +603,85 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
         {/* Leaderboard Section */}
         {activeTab === "leaderboard" && (
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[500px]">
-                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <div className={`overflow-x-auto ${isLeaderboardExpanded ? 'max-h-[600px] overflow-y-auto' : ''}`}>
+              <table className="w-full min-w-[400px]">
+                <thead className="bg-gradient-to-r from-orange-500 to-orange-600 text-white sticky top-0 z-10">
                   <tr>
                     <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-sm sm:text-base">Rank</th>
                     <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-sm sm:text-base">Player</th>
                     <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-sm sm:text-base">Points</th>
-                    <th className="px-3 sm:px-6 py-3 sm:py-4 text-left font-semibold text-sm sm:text-base">Streak</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {[
-                    { rank: 1, name: "Alex Chen", points: 5230, streak: 28 },
-                    { rank: 2, name: "Sarah Miller", points: 4890, streak: 21 },
-                    { rank: 3, name: "You", points: 2450, streak: 12, highlight: true },
-                    { rank: 8, name: "Jordan Lee", points: 1950, streak: 8 },
-                    { rank: 9, name: "Emma Davis", points: 1820, streak: 6 },
-                  ].map((player, idx) => (
-                    <tr key={idx} className={player.highlight ? "bg-orange-50" : ""}>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold text-gray-800 text-sm sm:text-base">#{player.rank}</td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-gray-800 text-sm sm:text-base">{player.name}</td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-orange-600 font-bold text-sm sm:text-base">{player.points}</td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-gray-600 text-sm sm:text-base">🔥 {player.streak}</td>
+                  {leaderboard.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-3 sm:px-6 py-8 text-center text-gray-500">
+                        <div className="text-4xl mb-2">🏆</div>
+                        <p>No players on the leaderboard yet. Be the first!</p>
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    (isLeaderboardExpanded ? leaderboard : leaderboard.slice(0, 5)).map((player) => {
+                      const isCurrentUser = player.email === user.email
+                      return (
+                        <tr key={player.id} className={isCurrentUser ? "bg-orange-50" : ""}>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold text-gray-800 text-sm sm:text-base">
+                            #{player.rank}
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base">
+                            <div className="flex items-center gap-2">
+                              {player.profilePicture ? (
+                                <img
+                                  src={player.profilePicture}
+                                  alt={player.name}
+                                  className="w-8 h-8 rounded-full object-cover border-2 border-orange-300"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                  {player.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className={`font-semibold ${isCurrentUser ? 'text-orange-700' : 'text-gray-800'}`}>
+                                {isCurrentUser ? `${player.name} (You)` : player.name}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-orange-600 font-bold text-sm sm:text-base">
+                            {player.points.toLocaleString()}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
+
+            {/* Expand/Collapse Button */}
+            {leaderboard.length > 5 && (
+              <div className="border-t border-gray-200 p-4 text-center">
+                <button
+                  onClick={() => setIsLeaderboardExpanded(!isLeaderboardExpanded)}
+                  className="text-orange-600 hover:text-orange-700 font-semibold text-sm sm:text-base flex items-center gap-2 mx-auto transition-colors cursor-pointer"
+                >
+                  {isLeaderboardExpanded ? (
+                    <>
+                      Show Less
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </>
+                  ) : (
+                    <>
+                      Show More ({leaderboard.length - 5} more)
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
