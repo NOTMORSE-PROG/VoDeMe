@@ -745,7 +745,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-base backdrop-blur-sm cursor-pointer"
             >
               ← Back
             </button>
@@ -839,7 +839,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {onBack && (
             <button
               onClick={onBack}
-              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
+              className="absolute top-4 left-4 z-30 bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-base backdrop-blur-sm cursor-pointer"
             >
               ← Back
             </button>
@@ -1095,7 +1095,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
         <div className="flex justify-between items-start mb-4">
           <button
             onClick={handleRestart}
-            className="bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-sm backdrop-blur-sm cursor-pointer"
+            className="bg-gray-700/80 hover:bg-gray-800 text-white font-bold px-4 py-2 rounded-full shadow-lg transition-all flex items-center gap-2 text-base backdrop-blur-sm cursor-pointer"
           >
             ← Back
           </button>
