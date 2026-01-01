@@ -1176,7 +1176,7 @@ export default function HopRightGame({ onBack }: HopRightGameProps) {
           {answered && (
             <div className="text-center animate-fade-in">
               {selectedAnswer === correctAnswerIndex ? (
-                <p className="text-2xl font-bold text-green-500 mb-4 drop-shadow-lg">
+                <p className="text-2xl font-bold text-white mb-4 drop-shadow-lg">
                   ✓ Correct! Great job!
                 </p>
               ) : (

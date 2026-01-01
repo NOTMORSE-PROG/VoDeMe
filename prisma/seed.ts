@@ -21,11 +21,12 @@ async function main() {
   const lesson1 = await prisma.videoLesson.upsert({
     where: { level_order: { level: 1, order: 1 } },
     update: {
+      title: "Synonyms",
       videoUrl:
         "https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtywVX4ZTub8GT5Xpe2vwW497oAKaMY3jOJVBs",
     },
     create: {
-      title: "Understanding Synonyms",
+      title: "Synonyms",
       description:
         "Learn how words with similar meanings can be used effectively in different contexts. This lesson demonstrates the importance of choosing the right synonym to convey precise meaning and enhance your vocabulary.",
       videoUrl:
@@ -265,11 +266,12 @@ async function main() {
   const lesson2 = await prisma.videoLesson.upsert({
     where: { level_order: { level: 1, order: 2 } },
     update: {
+      title: "Collocations",
       videoUrl:
         "https://j3z8y187h5.ufs.sh/f/8QlRmO7DVzRtfBj9piR2bOrpxNEa7F95mUoZXwezK4RM21ys",
     },
     create: {
-      title: "Mastering Collocations",
+      title: "Collocations",
       description:
         "Explore common word pairings and their types. This lesson shows how collocations work together naturally in English, helping you sound more fluent and native-like in your language use.",
       videoUrl:
@@ -746,8 +748,8 @@ async function main() {
 
   console.log("Database seeding completed successfully!");
   console.log("Created lessons:");
-  console.log("- Lesson 1: Understanding Synonyms");
-  console.log("- Lesson 2: Mastering Collocations");
+  console.log("- Lesson 1: Synonyms");
+  console.log("- Lesson 2: Collocations");
   console.log("- Lesson 3: Word Parts: Roots, Prefixes and Suffixes");
 }
 
