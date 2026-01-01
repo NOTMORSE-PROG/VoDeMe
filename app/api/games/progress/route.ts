@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { gameName, level, score } = validation.data;
-    const MIN_SCORE_TO_PASS = 7;
 
     // Check if user already has a record for this game/level
     const existingProgress = await db.gameProgress.findUnique({
@@ -84,8 +83,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If record exists and is completed, don't update (first attempt only)
-    if (existingProgress && existingProgress.completed) {
+    // If record exists, don't update (first attempt only)
+    if (existingProgress) {
       return NextResponse.json({
         progress: existingProgress,
         isFirstAttempt: false,
@@ -95,32 +94,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // If no record exists or not completed yet, create/update
-    const progress = await db.gameProgress.upsert({
-      where: {
-        userId_gameName_level: {
-          userId: auth.userId,
-          gameName,
-          level,
-        },
-      },
-      update: {
-        score,
-        completed: score >= MIN_SCORE_TO_PASS,
-      },
-      create: {
+    // If no record exists, create it (always mark as completed since there's no failing score)
+    const progress = await db.gameProgress.create({
+      data: {
         userId: auth.userId,
         gameName,
         level,
         score,
-        completed: score >= MIN_SCORE_TO_PASS,
+        completed: true,
       },
     });
 
     return NextResponse.json({
       progress,
-      isFirstAttempt: !existingProgress,
-      message: existingProgress ? 'Score updated (not yet completed before)' : 'First attempt recorded',
+      isFirstAttempt: true,
+      message: 'First attempt recorded',
     });
   } catch (error) {
     console.error('Error saving game progress:', error);

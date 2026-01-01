@@ -625,7 +625,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
     // Check if level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`Level ${level} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${level - 1} to unlock it.`)
+      toast.error(`Level ${level} is locked! Complete Level ${level - 1} first to unlock it.`)
       return
     }
 
@@ -713,7 +713,7 @@ export default function SynohitGame({ onBack }: SynohitGameProps) {
 
     // Check if next level is unlocked
     if (levelStatus === "locked") {
-      toast.error(`Level ${nextLevel} is locked! You need to score at least ${MIN_SCORE_TO_PASS * 10} pts in Level ${nextLevel - 1} to unlock it.`)
+      toast.error(`Level ${nextLevel} is locked! Complete Level ${nextLevel - 1} first to unlock it.`)
       return
     }
 
