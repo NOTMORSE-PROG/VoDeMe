@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { getProgress, getLevelStatus } from "@/lib/game-progress"
+import { getProgress, getLevelStatus, clearProgressCache } from "@/lib/game-progress"
 import { getWordOfDay } from "@/lib/word-data"
 import { VideoLessonCard } from "@/components/video-lesson-card"
 import { getLeaderboard, getUserRank, type LeaderboardEntry } from "@/lib/leaderboard"
@@ -68,6 +68,9 @@ function LevelIndicator({ gameName }: { gameName: string }) {
   )
 }
 
+// Auto-refresh interval in milliseconds (30 seconds)
+const REFRESH_INTERVAL = 30000
+
 export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, lessonsCompleted, quizzesCompleted, totalPoints, initialTab }: DashboardProps) {
   const [activeTab, setActiveTab] = useState(initialTab || "games")
   const [gameProgress, setGameProgress] = useState<{
@@ -82,6 +85,16 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [isLeaderboardExpanded, setIsLeaderboardExpanded] = useState(false)
   const [userRank, setUserRank] = useState(0)
+
+  // Local state for stats (initialized from props, updated via polling)
+  const [stats, setStats] = useState({
+    totalPoints,
+    lessonsCompleted,
+    quizzesCompleted,
+  })
+
+  // Refresh key to force LevelIndicator re-render
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Update active tab when initialTab prop changes
   useEffect(() => {
@@ -116,7 +129,55 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
       setUserRank(rank)
     }
     loadLeaderboard()
-  }, [])
+  }, [user.email])
+
+  // Auto-refresh stats, leaderboard, and game progress
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        // Fetch updated stats
+        const statsResponse = await fetch('/api/user/stats', { cache: 'no-store' })
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json()
+          setStats({
+            totalPoints: statsData.totalPoints,
+            lessonsCompleted: statsData.lessonsCompleted,
+            quizzesCompleted: statsData.quizzesCompleted,
+          })
+        }
+
+        // Refresh leaderboard
+        const leaderboardData = await getLeaderboard()
+        setLeaderboard(leaderboardData)
+        const rank = getUserRank(leaderboardData, user.email)
+        setUserRank(rank)
+
+        // Clear cache and refresh game progress
+        clearProgressCache()
+        const [synohitProgress, hoprightProgress, wordstudyjournalProgress] = await Promise.all([
+          getProgress("synohit"),
+          getProgress("hopright"),
+          getProgress("wordstudyjournal")
+        ])
+        setGameProgress({
+          synohit: synohitProgress,
+          hopright: hoprightProgress,
+          wordstudyjournal: wordstudyjournalProgress
+        })
+
+        // Increment refresh key to force LevelIndicator components to re-render
+        setRefreshKey(prev => prev + 1)
+      } catch (error) {
+        console.error('Error refreshing data:', error)
+      }
+    }
+
+    // Set up polling interval
+    const intervalId = setInterval(refreshData, REFRESH_INTERVAL)
+
+    // Cleanup on unmount
+    return () => clearInterval(intervalId)
+  }, [user.email])
 
   // Grass styles for HopRight card (client-side only to avoid hydration mismatch)
   const [grassStyles, setGrassStyles] = useState<{ height: number; rotation: number }[]>([])
@@ -225,17 +286,17 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">⭐</div>
             <p className="text-gray-600 text-xs sm:text-sm">Total Points</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">{totalPoints.toLocaleString()}</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{stats.totalPoints.toLocaleString()}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">📚</div>
             <p className="text-gray-600 text-xs sm:text-sm">Lessons Completed</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">{lessonsCompleted}</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{stats.lessonsCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">✅</div>
             <p className="text-gray-600 text-xs sm:text-sm">Quizzes Completed</p>
-            <p className="text-xl sm:text-3xl font-bold text-orange-600">{quizzesCompleted}</p>
+            <p className="text-xl sm:text-3xl font-bold text-orange-600">{stats.quizzesCompleted}</p>
           </div>
           <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
             <div className="text-2xl sm:text-3xl mb-1 sm:mb-2">🏆</div>
@@ -369,7 +430,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
                 </p>
 
                 {/* Level Progress */}
-                <LevelIndicator gameName="synohit" />
+                <LevelIndicator key={`synohit-${refreshKey}`} gameName="synohit" />
 
                 <button className="w-full bg-gradient-to-r from-amber-600 via-amber-700 to-amber-800 hover:from-amber-700 hover:via-amber-800 hover:to-amber-900 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-amber-900 text-sm sm:text-base mt-3 sm:mt-4">
                   Play Now
@@ -468,7 +529,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
                 </p>
 
                 {/* Level Progress */}
-                <LevelIndicator gameName="hopright" />
+                <LevelIndicator key={`hopright-${refreshKey}`} gameName="hopright" />
 
                 <button className="w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-teal-600 hover:from-teal-600 hover:via-emerald-600 hover:to-teal-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-teal-700 text-sm sm:text-base mt-3 sm:mt-4">
                   Play Now
@@ -558,7 +619,7 @@ export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProf
                 </p>
 
                 {/* Level Progress */}
-                <LevelIndicator gameName="wordstudyjournal" />
+                <LevelIndicator key={`wordstudyjournal-${refreshKey}`} gameName="wordstudyjournal" />
 
                 <button className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:via-orange-600 hover:to-amber-700 text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition shadow-lg border-2 border-amber-700 text-sm sm:text-base mt-3 sm:mt-4">
                   Play Now

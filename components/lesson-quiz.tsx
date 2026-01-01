@@ -120,10 +120,13 @@ export function LessonQuiz({
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          // Time's up - record time if not already recorded
-          if (!answerTimes[currentQuestion.id]) {
-            setAnswerTimes((prevTimes) => ({ ...prevTimes, [currentQuestion.id]: 60 }));
-          }
+          // Time's up - record time if not already recorded (use functional update to get latest state)
+          setAnswerTimes((prevTimes) => {
+            if (!prevTimes[currentQuestion.id]) {
+              return { ...prevTimes, [currentQuestion.id]: 60 };
+            }
+            return prevTimes;
+          });
 
           // Time's up - auto-submit current answer or move to next
           if (!answers[currentQuestion.id]) {
@@ -159,10 +162,14 @@ export function LessonQuiz({
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
 
     // Record time taken for this answer (only if not already answered)
-    if (!answerTimes[questionId]) {
-      const timeTaken = Math.floor((Date.now() - questionStartTime) / 1000); // Convert to seconds
-      setAnswerTimes((prev) => ({ ...prev, [questionId]: timeTaken }));
-    }
+    // Use functional update to check the latest state (avoids stale closure issues)
+    const timeTaken = Math.max(1, Math.floor((Date.now() - questionStartTime) / 1000)); // Convert to seconds, minimum 1s
+    setAnswerTimes((prev) => {
+      if (prev[questionId] === undefined) {
+        return { ...prev, [questionId]: timeTaken };
+      }
+      return prev;
+    });
   };
 
   const handleNext = () => {
@@ -210,14 +217,14 @@ export function LessonQuiz({
               return {
                 questionId,
                 selectedAnswer: originalLabel || selectedAnswer, // Use original label for API
-                timeTaken: answerTimes[questionId] || 60,
+                timeTaken: answerTimes[questionId] ?? 60,
               };
             }
 
             return {
               questionId,
               selectedAnswer,
-              timeTaken: answerTimes[questionId] || 60,
+              timeTaken: answerTimes[questionId] ?? 60,
             };
           }),
         }),
@@ -743,7 +750,7 @@ export function LessonQuiz({
                 <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleNext} disabled={isLastQuestion} className="flex-1 sm:flex-initial text-sm sm:text-base cursor-pointer">
+              <Button onClick={handleNext} disabled={!answers[currentQuestion.id]} className="flex-1 sm:flex-initial text-sm sm:text-base cursor-pointer">
                 Next
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 sm:ml-2" />
               </Button>

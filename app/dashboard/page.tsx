@@ -84,15 +84,13 @@ export default async function DashboardPage() {
   const quizzesCompleted = await db.quizAttempt.count({
     where: {
       userId: auth.userId,
-      passed: true,
     },
   });
 
-  // Get quiz scores for total points calculation
+  // Get ALL quiz scores for total points calculation (to match leaderboard)
   const quizAttempts = await db.quizAttempt.findMany({
     where: {
       userId: auth.userId,
-      passed: true,
     },
     select: {
       score: true,

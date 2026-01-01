@@ -25,6 +25,12 @@ let progressCache: GameProgress | null = null
 let cacheTimestamp = 0
 const CACHE_DURATION = 30000 // 30 seconds
 
+// Clear cache to force fresh data on next fetch
+export function clearProgressCache(): void {
+  progressCache = null
+  cacheTimestamp = 0
+}
+
 // Helper to fetch progress from API
 async function fetchProgressFromAPI(): Promise<GameProgress> {
   const response = await fetch('/api/games/progress')
