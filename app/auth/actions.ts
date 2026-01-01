@@ -221,7 +221,12 @@ export async function signInAction(
  * Destroys the current session
  */
 export async function signOutAction(): Promise<void> {
-  await destroySession();
+  try {
+    await destroySession();
+  } catch (error) {
+    console.error('Sign out error:', error);
+    // Still redirect even if session destruction fails
+  }
   redirect('/');
 }
 

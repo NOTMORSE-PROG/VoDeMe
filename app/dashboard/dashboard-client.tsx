@@ -68,7 +68,10 @@ export default function DashboardClient({ user, lessons, lessonsCompleted, quizz
 
   return (
     <Dashboard
-      user={user}
+      user={{
+        ...user,
+        profilePicture: user.profilePicture ?? undefined
+      }}
       onLogout={handleLogout}
       onPlayGame={(gameName) => setPage(gameName as any)}
       onNavigateToProfile={handleNavigateToProfile}

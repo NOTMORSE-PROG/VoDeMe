@@ -63,7 +63,7 @@ export default async function DashboardPage() {
   const lessonsWithProgress = lessons.map((lesson) => {
     const userProgress = lesson.progress[0];
     const hasQuiz = !!lesson.quiz;
-    const quizCompleted = hasQuiz && lesson.quiz.attempts && lesson.quiz.attempts.length > 0;
+    const quizCompleted = hasQuiz && lesson.quiz?.attempts && lesson.quiz.attempts.length > 0;
     return {
       id: lesson.id,
       title: lesson.title,

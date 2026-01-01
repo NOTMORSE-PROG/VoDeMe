@@ -67,7 +67,7 @@ export async function updateProfileAction(
         action: 'profile_update',
         entity: 'user',
         entityId: auth.userId,
-        oldData: oldUser,
+        oldData: oldUser ?? undefined,
         newData: updateData,
       },
     });
