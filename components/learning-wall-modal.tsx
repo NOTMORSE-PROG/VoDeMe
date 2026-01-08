@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -56,14 +56,7 @@ export function LearningWallModal({
   const [isDeletingPost, setIsDeleting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Fetch posts when modal opens or sort changes
-  useEffect(() => {
-    if (open) {
-      fetchPosts();
-    }
-  }, [open, lessonId, sortBy]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/lessons/${lessonId}/learning-wall?sort=${sortBy}`);
@@ -87,7 +80,14 @@ export function LearningWallModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lessonId, sortBy, hasPosted]);
+
+  // Fetch posts when modal opens or sort changes
+  useEffect(() => {
+    if (open) {
+      fetchPosts();
+    }
+  }, [open, fetchPosts]);
 
   const handleSubmit = async () => {
     console.log('handleSubmit called!', { content, contentLength: content.length, trimmedLength: content.trim().length });
@@ -147,9 +147,9 @@ export function LearningWallModal({
       }
 
       toast.success('Your reflection has been posted to the learning wall!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error posting to learning wall:', error);
-      toast.error(error.message || 'Failed to post reflection');
+      toast.error(error instanceof Error ? error.message : 'Failed to post reflection');
     } finally {
       setIsSubmitting(false);
     }
@@ -225,9 +225,9 @@ export function LearningWallModal({
       setEditingPostId(null);
       setEditContent('');
       toast.success('Your reflection has been updated!');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating post:', error);
-      toast.error(error.message || 'Failed to update reflection');
+      toast.error(error instanceof Error ? error.message : 'Failed to update reflection');
     }
   };
 
@@ -254,9 +254,9 @@ export function LearningWallModal({
       setDeletingPostId(null);
       setHasPosted(false); // Allow user to post again
       toast.success('Your reflection has been deleted');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting post:', error);
-      toast.error(error.message || 'Failed to delete reflection');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete reflection');
     } finally {
       setIsDeleting(false);
     }

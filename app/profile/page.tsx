@@ -50,7 +50,7 @@ export default async function ProfilePage() {
   }));
 
   // Remove passwordHash from user object before passing to client
-  const { passwordHash, accounts, ...userWithoutPassword } = user;
+  const { passwordHash: _passwordHash, accounts: _accounts, ...userWithoutPassword } = user;
 
   return (
     <ProfileClient

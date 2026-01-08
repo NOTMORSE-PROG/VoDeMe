@@ -10,7 +10,6 @@ import { db } from '@/lib/db';
 import { hashPassword, verifyPassword } from '@/lib/password';
 import { createSession, destroySession } from '@/lib/auth';
 import { signUpSchema, signInSchema } from '@/lib/validation';
-import type { SignUpInput, SignInInput } from '@/lib/validation';
 
 /**
  * Result types for authentication actions

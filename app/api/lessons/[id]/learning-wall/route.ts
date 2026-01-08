@@ -80,7 +80,7 @@ export async function GET(
     }
 
     // Check if current user has already posted to this lesson
-    const hasUserPosted = posts.some((post: any) => post.userId === auth.userId);
+    const hasUserPosted = posts.some((post) => post.userId === auth.userId);
 
     return NextResponse.json({
       posts: postsWithLikes,

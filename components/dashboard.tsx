@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { getProgress, getLevelStatus, clearProgressCache } from "@/lib/game-progress"
 import { getWordOfDay } from "@/lib/word-data"
 import { VideoLessonCard } from "@/components/video-lesson-card"
@@ -73,7 +72,7 @@ const REFRESH_INTERVAL = 30000
 
 export default function Dashboard({ user, onLogout, onPlayGame, onNavigateToProfile, lessons, lessonsCompleted, quizzesCompleted, totalPoints, initialTab }: DashboardProps) {
   const [activeTab, setActiveTab] = useState(initialTab || "games")
-  const [gameProgress, setGameProgress] = useState<{
+  const [_gameProgress, setGameProgress] = useState<{
     synohit: { currentLevel: number; levels: any[] }
     hopright: { currentLevel: number; levels: any[] }
     wordstudyjournal: { currentLevel: number; levels: any[] }

@@ -17,7 +17,7 @@ const gameProgressSchema = z.object({
 });
 
 // GET /api/games/progress - Get all game progress for user
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const auth = await verifyAuth();
     if (!auth) {
