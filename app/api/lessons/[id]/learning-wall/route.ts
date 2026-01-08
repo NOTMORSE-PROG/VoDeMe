@@ -68,6 +68,7 @@ export async function GET(
       id: post.id,
       content: post.content,
       createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
       user: post.user,
       likeCount: post._count.likes,
       isLikedByUser: post.likes.some((like) => like.userId === auth.userId),
@@ -81,7 +82,11 @@ export async function GET(
     // Check if current user has already posted to this lesson
     const hasUserPosted = posts.some((post: any) => post.userId === auth.userId);
 
-    return NextResponse.json({ posts: postsWithLikes, hasUserPosted });
+    return NextResponse.json({
+      posts: postsWithLikes,
+      hasUserPosted,
+      currentUserId: auth.userId
+    });
   } catch (error) {
     console.error('Error fetching learning wall posts:', error);
     return NextResponse.json(
