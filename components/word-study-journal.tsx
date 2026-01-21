@@ -378,7 +378,12 @@ export default function WordStudyJournal() {
     Object.entries(notebookRefs.current).forEach(([key, ref]) => {
       if (ref) {
         const rect = ref.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        if (
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom
+        ) {
           targetNotebook = key as "prefix" | "base" | "suffix";
         }
       }
@@ -441,7 +446,12 @@ export default function WordStudyJournal() {
     Object.entries(level2NotebookRefs.current).forEach(([key, ref]) => {
       if (ref) {
         const rect = ref.getBoundingClientRect();
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        if (
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom
+        ) {
           targetNotebook = key as "derived" | "inflected";
         }
       }
@@ -496,7 +506,12 @@ export default function WordStudyJournal() {
 
     if (level3BlankRef.current) {
       const rect = level3BlankRef.current.getBoundingClientRect();
-      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
         handleLevel3Drop(level3DraggingOption);
       } else {
         setLevel3DraggingOption(null);
@@ -660,7 +675,10 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg">
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
           <div className="text-center mb-12">
             <div className="bg-purple-100 border-4 border-purple-300 rounded-lg p-6 inline-block mb-4">
               <p className="text-sm text-gray-600 mb-2">Target Word</p>
@@ -715,7 +733,9 @@ export default function WordStudyJournal() {
                       }
                       onDragStart={() => setDraggingSegment(segments.prefix)}
                       onDragEnd={() => setDraggingSegment(null)}
-                      onPointerDown={(e) => handlePointerDown(e, segments.prefix)}
+                      onPointerDown={(e) =>
+                        handlePointerDown(e, segments.prefix)
+                      }
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
                       className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
@@ -751,7 +771,9 @@ export default function WordStudyJournal() {
                       }
                       onDragStart={() => setDraggingSegment(segments.suffix)}
                       onDragEnd={() => setDraggingSegment(null)}
-                      onPointerDown={(e) => handlePointerDown(e, segments.suffix)}
+                      onPointerDown={(e) =>
+                        handlePointerDown(e, segments.suffix)
+                      }
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
                       className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
@@ -886,8 +908,8 @@ export default function WordStudyJournal() {
             style={{
               left: dragPosition.x,
               top: dragPosition.y,
-              transform: 'translate(-50%, -50%)',
-              willChange: 'transform',
+              transform: "translate(-50%, -50%)",
+              willChange: "transform",
             }}
           >
             <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-400 shadow-lg opacity-90">
@@ -942,7 +964,10 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg">
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+          onPointerMove={handleLevel2PointerMove}
+          onPointerUp={handleLevel2PointerUp}
+        >
           <div className="text-center mb-12">
             <p className="text-sm text-gray-600 mb-4">
               Drag the sticky note to the correct notebook
@@ -1073,12 +1098,14 @@ export default function WordStudyJournal() {
             style={{
               left: level2DragPosition.x,
               top: level2DragPosition.y,
-              transform: 'translate(-50%, -50%)',
-              willChange: 'transform',
+              transform: "translate(-50%, -50%)",
+              willChange: "transform",
             }}
           >
             <div className="inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-2xl opacity-90">
-              <p className="text-4xl font-bold text-gray-800">{level2DraggingWord}</p>
+              <p className="text-4xl font-bold text-gray-800">
+                {level2DraggingWord}
+              </p>
             </div>
           </div>
         )}
@@ -1131,7 +1158,10 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg">
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+          onPointerMove={handleLevel3PointerMove}
+          onPointerUp={handleLevel3PointerUp}
+        >
           {/* Sentence with blank */}
           <div className="text-center mb-8">
             <div className="text-lg text-gray-700 mb-6 leading-relaxed inline">
@@ -1213,8 +1243,8 @@ export default function WordStudyJournal() {
             style={{
               left: level3DragPosition.x,
               top: level3DragPosition.y,
-              transform: 'translate(-50%, -50%)',
-              willChange: 'transform',
+              transform: "translate(-50%, -50%)",
+              willChange: "transform",
             }}
           >
             <div className="bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg shadow-2xl opacity-90">

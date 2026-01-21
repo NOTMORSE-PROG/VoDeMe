@@ -3,11 +3,11 @@
  * Handles OAuth flows for Google and other providers
  */
 
-'use server';
+"use server";
 
-import { randomBytes } from 'crypto';
-import { db } from '@/lib/db';
-import { env } from '@/lib/env';
+import { randomBytes } from "crypto";
+import { db } from "@/lib/db";
+import { env } from "@/lib/env";
 
 /**
  * Google User Info from OAuth
@@ -59,12 +59,12 @@ export interface OAuthStateData {
  */
 export async function generateOAuthState(
   provider: string,
-  mode: 'signin' | 'link',
+  mode: "signin" | "link",
   userId?: string,
-  redirectUri?: string
+  redirectUri?: string,
 ): Promise<string> {
   // Generate cryptographically secure random state token
-  const state = randomBytes(32).toString('hex');
+  const state = randomBytes(32).toString("hex");
 
   // State tokens expire in 10 minutes
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -93,7 +93,7 @@ export async function generateOAuthState(
  * @returns State data if valid, null if invalid/expired
  */
 export async function verifyOAuthState(
-  state: string | null
+  state: string | null,
 ): Promise<OAuthStateData | null> {
   if (!state) return null;
 
@@ -133,25 +133,27 @@ export async function verifyOAuthState(
  */
 export async function getGoogleAuthUrl(state: string): Promise<string> {
   if (!env.GOOGLE_CLIENT_ID) {
-    throw new Error('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID.');
+    throw new Error(
+      "Google OAuth is not configured. Please set GOOGLE_CLIENT_ID.",
+    );
   }
 
-  const baseUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const baseUrl = "https://accounts.google.com/o/oauth2/v2/auth";
 
   // Determine redirect URI based on environment
   const redirectUri =
-    env.NODE_ENV === 'production'
-      ? 'https://vodeme.vercel.app/api/auth/callback/google'
+    env.NODE_ENV === "production"
+      ? "https://vodeme.vercel.app/api/auth/callback/google"
       : `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback/google`;
 
   const params = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: 'openid email profile',
+    response_type: "code",
+    scope: "openid email profile",
     state,
-    access_type: 'offline', // Request refresh token
-    prompt: 'consent', // Force consent screen to get refresh token
+    access_type: "offline", // Request refresh token
+    prompt: "consent", // Force consent screen to get refresh token
   });
 
   return `${baseUrl}?${params.toString()}`;
@@ -165,40 +167,42 @@ export async function getGoogleAuthUrl(state: string): Promise<string> {
  * @returns Token response with access_token, refresh_token, etc.
  */
 export async function exchangeGoogleCode(
-  code: string
+  code: string,
 ): Promise<GoogleTokenResponse> {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
-    throw new Error('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
+    throw new Error(
+      "Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
+    );
   }
 
   // Determine redirect URI (must match the one used in authorization)
   const redirectUri =
-    env.NODE_ENV === 'production'
-      ? 'https://vodeme.vercel.app/api/auth/callback/google'
+    env.NODE_ENV === "production"
+      ? "https://vodeme.vercel.app/api/auth/callback/google"
       : `${env.NEXT_PUBLIC_APP_URL}/api/auth/callback/google`;
 
-  const tokenUrl = 'https://oauth2.googleapis.com/token';
+  const tokenUrl = "https://oauth2.googleapis.com/token";
 
   const params = new URLSearchParams({
     code,
     client_id: env.GOOGLE_CLIENT_ID,
     client_secret: env.GOOGLE_CLIENT_SECRET,
     redirect_uri: redirectUri,
-    grant_type: 'authorization_code',
+    grant_type: "authorization_code",
   });
 
   const response = await fetch(tokenUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
     body: params.toString(),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Google token exchange error:', error);
-    throw new Error('Failed to exchange code for tokens');
+    console.error("Google token exchange error:", error);
+    throw new Error("Failed to exchange code for tokens");
   }
 
   const tokens: GoogleTokenResponse = await response.json();
@@ -213,9 +217,9 @@ export async function exchangeGoogleCode(
  * @returns Google user profile information
  */
 export async function getGoogleUserInfo(
-  accessToken: string
+  accessToken: string,
 ): Promise<GoogleUserInfo> {
-  const userInfoUrl = 'https://www.googleapis.com/oauth2/v2/userinfo';
+  const userInfoUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
 
   const response = await fetch(userInfoUrl, {
     headers: {
@@ -225,8 +229,8 @@ export async function getGoogleUserInfo(
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('Google user info error:', error);
-    throw new Error('Failed to fetch user info from Google');
+    console.error("Google user info error:", error);
+    throw new Error("Failed to fetch user info from Google");
   }
 
   const userInfo: GoogleUserInfo = await response.json();

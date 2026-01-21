@@ -334,7 +334,9 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="text-xl sm:text-3xl animate-bounce">👉</div>
-            <p className="text-sm sm:text-lg font-semibold flex-1">{currentInstruction}</p>
+            <p className="text-sm sm:text-lg font-semibold flex-1">
+              {currentInstruction}
+            </p>
             <div className="text-xs sm:text-sm bg-white/20 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
               Step {currentIndex + 1}/{tutorialData.length}
             </div>
@@ -561,7 +563,9 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
               } ${draggingSegment && !placements.suffix ? "scale-105 ring-4 ring-blue-400 animate-pulse" : ""}`}
             >
               <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-t-lg bg-blue-100 border border-blue-500 sm:border-2">
-                <span className="text-[10px] sm:text-xs font-bold text-blue-700">Suffix</span>
+                <span className="text-[10px] sm:text-xs font-bold text-blue-700">
+                  Suffix
+                </span>
               </div>
               <div className="absolute inset-0 flex items-center justify-center px-1 sm:px-2">
                 {placements.suffix ? (
@@ -607,8 +611,12 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
           <div className="text-center animate-pop-in">
             <div className="bg-green-50 border border-green-400 sm:border-2 rounded-lg p-4 sm:p-6 mb-3 sm:mb-4">
               <p className="text-3xl sm:text-4xl mb-2">🎉</p>
-              <p className="text-xl sm:text-2xl font-bold text-green-700 mb-2">Perfect!</p>
-              <p className="text-gray-700 text-sm sm:text-base">{currentItem.hint}</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-700 mb-2">
+                Perfect!
+              </p>
+              <p className="text-gray-700 text-sm sm:text-base">
+                {currentItem.hint}
+              </p>
             </div>
             <button
               onClick={handleNext}
@@ -629,7 +637,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
               left: dragPosition.x,
               top: dragPosition.y,
               transform: "translate(-50%, -50%)",
-              willChange: 'transform',
+              willChange: "transform",
             }}
           >
             <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-400 shadow-lg opacity-90">
