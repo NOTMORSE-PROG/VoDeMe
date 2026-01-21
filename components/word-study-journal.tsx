@@ -215,14 +215,18 @@ export default function WordStudyJournal() {
     setPlacements({ prefix: null, base: null, suffix: null });
     setDraggingSegment(null);
     setWrongNotebook(null);
+    setDragPosition(null);
+    setTouchStartPos(null);
     // Reset Level 2 states
     setLevel2Placement(null);
     setLevel2DraggingWord(null);
     setLevel2WrongNotebook(null);
+    setLevel2DragPosition(null);
     // Reset Level 3 states
     setLevel3SelectedOption(null);
     setLevel3DraggingOption(null);
     setLevel3DroppedInBlank(false);
+    setLevel3DragPosition(null);
   };
 
   const handleAnswerLevel1 = (prefix: string, base: string, suffix: string) => {
@@ -349,26 +353,25 @@ export default function WordStudyJournal() {
     }, 100);
   };
 
-  const handleTouchStart = (e: React.TouchEvent, segmentValue: string) => {
+  const handlePointerDown = (e: React.PointerEvent, segmentValue: string) => {
     if (Object.values(placements).includes(segmentValue)) return;
-    const touch = e.touches[0];
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setTouchStartPos({ x: e.clientX, y: e.clientY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
     setDraggingSegment(segmentValue);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
     e.preventDefault();
-    const touch = e.touches[0];
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
 
-    const touch = e.changedTouches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
+    const x = e.clientX;
+    const y = e.clientY;
 
     let targetNotebook: "prefix" | "base" | "suffix" | null = null;
 
@@ -413,26 +416,25 @@ export default function WordStudyJournal() {
     setLevel2DraggingWord(null);
   };
 
-  const handleLevel2TouchStart = (e: React.TouchEvent, word: string) => {
+  const handleLevel2PointerDown = (e: React.PointerEvent, word: string) => {
     if (level2Placement !== null) return;
-    const touch = e.touches[0];
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setTouchStartPos({ x: e.clientX, y: e.clientY });
+    setLevel2DragPosition({ x: e.clientX, y: e.clientY });
     setLevel2DraggingWord(word);
   };
 
-  const handleLevel2TouchMove = (e: React.TouchEvent) => {
+  const handleLevel2PointerMove = (e: React.PointerEvent) => {
     if (!level2DraggingWord) return;
     e.preventDefault();
-    const touch = e.touches[0];
-    setLevel2DragPosition({ x: touch.clientX, y: touch.clientY });
+    setLevel2DragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleLevel2TouchEnd = (e: React.TouchEvent) => {
+  const handleLevel2PointerUp = (e: React.PointerEvent) => {
     if (!level2DraggingWord) return;
 
-    const touch = e.changedTouches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
+    const x = e.clientX;
+    const y = e.clientY;
 
     let targetNotebook: "derived" | "inflected" | null = null;
 
@@ -472,26 +474,25 @@ export default function WordStudyJournal() {
     setLevel3DroppedInBlank(true);
   };
 
-  const handleLevel3TouchStart = (e: React.TouchEvent, option: string) => {
+  const handleLevel3PointerDown = (e: React.PointerEvent, option: string) => {
     if (level3DroppedInBlank) return;
-    const touch = e.touches[0];
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setTouchStartPos({ x: e.clientX, y: e.clientY });
+    setLevel3DragPosition({ x: e.clientX, y: e.clientY });
     setLevel3DraggingOption(option);
   };
 
-  const handleLevel3TouchMove = (e: React.TouchEvent) => {
+  const handleLevel3PointerMove = (e: React.PointerEvent) => {
     if (!level3DraggingOption) return;
     e.preventDefault();
-    const touch = e.touches[0];
-    setLevel3DragPosition({ x: touch.clientX, y: touch.clientY });
+    setLevel3DragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleLevel3TouchEnd = (e: React.TouchEvent) => {
+  const handleLevel3PointerUp = (e: React.PointerEvent) => {
     if (!level3DraggingOption) return;
 
-    const touch = e.changedTouches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
+    const x = e.clientX;
+    const y = e.clientY;
 
     if (level3BlankRef.current) {
       const rect = level3BlankRef.current.getBoundingClientRect();
@@ -714,10 +715,10 @@ export default function WordStudyJournal() {
                       }
                       onDragStart={() => setDraggingSegment(segments.prefix)}
                       onDragEnd={() => setDraggingSegment(null)}
-                      onTouchStart={(e) => handleTouchStart(e, segments.prefix)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                      onPointerDown={(e) => handlePointerDown(e, segments.prefix)}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.prefix)
                           ? "opacity-30"
                           : ""
@@ -732,10 +733,10 @@ export default function WordStudyJournal() {
                     }
                     onDragStart={() => setDraggingSegment(segments.base)}
                     onDragEnd={() => setDraggingSegment(null)}
-                    onTouchStart={(e) => handleTouchStart(e, segments.base)}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                    onPointerDown={(e) => handlePointerDown(e, segments.base)}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                       Object.values(placements).includes(segments.base)
                         ? "opacity-30"
                         : ""
@@ -750,10 +751,10 @@ export default function WordStudyJournal() {
                       }
                       onDragStart={() => setDraggingSegment(segments.suffix)}
                       onDragEnd={() => setDraggingSegment(null)}
-                      onTouchStart={(e) => handleTouchStart(e, segments.suffix)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                      onPointerDown={(e) => handlePointerDown(e, segments.suffix)}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.suffix)
                           ? "opacity-30"
                           : ""
@@ -953,10 +954,10 @@ export default function WordStudyJournal() {
                 draggable={true}
                 onDragStart={() => setLevel2DraggingWord(item.word)}
                 onDragEnd={() => setLevel2DraggingWord(null)}
-                onTouchStart={(e) => handleLevel2TouchStart(e, item.word)}
-                onTouchMove={handleLevel2TouchMove}
-                onTouchEnd={handleLevel2TouchEnd}
-                className={`inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-lg cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                onPointerDown={(e) => handleLevel2PointerDown(e, item.word)}
+                onPointerMove={handleLevel2PointerMove}
+                onPointerUp={handleLevel2PointerUp}
+                className={`inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-lg cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                   level2DraggingWord ? "opacity-50 scale-95" : ""
                 }`}
               >
@@ -1180,10 +1181,10 @@ export default function WordStudyJournal() {
                 }
                 onDragStart={() => setLevel3DraggingOption(option)}
                 onDragEnd={() => setLevel3DraggingOption(null)}
-                onTouchStart={(e) => handleLevel3TouchStart(e, option)}
-                onTouchMove={handleLevel3TouchMove}
-                onTouchEnd={handleLevel3TouchEnd}
-                className={`w-full bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg transition cursor-grab active:cursor-grabbing hover:scale-102 hover:border-amber-400 ${
+                onPointerDown={(e) => handleLevel3PointerDown(e, option)}
+                onPointerMove={handleLevel3PointerMove}
+                onPointerUp={handleLevel3PointerUp}
+                className={`w-full bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg transition cursor-grab active:cursor-grabbing hover:scale-102 hover:border-amber-400 touch-none ${
                   level3SelectedOption === option ? "opacity-30" : ""
                 } ${level3DraggingOption === option ? "opacity-50 scale-95" : ""}`}
               >

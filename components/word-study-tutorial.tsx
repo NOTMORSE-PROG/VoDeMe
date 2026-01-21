@@ -229,28 +229,25 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
   };
 
   // Touch event handlers for iOS support
-  const handleTouchStart = (e: React.TouchEvent, segmentValue: string) => {
+  const handlePointerDown = (e: React.PointerEvent, segmentValue: string) => {
     if (Object.values(placements).includes(segmentValue)) return;
-    const touch = e.touches[0];
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setTouchStartPos({ x: e.clientX, y: e.clientY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
     setDraggingSegment(segmentValue);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
-    // Prevent scrolling while dragging
     e.preventDefault();
-    
-    const touch = e.touches[0];
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    setDragPosition({ x: e.clientX, y: e.clientY });
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
 
-    const touch = e.changedTouches[0];
-    const x = touch.clientX;
-    const y = touch.clientY;
+    const x = e.clientX;
+    const y = e.clientY;
 
     // Check which notebook the touch ended on
     let targetNotebook: "prefix" | "base" | "suffix" | null = null;
@@ -406,10 +403,10 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   }
                   onDragStart={() => setDraggingSegment(segments.prefix)}
                   onDragEnd={() => setDraggingSegment(null)}
-                  onTouchStart={(e) => handleTouchStart(e, segments.prefix)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                  onPointerDown={(e) => handlePointerDown(e, segments.prefix)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                     Object.values(placements).includes(segments.prefix)
                       ? "opacity-30"
                       : ""
@@ -422,10 +419,10 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                 draggable={!Object.values(placements).includes(segments.base)}
                 onDragStart={() => setDraggingSegment(segments.base)}
                 onDragEnd={() => setDraggingSegment(null)}
-                onTouchStart={(e) => handleTouchStart(e, segments.base)}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                onPointerDown={(e) => handlePointerDown(e, segments.base)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                   Object.values(placements).includes(segments.base)
                     ? "opacity-30"
                     : ""
@@ -440,10 +437,10 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   }
                   onDragStart={() => setDraggingSegment(segments.suffix)}
                   onDragEnd={() => setDraggingSegment(null)}
-                  onTouchStart={(e) => handleTouchStart(e, segments.suffix)}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                  onPointerDown={(e) => handlePointerDown(e, segments.suffix)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                     Object.values(placements).includes(segments.suffix)
                       ? "opacity-30"
                       : ""
