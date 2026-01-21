@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import WordStudyTutorial from "./word-study-tutorial";
 
 interface Level1Item {
@@ -399,6 +399,51 @@ export default function WordStudyJournal() {
     setDragPosition(null);
   };
 
+  // Global pointer listeners for Level 1 to improve iOS reliability
+  useEffect(() => {
+    if (!draggingSegment) return;
+
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      e.preventDefault();
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      e.preventDefault();
+
+      const x = e.clientX;
+      const y = e.clientY;
+
+      let targetNotebook: "prefix" | "base" | "suffix" | null = null;
+
+      Object.entries(notebookRefs.current).forEach(([key, ref]) => {
+        if (ref) {
+          const rect = ref.getBoundingClientRect();
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            targetNotebook = key as "prefix" | "base" | "suffix";
+          }
+        }
+      });
+
+      if (targetNotebook) {
+        handleDrop(targetNotebook, draggingSegment);
+      } else {
+        setDraggingSegment(null);
+      }
+
+      setTouchStartPos(null);
+      setDragPosition(null);
+    };
+
+    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
+    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalPointerMove);
+      window.removeEventListener("pointerup", handleGlobalPointerUp);
+    };
+  }, [draggingSegment, placements]);
+
   // Level 2 drag and drop handlers
   const handleLevel2Drop = (notebook: "derived" | "inflected") => {
     if (!level2DraggingWord) return;
@@ -467,6 +512,51 @@ export default function WordStudyJournal() {
     setLevel2DragPosition(null);
   };
 
+  // Global pointer listeners for Level 2 (iOS reliability)
+  useEffect(() => {
+    if (!level2DraggingWord) return;
+
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      e.preventDefault();
+      setLevel2DragPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      e.preventDefault();
+
+      const x = e.clientX;
+      const y = e.clientY;
+
+      let targetNotebook: "derived" | "inflected" | null = null;
+
+      Object.entries(level2NotebookRefs.current).forEach(([key, ref]) => {
+        if (ref) {
+          const rect = ref.getBoundingClientRect();
+          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+            targetNotebook = key as "derived" | "inflected";
+          }
+        }
+      });
+
+      if (targetNotebook) {
+        handleLevel2Drop(targetNotebook);
+      } else {
+        setLevel2DraggingWord(null);
+      }
+
+      setTouchStartPos(null);
+      setLevel2DragPosition(null);
+    };
+
+    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
+    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalPointerMove);
+      window.removeEventListener("pointerup", handleGlobalPointerUp);
+    };
+  }, [level2DraggingWord]);
+
   const handleLevel2Submit = () => {
     if (level2Placement === null) return;
 
@@ -523,6 +613,45 @@ export default function WordStudyJournal() {
     setTouchStartPos(null);
     setLevel3DragPosition(null);
   };
+
+  // Global pointer listeners for Level 3 (iOS reliability)
+  useEffect(() => {
+    if (!level3DraggingOption) return;
+
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      e.preventDefault();
+      setLevel3DragPosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      e.preventDefault();
+
+      const x = e.clientX;
+      const y = e.clientY;
+
+      if (level3BlankRef.current) {
+        const rect = level3BlankRef.current.getBoundingClientRect();
+        const isInsideBlank = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+
+        if (isInsideBlank) {
+          handleLevel3Drop(level3DraggingOption);
+        } else {
+          setLevel3DraggingOption(null);
+        }
+      }
+
+      setTouchStartPos(null);
+      setLevel3DragPosition(null);
+    };
+
+    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
+    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalPointerMove);
+      window.removeEventListener("pointerup", handleGlobalPointerUp);
+    };
+  }, [level3DraggingOption]);
 
   const handleLevel3Submit = () => {
     if (!level3SelectedOption) return;
@@ -677,8 +806,6 @@ export default function WordStudyJournal() {
 
         <div
           className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
         >
           <div className="text-center mb-12">
             <div className="bg-purple-100 border-4 border-purple-300 rounded-lg p-6 inline-block mb-4">
@@ -737,8 +864,6 @@ export default function WordStudyJournal() {
                       onPointerDown={(e) =>
                         handlePointerDown(e, segments.prefix)
                       }
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
                       className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.prefix)
                           ? "opacity-30"
@@ -755,8 +880,6 @@ export default function WordStudyJournal() {
                     onDragStart={() => setDraggingSegment(segments.base)}
                     onDragEnd={() => setDraggingSegment(null)}
                     onPointerDown={(e) => handlePointerDown(e, segments.base)}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
                     className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                       Object.values(placements).includes(segments.base)
                         ? "opacity-30"
@@ -775,8 +898,6 @@ export default function WordStudyJournal() {
                       onPointerDown={(e) =>
                         handlePointerDown(e, segments.suffix)
                       }
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
                       className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.suffix)
                           ? "opacity-30"
@@ -967,8 +1088,6 @@ export default function WordStudyJournal() {
 
         <div
           className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-          onPointerMove={handleLevel2PointerMove}
-          onPointerUp={handleLevel2PointerUp}
         >
           <div className="text-center mb-12">
             <p className="text-sm text-gray-600 mb-4">
@@ -982,8 +1101,6 @@ export default function WordStudyJournal() {
                 onDragStart={() => setLevel2DraggingWord(item.word)}
                 onDragEnd={() => setLevel2DraggingWord(null)}
                 onPointerDown={(e) => handleLevel2PointerDown(e, item.word)}
-                onPointerMove={handleLevel2PointerMove}
-                onPointerUp={handleLevel2PointerUp}
                 className={`inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-lg cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                   level2DraggingWord ? "opacity-50 scale-95" : ""
                 }`}
@@ -1162,8 +1279,6 @@ export default function WordStudyJournal() {
 
         <div
           className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-          onPointerMove={handleLevel3PointerMove}
-          onPointerUp={handleLevel3PointerUp}
         >
           {/* Sentence with blank */}
           <div className="text-center mb-8">
@@ -1215,8 +1330,6 @@ export default function WordStudyJournal() {
                 onDragStart={() => setLevel3DraggingOption(option)}
                 onDragEnd={() => setLevel3DraggingOption(null)}
                 onPointerDown={(e) => handleLevel3PointerDown(e, option)}
-                onPointerMove={handleLevel3PointerMove}
-                onPointerUp={handleLevel3PointerUp}
                 className={`w-full bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg transition cursor-grab active:cursor-grabbing hover:scale-102 hover:border-amber-400 touch-none ${
                   level3SelectedOption === option ? "opacity-30" : ""
                 } ${level3DraggingOption === option ? "opacity-50 scale-95" : ""}`}
