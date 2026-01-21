@@ -356,22 +356,28 @@ export default function WordStudyJournal() {
   const handlePointerDown = (e: React.PointerEvent, segmentValue: string) => {
     if (Object.values(placements).includes(segmentValue)) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    setTouchStartPos({ x: e.clientX, y: e.clientY });
-    setDragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
     setDraggingSegment(segmentValue);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
     e.preventDefault();
-    setDragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
 
-    const x = e.clientX;
-    const y = e.clientY;
+    // iOS compatibility: check touches array first (changedTouches for touchend)
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const x = touch.clientX;
+    const y = touch.clientY;
 
     let targetNotebook: "prefix" | "base" | "suffix" | null = null;
 
@@ -405,14 +411,18 @@ export default function WordStudyJournal() {
 
     const handleGlobalPointerMove = (e: PointerEvent) => {
       e.preventDefault();
-      setDragPosition({ x: e.clientX, y: e.clientY });
+      // iOS compatibility: check touches array first
+      const touch = (e as any).touches?.[0] || e;
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
     };
 
     const handleGlobalPointerUp = (e: PointerEvent) => {
       e.preventDefault();
 
-      const x = e.clientX;
-      const y = e.clientY;
+      // iOS compatibility: check touches array first (changedTouches for touchend)
+      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const x = touch.clientX;
+      const y = touch.clientY;
 
       let targetNotebook: "prefix" | "base" | "suffix" | null = null;
 
@@ -478,22 +488,28 @@ export default function WordStudyJournal() {
   const handleLevel2PointerDown = (e: React.PointerEvent, word: string) => {
     if (level2Placement !== null) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    setTouchStartPos({ x: e.clientX, y: e.clientY });
-    setLevel2DragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setLevel2DragPosition({ x: touch.clientX, y: touch.clientY });
     setLevel2DraggingWord(word);
   };
 
   const handleLevel2PointerMove = (e: React.PointerEvent) => {
     if (!level2DraggingWord) return;
     e.preventDefault();
-    setLevel2DragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setLevel2DragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleLevel2PointerUp = (e: React.PointerEvent) => {
     if (!level2DraggingWord) return;
 
-    const x = e.clientX;
-    const y = e.clientY;
+    // iOS compatibility: check touches array first (changedTouches for touchend)
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const x = touch.clientX;
+    const y = touch.clientY;
 
     let targetNotebook: "derived" | "inflected" | null = null;
 
@@ -527,14 +543,18 @@ export default function WordStudyJournal() {
 
     const handleGlobalPointerMove = (e: PointerEvent) => {
       e.preventDefault();
-      setLevel2DragPosition({ x: e.clientX, y: e.clientY });
+      // iOS compatibility: check touches array first
+      const touch = (e as any).touches?.[0] || e;
+      setLevel2DragPosition({ x: touch.clientX, y: touch.clientY });
     };
 
     const handleGlobalPointerUp = (e: PointerEvent) => {
       e.preventDefault();
 
-      const x = e.clientX;
-      const y = e.clientY;
+      // iOS compatibility: check touches array first (changedTouches for touchend)
+      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const x = touch.clientX;
+      const y = touch.clientY;
 
       let targetNotebook: "derived" | "inflected" | null = null;
 
@@ -595,22 +615,28 @@ export default function WordStudyJournal() {
   const handleLevel3PointerDown = (e: React.PointerEvent, option: string) => {
     if (level3DroppedInBlank) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    setTouchStartPos({ x: e.clientX, y: e.clientY });
-    setLevel3DragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+    setLevel3DragPosition({ x: touch.clientX, y: touch.clientY });
     setLevel3DraggingOption(option);
   };
 
   const handleLevel3PointerMove = (e: React.PointerEvent) => {
     if (!level3DraggingOption) return;
     e.preventDefault();
-    setLevel3DragPosition({ x: e.clientX, y: e.clientY });
+    // iOS compatibility: check touches array first
+    const touch = (e as any).touches?.[0] || e;
+    setLevel3DragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleLevel3PointerUp = (e: React.PointerEvent) => {
     if (!level3DraggingOption) return;
 
-    const x = e.clientX;
-    const y = e.clientY;
+    // iOS compatibility: check touches array first (changedTouches for touchend)
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const x = touch.clientX;
+    const y = touch.clientY;
 
     if (level3BlankRef.current) {
       const rect = level3BlankRef.current.getBoundingClientRect();
@@ -638,14 +664,18 @@ export default function WordStudyJournal() {
 
     const handleGlobalPointerMove = (e: PointerEvent) => {
       e.preventDefault();
-      setLevel3DragPosition({ x: e.clientX, y: e.clientY });
+      // iOS compatibility: check touches array first
+      const touch = (e as any).touches?.[0] || e;
+      setLevel3DragPosition({ x: touch.clientX, y: touch.clientY });
     };
 
     const handleGlobalPointerUp = (e: PointerEvent) => {
       e.preventDefault();
 
-      const x = e.clientX;
-      const y = e.clientY;
+      // iOS compatibility: check touches array first (changedTouches for touchend)
+      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const x = touch.clientX;
+      const y = touch.clientY;
 
       if (level3BlankRef.current) {
         const rect = level3BlankRef.current.getBoundingClientRect();

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { saveLevelProgress, getLevelStatus, getStarRating } from "@/lib/game-progress"
 import WordStudyTutorial from "./word-study-tutorial"
 import { toast } from "sonner"
@@ -250,58 +250,8 @@ function CharacterHand({ isWriting, emotion }: { isWriting: boolean; emotion: "n
   )
 }
 
-// Draggable Word Segment Component for Level 1
-function DraggableSegment({
-  text,
-  type,
-  onDragStart,
-  onDragEnd,
-  isDragging,
-  isPlaced
-}: {
-  text: string
-  type: "prefix" | "base" | "suffix"
-  onDragStart: () => void
-  onDragEnd: () => void
-  isDragging: boolean
-  isPlaced: boolean
-}) {
-  // Use neutral color for all segments to avoid giving away the answer
-  const neutralColor = "bg-amber-50 border-amber-300 text-gray-800"
-
-  return (
-    <div
-      draggable={!isPlaced}
-      onDragStart={(e) => {
-        if (!isPlaced) {
-          onDragStart()
-          e.dataTransfer.effectAllowed = "move"
-        }
-      }}
-      onDragEnd={onDragEnd}
-      className={`
-        px-2 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-3 rounded-lg border-2 font-bold text-sm xs:text-base sm:text-lg md:text-xl
-        transition-all duration-200 shadow-md
-        ${neutralColor}
-        ${isDragging ? "opacity-50 scale-95" : ""}
-        ${isPlaced ? "opacity-30 cursor-not-allowed" : "cursor-grab active:cursor-grabbing hover:scale-105"}
-      `}
-    >
-      {text}
-    </div>
-  )
-}
-
 // Notebook Component for drag targets
-function Notebook({
-  label,
-  color,
-  onDrop,
-  onDragOver,
-  placedContent,
-  validationState,
-  showValidation
-}: {
+const Notebook = React.forwardRef<HTMLDivElement, {
   label: string
   color: string
   onDrop: (e: React.DragEvent) => void
@@ -309,7 +259,8 @@ function Notebook({
   placedContent: string | null
   validationState?: "correct" | "wrong" | null
   showValidation: boolean
-}) {
+  isDragging?: boolean
+}>(({ label, color, onDrop, onDragOver, placedContent, validationState, showValidation, isDragging }, ref) => {
   const colorClasses: Record<string, { bg: string; border: string; text: string; ring: string }> = {
     yellow: { bg: "bg-yellow-100", border: "border-yellow-500", text: "text-yellow-700", ring: "ring-yellow-400" },
     green: { bg: "bg-green-100", border: "border-green-500", text: "text-green-700", ring: "ring-green-400" },
@@ -322,6 +273,7 @@ function Notebook({
 
   return (
     <div
+      ref={ref}
       onDrop={onDrop}
       onDragOver={onDragOver}
       className={`
@@ -330,6 +282,7 @@ function Notebook({
         ${showValidation && validationState === "correct" ? "border-green-500 ring-2 sm:ring-4 ring-green-300" : ""}
         ${showValidation && validationState === "wrong" ? "border-red-500 ring-2 sm:ring-4 ring-red-300 animate-shake" : ""}
         ${!showValidation ? colors.border : ""}
+        ${isDragging && !placedContent ? `scale-105 ring-4 ${colors.ring} animate-pulse` : ""}
         hover:scale-105
       `}
     >
@@ -401,104 +354,9 @@ function Notebook({
       `}</style>
     </div>
   )
-}
+})
 
-// Draggable Sticky Note for Level 2
-function DraggableStickyNote({
-  word,
-  color,
-  onDragStart,
-  onDragEnd,
-  isDragging,
-  isPlaced
-}: {
-  word: string
-  color: string
-  onDragStart: () => void
-  onDragEnd: () => void
-  isDragging: boolean
-  isPlaced: boolean
-}) {
-  const colorClasses: Record<string, string> = {
-    yellow: "bg-yellow-200 shadow-yellow-300",
-    pink: "bg-pink-200 shadow-pink-300",
-    blue: "bg-blue-200 shadow-blue-300",
-    green: "bg-green-200 shadow-green-300",
-  }
-
-  return (
-    <div
-      draggable={!isPlaced}
-      onDragStart={(e) => {
-        if (!isPlaced) {
-          onDragStart()
-          e.dataTransfer.effectAllowed = "move"
-        }
-      }}
-      onDragEnd={onDragEnd}
-      className={`
-        relative w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 p-2 sm:p-3 rounded-sm shadow-lg
-        transition-all duration-300
-        ${colorClasses[color] || colorClasses.yellow}
-        ${isDragging ? "opacity-50 scale-90" : ""}
-        ${isPlaced ? "opacity-0 pointer-events-none" : "cursor-grab active:cursor-grabbing hover:scale-105 hover:-rotate-3"}
-      `}
-      style={{
-        transform: isPlaced ? "scale(0)" : `rotate(${Math.random() * 6 - 3}deg)`,
-        boxShadow: "4px 4px 10px rgba(0,0,0,0.2)",
-      }}
-    >
-      {/* Tape at top */}
-      <div className="absolute -top-1.5 sm:-top-2 left-1/2 -translate-x-1/2 w-6 h-3 sm:w-8 sm:h-4 bg-amber-200/80 rounded-sm" />
-
-      {/* Word */}
-      <div className="h-full flex items-center justify-center px-1">
-        <span
-          className="text-gray-800 font-semibold text-center text-xs xs:text-sm sm:text-base leading-tight"
-          style={{ fontFamily: "'Caveat', cursive" }}
-        >
-          {word}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// Draggable Word Option for Level 3
-function DraggableWord({
-  word,
-  onDragStart,
-  onDragEnd,
-  isDragging,
-  isPlaced
-}: {
-  word: string
-  onDragStart: () => void
-  onDragEnd: () => void
-  isDragging: boolean
-  isPlaced: boolean
-}) {
-  return (
-    <div
-      draggable={!isPlaced}
-      onDragStart={(e) => {
-        if (!isPlaced) {
-          onDragStart()
-          e.dataTransfer.effectAllowed = "move"
-        }
-      }}
-      onDragEnd={onDragEnd}
-      className={`
-        px-3 py-2 xs:px-4 xs:py-2.5 sm:py-3 rounded-xl font-semibold text-sm xs:text-base transition-all shadow-md
-        border-2 border-amber-200
-        ${isDragging ? "opacity-50 scale-90" : ""}
-        ${isPlaced ? "opacity-30 cursor-not-allowed bg-gray-200 text-gray-500" : "bg-white hover:bg-amber-50 text-gray-700 cursor-grab active:cursor-grabbing hover:scale-105"}
-      `}
-    >
-      {word}
-    </div>
-  )
-}
+Notebook.displayName = "Notebook"
 
 // Progress Indicator
 function ProgressIndicator({ current, total, level }: { current: number; total: number; level: number }) {
@@ -652,6 +510,14 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
   const [draggingWord, setDraggingWord] = useState<string | null>(null)
   const [sentenceBlank, setSentenceBlank] = useState<string | null>(null)
 
+  // iOS Pointer Events support - for mobile drag and drop
+  const [touchStartPos, setTouchStartPos] = useState<{ x: number; y: number } | null>(null)
+  const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null)
+
+  // Refs for drop zones
+  const notebookRefs = useRef<Record<string, HTMLElement | null>>({})
+  const dropZoneRefs = useRef<Record<string, HTMLElement | null>>({})
+
   // Shuffled data
   const [shuffledLevel1, setShuffledLevel1] = useState<Level1Item[]>([])
   const [shuffledLevel2, setShuffledLevel2] = useState<Level2Item[]>([])
@@ -664,6 +530,137 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     if (!item) return []
     return shuffleArray([...item.derivedForms, ...item.inflectedForms])
   }, [currentLevel, currentItem, shuffledLevel3])
+
+  // iOS Pointer Event Handlers - Level 1 (Segments)
+  const handleSegmentPointerDown = (e: React.PointerEvent, segmentType: "prefix" | "base" | "suffix") => {
+    if (!userSegments) return
+    const segmentValue = segmentType === "prefix" ? userSegments.prefix : segmentType === "base" ? userSegments.base : userSegments.suffix
+    if (Object.values(placements).includes(segmentValue)) return
+    
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const touch = (e as any).touches?.[0] || e
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+    setDraggingSegment(segmentType)
+  }
+
+  const handleSegmentPointerMove = (e: React.PointerEvent) => {
+    if (!draggingSegment) return
+    e.preventDefault()
+    const touch = (e as any).touches?.[0] || e
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+  }
+
+  const handleSegmentPointerUp = (e: React.PointerEvent) => {
+    if (!draggingSegment || !userSegments) return
+    
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e
+    const x = touch.clientX
+    const y = touch.clientY
+
+    let targetNotebook: "prefix" | "base" | "suffix" | null = null
+
+    Object.entries(notebookRefs.current).forEach(([key, ref]) => {
+      if (ref) {
+        const rect = ref.getBoundingClientRect()
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          targetNotebook = key as "prefix" | "base" | "suffix"
+        }
+      }
+    })
+
+    if (targetNotebook) {
+      const segmentValue = draggingSegment === "prefix" ? userSegments.prefix : draggingSegment === "base" ? userSegments.base : userSegments.suffix
+      setPlacements((prev) => ({ ...prev, [targetNotebook as string]: segmentValue }))
+    }
+
+    setDraggingSegment(null)
+    setTouchStartPos(null)
+    setDragPosition(null)
+  }
+
+  // iOS Pointer Event Handlers - Level 2 (Sticky Notes)
+  const handleStickyNotePointerDown = (e: React.PointerEvent) => {
+    if (stickyNotePlacement) return
+    
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const touch = (e as any).touches?.[0] || e
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+    setDraggingStickyNote(true)
+  }
+
+  const handleStickyNotePointerMove = (e: React.PointerEvent) => {
+    if (!draggingStickyNote) return
+    e.preventDefault()
+    const touch = (e as any).touches?.[0] || e
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+  }
+
+  const handleStickyNotePointerUp = (e: React.PointerEvent) => {
+    if (!draggingStickyNote) return
+    
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e
+    const x = touch.clientX
+    const y = touch.clientY
+
+    let targetZone: "derived" | "inflected" | null = null
+
+    Object.entries(dropZoneRefs.current).forEach(([key, ref]) => {
+      if (ref) {
+        const rect = ref.getBoundingClientRect()
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          targetZone = key as "derived" | "inflected"
+        }
+      }
+    })
+
+    if (targetZone) {
+      setStickyNotePlacement(targetZone)
+    }
+
+    setDraggingStickyNote(false)
+    setTouchStartPos(null)
+    setDragPosition(null)
+  }
+
+  // iOS Pointer Event Handlers - Level 3 (Words)
+  const handleWordPointerDown = (e: React.PointerEvent, word: string) => {
+    if (sentenceBlank) return
+    
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const touch = (e as any).touches?.[0] || e
+    setTouchStartPos({ x: touch.clientX, y: touch.clientY })
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+    setDraggingWord(word)
+  }
+
+  const handleWordPointerMove = (e: React.PointerEvent) => {
+    if (!draggingWord) return
+    e.preventDefault()
+    const touch = (e as any).touches?.[0] || e
+    setDragPosition({ x: touch.clientX, y: touch.clientY })
+  }
+
+  const handleWordPointerUp = (e: React.PointerEvent) => {
+    if (!draggingWord) return
+    
+    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e
+    const x = touch.clientX
+    const y = touch.clientY
+
+    const blankRef = dropZoneRefs.current["blank"]
+    if (blankRef) {
+      const rect = blankRef.getBoundingClientRect()
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        setSentenceBlank(draggingWord)
+      }
+    }
+
+    setDraggingWord(null)
+    setTouchStartPos(null)
+    setDragPosition(null)
+  }
 
   // Initialize level data
   const initializeLevel = useCallback((level: 1 | 2 | 3) => {
@@ -1366,6 +1363,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     }
 
     return (
+      <>
       <ClassroomBackground>
         <div className="min-h-screen flex flex-col p-4 pt-56">
           {/* Menu button - top left */}
@@ -1478,31 +1476,46 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
                   {item.prefix !== "none" && userSegments.prefix && (
-                    <DraggableSegment
-                      text={userSegments.prefix}
-                      type="prefix"
+                    <div
+                      draggable={!Object.values(placements).includes(userSegments.prefix)}
                       onDragStart={() => setDraggingSegment("prefix")}
                       onDragEnd={() => setDraggingSegment(null)}
-                      isDragging={draggingSegment === "prefix"}
-                      isPlaced={Object.values(placements).includes(userSegments.prefix)}
-                    />
+                      onPointerDown={(e) => handleSegmentPointerDown(e, "prefix")}
+                      onPointerMove={handleSegmentPointerMove}
+                      onPointerUp={handleSegmentPointerUp}
+                      className={`draggable-no-callout px-2 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-3 rounded-lg border-2 font-bold text-sm xs:text-base sm:text-lg md:text-xl transition-all duration-200 shadow-md bg-amber-50 border-amber-300 text-gray-800 touch-none ${
+                        Object.values(placements).includes(userSegments.prefix) ? "opacity-30 cursor-not-allowed" : "cursor-grab active:cursor-grabbing hover:scale-105"
+                      } ${draggingSegment === "prefix" ? "opacity-50 scale-95" : ""}`}
+                    >
+                      {userSegments.prefix}
+                    </div>
                   )}
-                  <DraggableSegment
-                    text={userSegments.base}
-                    type="base"
+                  <div
+                    draggable={!Object.values(placements).includes(userSegments.base)}
                     onDragStart={() => setDraggingSegment("base")}
                     onDragEnd={() => setDraggingSegment(null)}
-                    isDragging={draggingSegment === "base"}
-                    isPlaced={Object.values(placements).includes(userSegments.base)}
-                  />
-                  <DraggableSegment
-                    text={userSegments.suffix}
-                    type="suffix"
+                    onPointerDown={(e) => handleSegmentPointerDown(e, "base")}
+                    onPointerMove={handleSegmentPointerMove}
+                    onPointerUp={handleSegmentPointerUp}
+                    className={`draggable-no-callout px-2 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-3 rounded-lg border-2 font-bold text-sm xs:text-base sm:text-lg md:text-xl transition-all duration-200 shadow-md bg-amber-50 border-amber-300 text-gray-800 touch-none ${
+                      Object.values(placements).includes(userSegments.base) ? "opacity-30 cursor-not-allowed" : "cursor-grab active:cursor-grabbing hover:scale-105"
+                    } ${draggingSegment === "base" ? "opacity-50 scale-95" : ""}`}
+                  >
+                    {userSegments.base}
+                  </div>
+                  <div
+                    draggable={!Object.values(placements).includes(userSegments.suffix)}
                     onDragStart={() => setDraggingSegment("suffix")}
                     onDragEnd={() => setDraggingSegment(null)}
-                    isDragging={draggingSegment === "suffix"}
-                    isPlaced={Object.values(placements).includes(userSegments.suffix)}
-                  />
+                    onPointerDown={(e) => handleSegmentPointerDown(e, "suffix")}
+                    onPointerMove={handleSegmentPointerMove}
+                    onPointerUp={handleSegmentPointerUp}
+                    className={`draggable-no-callout px-2 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-3 rounded-lg border-2 font-bold text-sm xs:text-base sm:text-lg md:text-xl transition-all duration-200 shadow-md bg-amber-50 border-amber-300 text-gray-800 touch-none ${
+                      Object.values(placements).includes(userSegments.suffix) ? "opacity-30 cursor-not-allowed" : "cursor-grab active:cursor-grabbing hover:scale-105"
+                    } ${draggingSegment === "suffix" ? "opacity-50 scale-95" : ""}`}
+                  >
+                    {userSegments.suffix}
+                  </div>
                 </div>
 
                 {/* Show hint if split is wrong */}
@@ -1541,11 +1554,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             {/* Notebooks */}
             <div className="flex flex-wrap justify-center gap-2 xs:gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
               <Notebook
+                ref={(el) => { notebookRefs.current["prefix"] = el }}
                 label="Prefix"
                 color="yellow"
                 placedContent={placements.prefix}
                 validationState={getValidationState("prefix")}
                 showValidation={submitted}
+                isDragging={!!draggingSegment}
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
@@ -1558,11 +1573,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDragOver={(e) => e.preventDefault()}
               />
               <Notebook
+                ref={(el) => { notebookRefs.current["base"] = el }}
                 label="Base Word"
                 color="green"
                 placedContent={placements.base}
                 validationState={getValidationState("base")}
                 showValidation={submitted}
+                isDragging={!!draggingSegment}
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
@@ -1575,11 +1592,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDragOver={(e) => e.preventDefault()}
               />
               <Notebook
+                ref={(el) => { notebookRefs.current["suffix"] = el }}
                 label="Suffix"
                 color="blue"
                 placedContent={placements.suffix}
                 validationState={getValidationState("suffix")}
                 showValidation={submitted}
+                isDragging={!!draggingSegment}
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingSegment && !submitted && userSegments) {
@@ -1636,6 +1655,26 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           .animate-bounce-soft { animation: bounce-soft 1s ease-in-out infinite; }
         `}</style>
       </ClassroomBackground>
+
+      {/* Floating Drag Element for iOS - Level 1 */}
+      {dragPosition && draggingSegment && userSegments && (
+        <div
+          className="fixed pointer-events-none z-[9999]"
+          style={{
+            left: dragPosition.x,
+            top: dragPosition.y,
+            transform: "translate(-50%, -50%)",
+            willChange: "transform",
+          }}
+        >
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-400 shadow-lg opacity-90">
+            <span className="text-xl sm:text-2xl font-bold text-gray-800">
+              {draggingSegment === "prefix" ? userSegments.prefix : draggingSegment === "base" ? userSegments.base : userSegments.suffix}
+            </span>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
@@ -1647,6 +1686,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     const noteColors = ["yellow", "pink", "blue", "green"]
 
     return (
+      <>
       <ClassroomBackground>
         <div className="min-h-screen flex flex-col p-4 pt-56">
           {/* Menu button - top left */}
@@ -1691,25 +1731,47 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             {/* Sticky Note */}
             {!submitted && (
               <div className="mb-8 animate-pop-in">
-                <DraggableStickyNote
-                  word={item.word}
-                  color={noteColors[currentItem % 4]}
+                <div
+                  draggable={stickyNotePlacement === null}
                   onDragStart={() => setDraggingStickyNote(true)}
                   onDragEnd={() => setDraggingStickyNote(false)}
-                  isDragging={draggingStickyNote}
-                  isPlaced={stickyNotePlacement !== null}
-                />
+                  onPointerDown={handleStickyNotePointerDown}
+                  onPointerMove={handleStickyNotePointerMove}
+                  onPointerUp={handleStickyNotePointerUp}
+                  className={`draggable-no-callout relative w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 p-2 sm:p-3 rounded-sm shadow-lg transition-all duration-300 touch-none ${
+                    noteColors[currentItem % 4] === "yellow" ? "bg-yellow-200 shadow-yellow-300" : noteColors[currentItem % 4] === "pink" ? "bg-pink-200 shadow-pink-300" : noteColors[currentItem % 4] === "blue" ? "bg-blue-200 shadow-blue-300" : "bg-green-200 shadow-green-300"
+                  } ${
+                    draggingStickyNote ? "opacity-50 scale-90" : ""
+                  } ${
+                    stickyNotePlacement !== null ? "opacity-0 pointer-events-none" : "cursor-grab active:cursor-grabbing hover:scale-105 hover:-rotate-3"
+                  }`}
+                  style={{
+                    transform: stickyNotePlacement !== null ? "scale(0)" : `rotate(${Math.random() * 6 - 3}deg)`,
+                    boxShadow: "4px 4px 10px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  {/* Tape at top */}
+                  <div className="absolute -top-1.5 sm:-top-2 left-1/2 -translate-x-1/2 w-6 h-3 sm:w-8 sm:h-4 bg-amber-200/80 rounded-sm" />
+                  {/* Word */}
+                  <div className="h-full flex items-center justify-center px-1">
+                    <span className="text-gray-800 font-semibold text-center text-xs xs:text-sm sm:text-base leading-tight" style={{ fontFamily: "'Caveat', cursive" }}>
+                      {item.word}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Notebooks */}
             <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mb-8">
               <Notebook
+                ref={(el) => { dropZoneRefs.current["derived"] = el }}
                 label="Derived Form"
                 color="purple"
                 placedContent={stickyNotePlacement === "derived" ? item.word : null}
                 validationState={submitted ? (item.isDerived ? "correct" : "wrong") : null}
                 showValidation={submitted && stickyNotePlacement === "derived"}
+                isDragging={draggingStickyNote}
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingStickyNote && !submitted) {
@@ -1721,11 +1783,13 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 onDragOver={(e) => e.preventDefault()}
               />
               <Notebook
+                ref={(el) => { dropZoneRefs.current["inflected"] = el }}
                 label="Inflected Form"
                 color="pink"
                 placedContent={stickyNotePlacement === "inflected" ? item.word : null}
                 validationState={submitted ? (!item.isDerived ? "correct" : "wrong") : null}
                 showValidation={submitted && stickyNotePlacement === "inflected"}
+                isDragging={draggingStickyNote}
                 onDrop={(e) => {
                   e.preventDefault()
                   if (draggingStickyNote && !submitted) {
@@ -1802,6 +1866,26 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           .animate-bounce-soft { animation: bounce-soft 1s ease-in-out infinite; }
         `}</style>
       </ClassroomBackground>
+
+      {/* Floating Drag Element for iOS - Level 2 */}
+      {dragPosition && draggingStickyNote && (
+        <div
+          className="fixed pointer-events-none z-[9999]"
+          style={{
+            left: dragPosition.x,
+            top: dragPosition.y,
+            transform: "translate(-50%, -50%)",
+            willChange: "transform",
+          }}
+        >
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400 shadow-lg opacity-90">
+            <span className="text-lg sm:text-xl font-bold text-gray-800" style={{ fontFamily: "'Caveat', cursive" }}>
+              {item.word}
+            </span>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
@@ -1813,6 +1897,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     const allOptions = level3Options
 
     return (
+      <>
       <ClassroomBackground>
         <div className="min-h-screen flex flex-col p-4 pt-56">
           {/* Menu button - top left */}
@@ -1859,7 +1944,8 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
               <p className="text-lg sm:text-xl text-gray-700 leading-relaxed text-center">
                 {item.sentence.split("________")[0]}
                 <span
-                  className={`inline-block min-w-[120px] mx-1 px-3 py-1 rounded-lg border-2 border-dashed ${
+                  ref={(el) => { dropZoneRefs.current["blank"] = el }}
+                  className={`inline-block min-w-[120px] mx-1 px-3 py-1 rounded-lg border-2 border-dashed transition-all ${
                     submitted
                       ? sentenceBlank === item.correctAnswer
                         ? "bg-green-100 border-green-400 text-green-700"
@@ -1867,7 +1953,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                       : sentenceBlank
                         ? "bg-amber-100 border-amber-400 text-amber-700"
                         : "bg-gray-100 border-gray-400"
-                  }`}
+                  } ${draggingWord && !sentenceBlank ? "scale-105 ring-4 ring-amber-400 animate-pulse" : ""}`}
                   onDrop={(e) => {
                     e.preventDefault()
                     if (draggingWord && !submitted) {
@@ -1890,14 +1976,22 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
                 <p className="text-center text-gray-600 text-sm mb-3">Drag a word to the blank above:</p>
                 <div className="flex flex-wrap justify-center gap-3">
                   {allOptions.map((word, index) => (
-                    <DraggableWord
+                    <div
                       key={index}
-                      word={word}
+                      draggable={sentenceBlank !== word}
                       onDragStart={() => setDraggingWord(word)}
                       onDragEnd={() => setDraggingWord(null)}
-                      isDragging={draggingWord === word}
-                      isPlaced={sentenceBlank === word}
-                    />
+                      onPointerDown={(e) => handleWordPointerDown(e, word)}
+                      onPointerMove={handleWordPointerMove}
+                      onPointerUp={handleWordPointerUp}
+                      className={`draggable-no-callout px-3 py-2 xs:px-4 xs:py-2.5 sm:py-3 rounded-xl font-semibold text-sm xs:text-base transition-all shadow-md border-2 border-amber-200 touch-none ${
+                        draggingWord === word ? "opacity-50 scale-90" : ""
+                      } ${
+                        sentenceBlank === word ? "opacity-30 cursor-not-allowed bg-gray-200 text-gray-500" : "bg-white hover:bg-amber-50 text-gray-700 cursor-grab active:cursor-grabbing hover:scale-105"
+                      }`}
+                    >
+                      {word}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1951,6 +2045,26 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           .animate-bounce-soft { animation: bounce-soft 1s ease-in-out infinite; }
         `}</style>
       </ClassroomBackground>
+
+      {/* Floating Drag Element for iOS - Level 3 */}
+      {dragPosition && draggingWord && (
+        <div
+          className="fixed pointer-events-none z-[9999]"
+          style={{
+            left: dragPosition.x,
+            top: dragPosition.y,
+            transform: "translate(-50%, -50%)",
+            willChange: "transform",
+          }}
+        >
+          <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-100 to-blue-200 border-2 border-blue-400 shadow-lg opacity-90">
+            <span className="text-base sm:text-lg font-bold text-gray-800">
+              {draggingWord}
+            </span>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
