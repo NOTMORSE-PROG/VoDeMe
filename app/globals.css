@@ -128,3 +128,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent iOS long-press context menu on draggable elements */
+.draggable-no-callout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

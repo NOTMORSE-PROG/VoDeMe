@@ -408,7 +408,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   onPointerDown={(e) => handlePointerDown(e, segments.prefix)}
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                  className={`draggable-no-callout px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                     Object.values(placements).includes(segments.prefix)
                       ? "opacity-30"
                       : ""
@@ -424,7 +424,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                 onPointerDown={(e) => handlePointerDown(e, segments.base)}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
-                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                className={`draggable-no-callout px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                   Object.values(placements).includes(segments.base)
                     ? "opacity-30"
                     : ""
@@ -442,7 +442,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   onPointerDown={(e) => handlePointerDown(e, segments.suffix)}
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                  className={`draggable-no-callout px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                     Object.values(placements).includes(segments.suffix)
                       ? "opacity-30"
                       : ""

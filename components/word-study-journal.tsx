@@ -419,7 +419,12 @@ export default function WordStudyJournal() {
       Object.entries(notebookRefs.current).forEach(([key, ref]) => {
         if (ref) {
           const rect = ref.getBoundingClientRect();
-          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          if (
+            x >= rect.left &&
+            x <= rect.right &&
+            y >= rect.top &&
+            y <= rect.bottom
+          ) {
             targetNotebook = key as "prefix" | "base" | "suffix";
           }
         }
@@ -435,8 +440,12 @@ export default function WordStudyJournal() {
       setDragPosition(null);
     };
 
-    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
-    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+    window.addEventListener("pointermove", handleGlobalPointerMove, {
+      passive: false,
+    });
+    window.addEventListener("pointerup", handleGlobalPointerUp, {
+      passive: false,
+    });
 
     return () => {
       window.removeEventListener("pointermove", handleGlobalPointerMove);
@@ -532,7 +541,12 @@ export default function WordStudyJournal() {
       Object.entries(level2NotebookRefs.current).forEach(([key, ref]) => {
         if (ref) {
           const rect = ref.getBoundingClientRect();
-          if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          if (
+            x >= rect.left &&
+            x <= rect.right &&
+            y >= rect.top &&
+            y <= rect.bottom
+          ) {
             targetNotebook = key as "derived" | "inflected";
           }
         }
@@ -548,8 +562,12 @@ export default function WordStudyJournal() {
       setLevel2DragPosition(null);
     };
 
-    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
-    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+    window.addEventListener("pointermove", handleGlobalPointerMove, {
+      passive: false,
+    });
+    window.addEventListener("pointerup", handleGlobalPointerUp, {
+      passive: false,
+    });
 
     return () => {
       window.removeEventListener("pointermove", handleGlobalPointerMove);
@@ -631,7 +649,11 @@ export default function WordStudyJournal() {
 
       if (level3BlankRef.current) {
         const rect = level3BlankRef.current.getBoundingClientRect();
-        const isInsideBlank = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+        const isInsideBlank =
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom;
 
         if (isInsideBlank) {
           handleLevel3Drop(level3DraggingOption);
@@ -644,8 +666,12 @@ export default function WordStudyJournal() {
       setLevel3DragPosition(null);
     };
 
-    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: false });
-    window.addEventListener("pointerup", handleGlobalPointerUp, { passive: false });
+    window.addEventListener("pointermove", handleGlobalPointerMove, {
+      passive: false,
+    });
+    window.addEventListener("pointerup", handleGlobalPointerUp, {
+      passive: false,
+    });
 
     return () => {
       window.removeEventListener("pointermove", handleGlobalPointerMove);
@@ -804,9 +830,7 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div
-          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-        >
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none">
           <div className="text-center mb-12">
             <div className="bg-purple-100 border-4 border-purple-300 rounded-lg p-6 inline-block mb-4">
               <p className="text-sm text-gray-600 mb-2">Target Word</p>
@@ -864,7 +888,9 @@ export default function WordStudyJournal() {
                       onPointerDown={(e) =>
                         handlePointerDown(e, segments.prefix)
                       }
-                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      className={`draggable-no-callout px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.prefix)
                           ? "opacity-30"
                           : ""
@@ -880,7 +906,9 @@ export default function WordStudyJournal() {
                     onDragStart={() => setDraggingSegment(segments.base)}
                     onDragEnd={() => setDraggingSegment(null)}
                     onPointerDown={(e) => handlePointerDown(e, segments.base)}
-                    className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    className={`draggable-no-callout px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                       Object.values(placements).includes(segments.base)
                         ? "opacity-30"
                         : ""
@@ -898,7 +926,9 @@ export default function WordStudyJournal() {
                       onPointerDown={(e) =>
                         handlePointerDown(e, segments.suffix)
                       }
-                      className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      className={`draggable-no-callout px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                         Object.values(placements).includes(segments.suffix)
                           ? "opacity-30"
                           : ""
@@ -1086,9 +1116,7 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div
-          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-        >
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none">
           <div className="text-center mb-12">
             <p className="text-sm text-gray-600 mb-4">
               Drag the sticky note to the correct notebook
@@ -1101,7 +1129,9 @@ export default function WordStudyJournal() {
                 onDragStart={() => setLevel2DraggingWord(item.word)}
                 onDragEnd={() => setLevel2DraggingWord(null)}
                 onPointerDown={(e) => handleLevel2PointerDown(e, item.word)}
-                className={`inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-lg cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
+                onPointerMove={handleLevel2PointerMove}
+                onPointerUp={handleLevel2PointerUp}
+                className={`draggable-no-callout inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-lg cursor-grab active:cursor-grabbing hover:scale-105 transition touch-none ${
                   level2DraggingWord ? "opacity-50 scale-95" : ""
                 }`}
               >
@@ -1277,9 +1307,7 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div
-          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
-        >
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none">
           {/* Sentence with blank */}
           <div className="text-center mb-8">
             <div className="text-lg text-gray-700 mb-6 leading-relaxed inline">
@@ -1330,7 +1358,9 @@ export default function WordStudyJournal() {
                 onDragStart={() => setLevel3DraggingOption(option)}
                 onDragEnd={() => setLevel3DraggingOption(null)}
                 onPointerDown={(e) => handleLevel3PointerDown(e, option)}
-                className={`w-full bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg transition cursor-grab active:cursor-grabbing hover:scale-102 hover:border-amber-400 touch-none ${
+                onPointerMove={handleLevel3PointerMove}
+                onPointerUp={handleLevel3PointerUp}
+                className={`draggable-no-callout w-full bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg transition cursor-grab active:cursor-grabbing hover:scale-102 hover:border-amber-400 touch-none ${
                   level3SelectedOption === option ? "opacity-30" : ""
                 } ${level3DraggingOption === option ? "opacity-50 scale-95" : ""}`}
               >
