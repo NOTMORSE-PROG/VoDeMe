@@ -63,7 +63,26 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
             <button
               type="button"
               onClick={() => {
-                window.location.href = '/api/auth/google?mode=signin&redirect=/dashboard'
+                // Detect if user is in an in-app browser (Instagram, Facebook, TikTok, etc.)
+                const ua = navigator.userAgent || navigator.vendor;
+                const isInAppBrowser = 
+                  ua.includes('Instagram') || 
+                  ua.includes('FBAN') || 
+                  ua.includes('FBAV') ||
+                  ua.includes('Twitter') ||
+                  ua.includes('Line') ||
+                  ua.includes('WhatsApp') ||
+                  (ua.includes('iPhone') && !ua.includes('Safari'));
+                
+                const authUrl = `${window.location.origin}/api/auth/google?mode=signin&redirect=/dashboard`;
+                
+                if (isInAppBrowser) {
+                  // For in-app browsers, show instructions to open in Safari/Chrome
+                  alert('To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again');
+                  return;
+                }
+                
+                window.location.href = authUrl;
               }}
               className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition cursor-pointer"
               title="Sign in with Google"
