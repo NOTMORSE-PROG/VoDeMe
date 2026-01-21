@@ -717,6 +717,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     x: number;
     y: number;
   } | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   // Refs for drop zones
   const notebookRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -750,17 +751,23 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     if (Object.values(placements).includes(segmentValue)) return;
 
     e.currentTarget.setPointerCapture(e.pointerId);
-    const touch = (e as any).touches?.[0] || e;
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    const isTouch = e.pointerType === "touch";
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      const touch = (e as any).touches?.[0] || e;
+      setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
     setDraggingSegment(segmentType);
   };
 
   const handleSegmentPointerMove = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
     e.preventDefault();
-    const touch = (e as any).touches?.[0] || e;
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    if (isTouchDevice) {
+      const touch = (e as any).touches?.[0] || e;
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
   };
 
   const handleSegmentPointerUp = (e: React.PointerEvent) => {
@@ -810,17 +817,23 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     if (stickyNotePlacement) return;
 
     e.currentTarget.setPointerCapture(e.pointerId);
-    const touch = (e as any).touches?.[0] || e;
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    const isTouch = e.pointerType === "touch";
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      const touch = (e as any).touches?.[0] || e;
+      setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
     setDraggingStickyNote(true);
   };
 
   const handleStickyNotePointerMove = (e: React.PointerEvent) => {
     if (!draggingStickyNote) return;
     e.preventDefault();
-    const touch = (e as any).touches?.[0] || e;
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    if (isTouchDevice) {
+      const touch = (e as any).touches?.[0] || e;
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
   };
 
   const handleStickyNotePointerUp = (e: React.PointerEvent) => {
@@ -861,17 +874,23 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
     if (sentenceBlank) return;
 
     e.currentTarget.setPointerCapture(e.pointerId);
-    const touch = (e as any).touches?.[0] || e;
-    setTouchStartPos({ x: touch.clientX, y: touch.clientY });
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    const isTouch = e.pointerType === "touch";
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      const touch = (e as any).touches?.[0] || e;
+      setTouchStartPos({ x: touch.clientX, y: touch.clientY });
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
     setDraggingWord(word);
   };
 
   const handleWordPointerMove = (e: React.PointerEvent) => {
     if (!draggingWord) return;
     e.preventDefault();
-    const touch = (e as any).touches?.[0] || e;
-    setDragPosition({ x: touch.clientX, y: touch.clientY });
+    if (isTouchDevice) {
+      const touch = (e as any).touches?.[0] || e;
+      setDragPosition({ x: touch.clientX, y: touch.clientY });
+    }
   };
 
   const handleWordPointerUp = (e: React.PointerEvent) => {
@@ -1156,7 +1175,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           </button>
 
           {/* Title on Chalkboard */}
-          <div className="absolute top-20 xs:top-24 sm:top-28 md:top-32 left-1/2 -translate-x-1/2 text-center z-20 px-4 w-full">
+          <div className="absolute top-10 xs:top-12 sm:top-14 md:top-16 left-1/2 -translate-x-1/2 text-center z-20 px-4 w-full">
             <h1
               className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg mb-1 sm:mb-2"
               style={{ fontFamily: "'Permanent Marker', cursive" }}
@@ -1303,7 +1322,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
           </button>
 
           {/* Title on Chalkboard */}
-          <div className="absolute top-20 xs:top-24 sm:top-28 md:top-32 left-1/2 -translate-x-1/2 text-center z-20 px-4">
+          <div className="absolute top-10 xs:top-12 sm:top-14 md:top-16 left-1/2 -translate-x-1/2 text-center z-20 px-4">
             <h1
               className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-2"
               style={{ fontFamily: "'Permanent Marker', cursive" }}
@@ -1777,7 +1796,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             </div>
 
             {/* Chalkboard Content */}
-            <div className="absolute top-20 xs:top-24 sm:top-28 md:top-32 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-2xl px-4">
+            <div className="absolute top-12 xs:top-14 sm:top-16 md:top-18 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-2xl px-4">
               <p className="text-white text-xs xs:text-sm sm:text-base mb-1 sm:mb-2 opacity-80">
                 {!userSegments
                   ? "Click between letters to split the word"
@@ -2129,7 +2148,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
         </ClassroomBackground>
 
         {/* Floating Drag Element for iOS - Level 1 */}
-        {dragPosition && draggingSegment && userSegments && (
+        {isTouchDevice && dragPosition && draggingSegment && userSegments && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{
@@ -2195,7 +2214,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             </div>
 
             {/* Chalkboard Content */}
-            <div className="absolute top-24 xs:top-28 sm:top-32 md:top-36 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-2xl px-2 sm:px-4">
+            <div className="absolute top-14 xs:top-16 sm:top-18 md:top-20 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-2xl px-2 sm:px-4">
               <p className="text-white text-xs xs:text-sm sm:text-base md:text-lg mb-1 sm:mb-2 opacity-90 leading-tight">
                 Derived = new word/meaning | Inflected = grammatical change
               </p>
@@ -2418,7 +2437,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
         </ClassroomBackground>
 
         {/* Floating Drag Element for iOS - Level 2 */}
-        {dragPosition && draggingStickyNote && (
+        {isTouchDevice && dragPosition && draggingStickyNote && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{
@@ -2483,7 +2502,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
             </div>
 
             {/* Chalkboard Content */}
-            <div className="absolute top-20 xs:top-24 sm:top-28 md:top-32 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-3xl px-4">
+            <div className="absolute top-12 xs:top-14 sm:top-16 md:top-18 left-1/2 -translate-x-1/2 text-center z-20 w-full max-w-3xl px-4">
               <p className="text-white text-sm mb-2 opacity-80">
                 Base word:{" "}
                 <span className="font-bold text-yellow-300">
@@ -2633,7 +2652,7 @@ export default function WordPartsGame({ onBack }: WordPartsGameProps) {
         </ClassroomBackground>
 
         {/* Floating Drag Element for iOS - Level 3 */}
-        {dragPosition && draggingWord && (
+        {isTouchDevice && dragPosition && draggingWord && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{

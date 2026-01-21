@@ -92,6 +92,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
     x: number;
     y: number;
   } | null>(null);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const notebookRefs = useRef<{
     prefix: HTMLDivElement | null;
     base: HTMLDivElement | null;
@@ -232,15 +233,21 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
   const handlePointerDown = (e: React.PointerEvent, segmentValue: string) => {
     if (Object.values(placements).includes(segmentValue)) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    setTouchStartPos({ x: e.clientX, y: e.clientY });
-    setDragPosition({ x: e.clientX, y: e.clientY });
+    const isTouch = e.pointerType === "touch";
+    setIsTouchDevice(isTouch);
+    if (isTouch) {
+      setTouchStartPos({ x: e.clientX, y: e.clientY });
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    }
     setDraggingSegment(segmentValue);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!draggingSegment) return;
     e.preventDefault();
-    setDragPosition({ x: e.clientX, y: e.clientY });
+    if (isTouchDevice) {
+      setDragPosition({ x: e.clientX, y: e.clientY });
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -630,7 +637,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
         )}
 
         {/* Visual overlay for dragging on touch devices */}
-        {dragPosition && draggingSegment && (
+        {isTouchDevice && dragPosition && draggingSegment && (
           <div
             className="fixed pointer-events-none z-[9999]"
             style={{
