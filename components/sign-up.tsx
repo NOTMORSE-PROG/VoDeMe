@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useActionState } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { signUpAction } from "@/app/auth/actions"
-import { Eye, EyeOff, ArrowLeft } from "lucide-react"
+import type React from "react";
+import { useState } from "react";
+import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { signUpAction } from "@/app/auth/actions";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 interface SignUpProps {
-  onToggleSignIn: () => void
+  onToggleSignIn: () => void;
 }
 
 export default function SignUp({ onToggleSignIn }: SignUpProps) {
-  const router = useRouter()
-  const [state, formAction, isPending] = useActionState(signUpAction, null)
-  const [showPassword, setShowPassword] = useState(false)
+  const router = useRouter();
+  const [state, formAction, isPending] = useActionState(signUpAction, null);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="w-full max-w-5xl">
@@ -31,7 +31,9 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
               className="w-full h-full object-contain"
               priority
             />
-            <h3 className="absolute bottom-6 left-0 right-0 text-white text-xl font-bold">Hello, Friend!</h3>
+            <h3 className="absolute bottom-6 left-0 right-0 text-white text-xl font-bold">
+              Hello, Friend!
+            </h3>
           </div>
         </div>
 
@@ -59,29 +61,36 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
               onClick={() => {
                 // Detect if user is in an in-app browser (Instagram, Facebook, TikTok, etc.)
                 const ua = navigator.userAgent || navigator.vendor;
-                const isInAppBrowser = 
-                  ua.includes('Instagram') || 
-                  ua.includes('FBAN') || 
-                  ua.includes('FBAV') ||
-                  ua.includes('Twitter') ||
-                  ua.includes('Line') ||
-                  ua.includes('WhatsApp') ||
-                  (ua.includes('iPhone') && !ua.includes('Safari'));
-                
+                const isInAppBrowser =
+                  ua.includes("Instagram") ||
+                  ua.includes("FBAN") ||
+                  ua.includes("FBAV") ||
+                  ua.includes("Twitter") ||
+                  ua.includes("Line") ||
+                  ua.includes("WhatsApp") ||
+                  (ua.includes("iPhone") && !ua.includes("Safari"));
+
                 const authUrl = `${window.location.origin}/api/auth/google?mode=signin&redirect=/dashboard`;
-                
+
                 if (isInAppBrowser) {
                   // For in-app browsers, show instructions to open in Safari/Chrome
-                  alert('To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again');
+                  alert(
+                    'To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again',
+                  );
                   return;
                 }
-                
+
                 window.location.href = authUrl;
               }}
               className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition cursor-pointer"
               title="Sign in with Google"
             >
-              <Image src="/images/google-icon.svg" alt="Google" width={18} height={18} />
+              <Image
+                src="/images/google-icon.svg"
+                alt="Google"
+                width={18}
+                height={18}
+              />
             </button>
           </div>
 
@@ -90,7 +99,9 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or create new account</span>
+              <span className="px-2 bg-white text-gray-500">
+                or create new account
+              </span>
             </div>
           </div>
 
@@ -103,7 +114,10 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
 
           <form action={formAction} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Full Name
               </label>
               <input
@@ -116,12 +130,17 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
                 placeholder="John Doe"
               />
               {state?.success === false && state.errors.name && (
-                <p className="mt-1 text-sm text-red-600">{state.errors.name[0]}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {state.errors.name[0]}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -134,12 +153,17 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
                 placeholder="your@email.com"
               />
               {state?.success === false && state.errors.email && (
-                <p className="mt-1 text-sm text-red-600">{state.errors.email[0]}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {state.errors.email[0]}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -166,10 +190,13 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
                 </button>
               </div>
               {state?.success === false && state.errors.password && (
-                <p className="mt-1 text-sm text-red-600">{state.errors.password[0]}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {state.errors.password[0]}
+                </p>
               )}
               <p className="mt-1 text-xs text-gray-500">
-                Must be at least 8 characters with uppercase, lowercase, and number
+                Must be at least 8 characters with uppercase, lowercase, and
+                number
               </p>
             </div>
 
@@ -195,5 +222,5 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

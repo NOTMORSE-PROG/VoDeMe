@@ -1,42 +1,42 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useActionState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
-import { signInAction } from "@/app/auth/actions"
-import { Eye, EyeOff, ArrowLeft } from "lucide-react"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useActionState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { signInAction } from "@/app/auth/actions";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
 interface SignInProps {
-  onToggleSignUp: () => void
+  onToggleSignUp: () => void;
 }
 
 export default function SignIn({ onToggleSignUp }: SignInProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [state, formAction, isPending] = useActionState(signInAction, null)
-  const [showPassword, setShowPassword] = useState(false)
-  const [urlError, setUrlError] = useState<string | null>(null)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [state, formAction, isPending] = useActionState(signInAction, null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   // Read error from URL parameters (from OAuth redirect)
   useEffect(() => {
-    const error = searchParams.get('error')
+    const error = searchParams.get("error");
     if (error) {
-      setUrlError(decodeURIComponent(error))
+      setUrlError(decodeURIComponent(error));
       // Clear the error from URL after reading it
-      const newUrl = new URL(window.location.href)
-      newUrl.searchParams.delete('error')
-      window.history.replaceState({}, '', newUrl.toString())
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("error");
+      window.history.replaceState({}, "", newUrl.toString());
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Clear URL error when form state changes (user submitted form)
   useEffect(() => {
     if (state !== null) {
-      setUrlError(null)
+      setUrlError(null);
     }
-  }, [state])
+  }, [state]);
 
   return (
     <div className="w-full max-w-5xl">
@@ -65,29 +65,36 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
               onClick={() => {
                 // Detect if user is in an in-app browser (Instagram, Facebook, TikTok, etc.)
                 const ua = navigator.userAgent || navigator.vendor;
-                const isInAppBrowser = 
-                  ua.includes('Instagram') || 
-                  ua.includes('FBAN') || 
-                  ua.includes('FBAV') ||
-                  ua.includes('Twitter') ||
-                  ua.includes('Line') ||
-                  ua.includes('WhatsApp') ||
-                  (ua.includes('iPhone') && !ua.includes('Safari'));
-                
+                const isInAppBrowser =
+                  ua.includes("Instagram") ||
+                  ua.includes("FBAN") ||
+                  ua.includes("FBAV") ||
+                  ua.includes("Twitter") ||
+                  ua.includes("Line") ||
+                  ua.includes("WhatsApp") ||
+                  (ua.includes("iPhone") && !ua.includes("Safari"));
+
                 const authUrl = `${window.location.origin}/api/auth/google?mode=signin&redirect=/dashboard`;
-                
+
                 if (isInAppBrowser) {
                   // For in-app browsers, show instructions to open in Safari/Chrome
-                  alert('To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again');
+                  alert(
+                    'To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again',
+                  );
                   return;
                 }
-                
+
                 window.location.href = authUrl;
               }}
               className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 hover:border-orange-500 transition cursor-pointer"
               title="Sign in with Google"
             >
-              <Image src="/images/google-icon.svg" alt="Google" width={18} height={18} />
+              <Image
+                src="/images/google-icon.svg"
+                alt="Google"
+                width={18}
+                height={18}
+              />
             </button>
           </div>
 
@@ -96,7 +103,9 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or use your account</span>
+              <span className="px-2 bg-white text-gray-500">
+                or use your account
+              </span>
             </div>
           </div>
 
@@ -109,7 +118,10 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
               errorMessage = urlError;
             } else if (state?.success === false && state.errors._form) {
               errorMessage = state.errors._form[0];
-            } else if (state?.success === false && (state.errors.email || state.errors.password)) {
+            } else if (
+              state?.success === false &&
+              (state.errors.email || state.errors.password)
+            ) {
               errorMessage = "Invalid email or password. Please try again.";
             }
 
@@ -122,7 +134,10 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
 
           <form action={formAction} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email
               </label>
               <input
@@ -137,7 +152,10 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -208,5 +226,5 @@ export default function SignIn({ onToggleSignUp }: SignInProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
