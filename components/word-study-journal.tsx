@@ -375,7 +375,8 @@ export default function WordStudyJournal() {
     if (!draggingSegment) return;
 
     // iOS compatibility: check touches array first (changedTouches for touchend)
-    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const touch =
+      (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
     const x = touch.clientX;
     const y = touch.clientY;
 
@@ -420,7 +421,8 @@ export default function WordStudyJournal() {
       e.preventDefault();
 
       // iOS compatibility: check touches array first (changedTouches for touchend)
-      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const touch =
+        (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
       const x = touch.clientX;
       const y = touch.clientY;
 
@@ -507,7 +509,8 @@ export default function WordStudyJournal() {
     if (!level2DraggingWord) return;
 
     // iOS compatibility: check touches array first (changedTouches for touchend)
-    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const touch =
+      (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
     const x = touch.clientX;
     const y = touch.clientY;
 
@@ -552,7 +555,8 @@ export default function WordStudyJournal() {
       e.preventDefault();
 
       // iOS compatibility: check touches array first (changedTouches for touchend)
-      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const touch =
+        (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
       const x = touch.clientX;
       const y = touch.clientY;
 
@@ -634,7 +638,8 @@ export default function WordStudyJournal() {
     if (!level3DraggingOption) return;
 
     // iOS compatibility: check touches array first (changedTouches for touchend)
-    const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+    const touch =
+      (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
     const x = touch.clientX;
     const y = touch.clientY;
 
@@ -673,7 +678,8 @@ export default function WordStudyJournal() {
       e.preventDefault();
 
       // iOS compatibility: check touches array first (changedTouches for touchend)
-      const touch = (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
+      const touch =
+        (e as any).changedTouches?.[0] || (e as any).touches?.[0] || e;
       const x = touch.clientX;
       const y = touch.clientY;
 
