@@ -662,7 +662,7 @@ export default function WordStudyJournal() {
   if (level === 1) {
     const item = gameData.level1[itemIndex];
     return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4 overflow-y-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-600 mb-2">
             Word Study Journal - Level 1
@@ -675,7 +675,8 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+        <div
+          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
@@ -951,7 +952,7 @@ export default function WordStudyJournal() {
   if (level === 2) {
     const item = gameData.level2[itemIndex];
     return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4 overflow-y-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-indigo-600 mb-2">
             Word Study Journal - Level 2
@@ -964,7 +965,8 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+        <div
+          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
           onPointerMove={handleLevel2PointerMove}
           onPointerUp={handleLevel2PointerUp}
         >
@@ -1145,7 +1147,7 @@ export default function WordStudyJournal() {
     const sentenceParts = item.sentence.split("________");
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4">
+      <div className="fixed inset-0 bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col items-center justify-center p-4 overflow-y-auto">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-blue-600 mb-2">
             Word Study Journal - Level 3
@@ -1158,7 +1160,8 @@ export default function WordStudyJournal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg"
+        <div
+          className="bg-white rounded-lg p-8 max-w-2xl w-full shadow-lg touch-none"
           onPointerMove={handleLevel3PointerMove}
           onPointerUp={handleLevel3PointerUp}
         >
