@@ -88,6 +88,10 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
     x: number;
     y: number;
   } | null>(null);
+  const [dragPosition, setDragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const notebookRefs = useRef<{
     prefix: HTMLDivElement | null;
     base: HTMLDivElement | null;
@@ -236,6 +240,9 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
     if (!draggingSegment) return;
     // Prevent scrolling while dragging
     e.preventDefault();
+    
+    const touch = e.touches[0];
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -269,6 +276,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
     }
 
     setTouchStartPos(null);
+    setDragPosition(null);
   };
 
   const handleNext = () => {
@@ -308,8 +316,8 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-gradient-to-b from-amber-50 to-orange-50 rounded-2xl p-6 max-w-4xl w-full shadow-2xl relative my-8">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-2 sm:p-4 z-50 overflow-y-auto">
+      <div className="bg-gradient-to-b from-amber-50 to-orange-50 rounded-xl sm:rounded-2xl p-3 sm:p-6 max-w-4xl w-full shadow-2xl relative my-4 sm:my-8">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 hover:bg-white/50 rounded-full transition z-10"
@@ -318,7 +326,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
         </button>
 
         {/* Animated Instruction Banner */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl p-4 mb-6 shadow-lg animate-slide-down relative overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 shadow-lg animate-slide-down relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-white/30">
             <div
               className="h-full bg-white transition-all duration-500"
@@ -327,19 +335,19 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
               }}
             />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-3xl animate-bounce">👉</div>
-            <p className="text-lg font-semibold flex-1">{currentInstruction}</p>
-            <div className="text-sm bg-white/20 px-3 py-1 rounded-full">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="text-xl sm:text-3xl animate-bounce">👉</div>
+            <p className="text-sm sm:text-lg font-semibold flex-1">{currentInstruction}</p>
+            <div className="text-xs sm:text-sm bg-white/20 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
               Step {currentIndex + 1}/{tutorialData.length}
             </div>
           </div>
         </div>
 
         {/* Word Display */}
-        <div className="bg-purple-100 border-4 border-purple-300 rounded-xl p-6 mb-6 text-center">
-          <p className="text-sm text-gray-600 mb-2">Target Word</p>
-          <p className="text-5xl font-bold text-purple-600 mb-4">
+        <div className="bg-purple-100 border-2 sm:border-4 border-purple-300 rounded-lg sm:rounded-xl p-3 sm:p-6 mb-4 sm:mb-6 text-center">
+          <p className="text-xs sm:text-sm text-gray-600 mb-2">Target Word</p>
+          <p className="text-3xl sm:text-5xl font-bold text-purple-600 mb-3 sm:mb-4">
             {currentItem.target}
           </p>
 
@@ -352,13 +360,13 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                     key={index}
                     className="inline-flex items-center relative"
                   >
-                    <span className="text-3xl font-bold text-gray-800 px-1">
+                    <span className="text-2xl sm:text-3xl font-bold text-gray-800 px-0.5 sm:px-1">
                       {letter}
                     </span>
                     {index < currentItem.target.length - 1 && (
                       <button
                         onClick={() => handleSplitClick(index + 1)}
-                        className={`relative w-2 h-12 mx-1 transition-all rounded ${
+                        className={`relative w-1.5 sm:w-2 h-8 sm:h-12 mx-0.5 sm:mx-1 transition-all rounded ${
                           splitPoints.includes(index + 1)
                             ? "bg-orange-500 scale-x-150 shadow-lg animate-pulse cursor-pointer"
                             : currentItem.expectedSplits.includes(index + 1)
@@ -401,7 +409,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   onTouchStart={(e) => handleTouchStart(e, segments.prefix)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
                     Object.values(placements).includes(segments.prefix)
                       ? "opacity-30"
                       : ""
@@ -417,7 +425,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                 onTouchStart={(e) => handleTouchStart(e, segments.base)}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
-                className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
                   Object.values(placements).includes(segments.base)
                     ? "opacity-30"
                     : ""
@@ -435,7 +443,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                   onTouchStart={(e) => handleTouchStart(e, segments.suffix)}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
-                  className={`px-4 py-2 rounded-lg border-2 font-bold text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 font-bold text-base sm:text-lg bg-amber-50 border-amber-300 text-gray-800 cursor-grab active:cursor-grabbing hover:scale-105 transition ${
                     Object.values(placements).includes(segments.suffix)
                       ? "opacity-30"
                       : ""
@@ -449,7 +457,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
         </div>
 
         {/* Notebooks */}
-        <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           {/* Prefix Notebook */}
           {currentItem.prefix !== "none" && (
             <div
@@ -459,7 +467,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                 if (draggingSegment) handleDrop("prefix", draggingSegment);
               }}
               onDragOver={(e) => e.preventDefault()}
-              className={`relative w-32 h-40 rounded-lg shadow-xl transition-all bg-yellow-100 border-4 ${
+              className={`relative w-24 sm:w-32 h-32 sm:h-40 rounded-lg shadow-xl transition-all bg-yellow-100 border-2 sm:border-4 ${
                 showSuccess && getValidationState("prefix") === "correct"
                   ? "border-green-500 ring-4 ring-green-300 animate-wiggle"
                   : showSuccess && getValidationState("prefix") === "wrong"
@@ -469,21 +477,21 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                       : "border-yellow-500"
               } ${draggingSegment && !placements.prefix ? "scale-105 ring-4 ring-yellow-400 animate-pulse" : ""}`}
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-t-lg bg-yellow-100 border-2 border-yellow-500">
-                <span className="text-xs font-bold text-yellow-700">
+              <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-t-lg bg-yellow-100 border border-yellow-500 sm:border-2">
+                <span className="text-[10px] sm:text-xs font-bold text-yellow-700">
                   Prefix
                 </span>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center px-2">
+              <div className="absolute inset-0 flex items-center justify-center px-1 sm:px-2">
                 {placements.prefix ? (
                   <div
-                    className="text-yellow-700 font-bold text-xl animate-write-in"
+                    className="text-yellow-700 font-bold text-base sm:text-xl animate-write-in"
                     style={{ fontFamily: "'Caveat', cursive" }}
                   >
                     {placements.prefix}
                   </div>
                 ) : (
-                  <div className="text-3xl opacity-30">📝</div>
+                  <div className="text-2xl sm:text-3xl opacity-30">📝</div>
                 )}
               </div>
               {showSuccess && getValidationState("prefix") && (
@@ -502,7 +510,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
               if (draggingSegment) handleDrop("base", draggingSegment);
             }}
             onDragOver={(e) => e.preventDefault()}
-            className={`relative w-32 h-40 rounded-lg shadow-xl transition-all bg-green-100 border-4 ${
+            className={`relative w-24 sm:w-32 h-32 sm:h-40 rounded-lg shadow-xl transition-all bg-green-100 border-2 sm:border-4 ${
               showSuccess && getValidationState("base") === "correct"
                 ? "border-green-500 ring-4 ring-green-300 animate-wiggle"
                 : showSuccess && getValidationState("base") === "wrong"
@@ -512,21 +520,21 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                     : "border-green-500"
             } ${draggingSegment && !placements.base ? "scale-105 ring-4 ring-green-400 animate-pulse" : ""}`}
           >
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-t-lg bg-green-100 border-2 border-green-500">
-              <span className="text-xs font-bold text-green-700">
+            <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-t-lg bg-green-100 border border-green-500 sm:border-2">
+              <span className="text-[10px] sm:text-xs font-bold text-green-700">
                 Base Word
               </span>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center px-2">
+            <div className="absolute inset-0 flex items-center justify-center px-1 sm:px-2">
               {placements.base ? (
                 <div
-                  className="text-green-700 font-bold text-xl animate-write-in"
+                  className="text-green-700 font-bold text-base sm:text-xl animate-write-in"
                   style={{ fontFamily: "'Caveat', cursive" }}
                 >
                   {placements.base}
                 </div>
               ) : (
-                <div className="text-3xl opacity-30">📝</div>
+                <div className="text-2xl sm:text-3xl opacity-30">📝</div>
               )}
             </div>
             {showSuccess && getValidationState("base") && (
@@ -545,7 +553,7 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                 if (draggingSegment) handleDrop("suffix", draggingSegment);
               }}
               onDragOver={(e) => e.preventDefault()}
-              className={`relative w-32 h-40 rounded-lg shadow-xl transition-all bg-blue-100 border-4 ${
+              className={`relative w-24 sm:w-32 h-32 sm:h-40 rounded-lg shadow-xl transition-all bg-blue-100 border-2 sm:border-4 ${
                 showSuccess && getValidationState("suffix") === "correct"
                   ? "border-green-500 ring-4 ring-green-300 animate-wiggle"
                   : showSuccess && getValidationState("suffix") === "wrong"
@@ -555,19 +563,19 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
                       : "border-blue-500"
               } ${draggingSegment && !placements.suffix ? "scale-105 ring-4 ring-blue-400 animate-pulse" : ""}`}
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-t-lg bg-blue-100 border-2 border-blue-500">
-                <span className="text-xs font-bold text-blue-700">Suffix</span>
+              <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-t-lg bg-blue-100 border border-blue-500 sm:border-2">
+                <span className="text-[10px] sm:text-xs font-bold text-blue-700">Suffix</span>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center px-2">
+              <div className="absolute inset-0 flex items-center justify-center px-1 sm:px-2">
                 {placements.suffix ? (
                   <div
-                    className="text-blue-700 font-bold text-xl animate-write-in"
+                    className="text-blue-700 font-bold text-base sm:text-xl animate-write-in"
                     style={{ fontFamily: "'Caveat', cursive" }}
                   >
                     {placements.suffix}
                   </div>
                 ) : (
-                  <div className="text-3xl opacity-30">📝</div>
+                  <div className="text-2xl sm:text-3xl opacity-30">📝</div>
                 )}
               </div>
               {showSuccess && getValidationState("suffix") && (
@@ -600,19 +608,38 @@ export default function WordStudyTutorial({ onClose }: WordStudyTutorialProps) {
         {/* Success and Next Button */}
         {showSuccess && (
           <div className="text-center animate-pop-in">
-            <div className="bg-green-50 border-2 border-green-400 rounded-lg p-6 mb-4">
-              <p className="text-4xl mb-2">🎉</p>
-              <p className="text-2xl font-bold text-green-700 mb-2">Perfect!</p>
-              <p className="text-gray-700">{currentItem.hint}</p>
+            <div className="bg-green-50 border border-green-400 sm:border-2 rounded-lg p-4 sm:p-6 mb-3 sm:mb-4">
+              <p className="text-3xl sm:text-4xl mb-2">🎉</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-700 mb-2">Perfect!</p>
+              <p className="text-gray-700 text-sm sm:text-base">{currentItem.hint}</p>
             </div>
             <button
               onClick={handleNext}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all text-lg shadow-lg"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-lg sm:rounded-xl transition-all text-base sm:text-lg shadow-lg"
             >
               {currentIndex < tutorialData.length - 1
                 ? "Next Word →"
                 : "Finish Tutorial 🎓"}
             </button>
+          </div>
+        )}
+
+        {/* Visual overlay for dragging on touch devices */}
+        {dragPosition && draggingSegment && (
+          <div
+            className="fixed pointer-events-none z-[9999]"
+            style={{
+              left: dragPosition.x,
+              top: dragPosition.y,
+              transform: "translate(-50%, -50%)",
+              willChange: 'transform',
+            }}
+          >
+            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-400 shadow-lg opacity-90">
+              <span className="text-2xl font-bold text-gray-800">
+                {draggingSegment}
+              </span>
+            </div>
           </div>
         )}
 

@@ -156,6 +156,10 @@ export default function WordStudyJournal() {
     x: number;
     y: number;
   } | null>(null);
+  const [dragPosition, setDragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const notebookRefs = useRef<{
     prefix: HTMLDivElement | null;
     base: HTMLDivElement | null;
@@ -174,6 +178,10 @@ export default function WordStudyJournal() {
   const [level2WrongNotebook, setLevel2WrongNotebook] = useState<
     "derived" | "inflected" | null
   >(null);
+  const [level2DragPosition, setLevel2DragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const level2NotebookRefs = useRef<{
     derived: HTMLDivElement | null;
     inflected: HTMLDivElement | null;
@@ -190,6 +198,10 @@ export default function WordStudyJournal() {
     string | null
   >(null);
   const [level3DroppedInBlank, setLevel3DroppedInBlank] = useState(false);
+  const [level3DragPosition, setLevel3DragPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const level3BlankRef = useRef<HTMLDivElement | null>(null);
 
   const handleStartLevel = (lvl: 1 | 2 | 3) => {
@@ -347,6 +359,8 @@ export default function WordStudyJournal() {
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!draggingSegment) return;
     e.preventDefault();
+    const touch = e.touches[0];
+    setDragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
@@ -361,12 +375,7 @@ export default function WordStudyJournal() {
     Object.entries(notebookRefs.current).forEach(([key, ref]) => {
       if (ref) {
         const rect = ref.getBoundingClientRect();
-        if (
-          x >= rect.left &&
-          x <= rect.right &&
-          y >= rect.top &&
-          y <= rect.bottom
-        ) {
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
           targetNotebook = key as "prefix" | "base" | "suffix";
         }
       }
@@ -379,6 +388,7 @@ export default function WordStudyJournal() {
     }
 
     setTouchStartPos(null);
+    setDragPosition(null);
   };
 
   // Level 2 drag and drop handlers
@@ -413,6 +423,8 @@ export default function WordStudyJournal() {
   const handleLevel2TouchMove = (e: React.TouchEvent) => {
     if (!level2DraggingWord) return;
     e.preventDefault();
+    const touch = e.touches[0];
+    setLevel2DragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleLevel2TouchEnd = (e: React.TouchEvent) => {
@@ -427,12 +439,7 @@ export default function WordStudyJournal() {
     Object.entries(level2NotebookRefs.current).forEach(([key, ref]) => {
       if (ref) {
         const rect = ref.getBoundingClientRect();
-        if (
-          x >= rect.left &&
-          x <= rect.right &&
-          y >= rect.top &&
-          y <= rect.bottom
-        ) {
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
           targetNotebook = key as "derived" | "inflected";
         }
       }
@@ -445,6 +452,7 @@ export default function WordStudyJournal() {
     }
 
     setTouchStartPos(null);
+    setLevel2DragPosition(null);
   };
 
   const handleLevel2Submit = () => {
@@ -474,6 +482,8 @@ export default function WordStudyJournal() {
   const handleLevel3TouchMove = (e: React.TouchEvent) => {
     if (!level3DraggingOption) return;
     e.preventDefault();
+    const touch = e.touches[0];
+    setLevel3DragPosition({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleLevel3TouchEnd = (e: React.TouchEvent) => {
@@ -485,12 +495,7 @@ export default function WordStudyJournal() {
 
     if (level3BlankRef.current) {
       const rect = level3BlankRef.current.getBoundingClientRect();
-      if (
-        x >= rect.left &&
-        x <= rect.right &&
-        y >= rect.top &&
-        y <= rect.bottom
-      ) {
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
         handleLevel3Drop(level3DraggingOption);
       } else {
         setLevel3DraggingOption(null);
@@ -500,6 +505,7 @@ export default function WordStudyJournal() {
     }
 
     setTouchStartPos(null);
+    setLevel3DragPosition(null);
   };
 
   const handleLevel3Submit = () => {
@@ -872,6 +878,25 @@ export default function WordStudyJournal() {
           )}
         </div>
 
+        {/* Visual overlay for dragging on touch devices */}
+        {dragPosition && draggingSegment && (
+          <div
+            className="fixed pointer-events-none z-[9999]"
+            style={{
+              left: dragPosition.x,
+              top: dragPosition.y,
+              transform: 'translate(-50%, -50%)',
+              willChange: 'transform',
+            }}
+          >
+            <div className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-100 to-orange-100 border-2 border-amber-400 shadow-lg opacity-90">
+              <span className="text-2xl font-bold text-gray-800">
+                {draggingSegment}
+              </span>
+            </div>
+          </div>
+        )}
+
         <style jsx>{`
           @keyframes shake {
             0%,
@@ -1040,6 +1065,23 @@ export default function WordStudyJournal() {
           )}
         </div>
 
+        {/* Dragging overlay for touch devices - Level 2 */}
+        {level2DragPosition && level2DraggingWord && (
+          <div
+            className="fixed pointer-events-none z-[9999]"
+            style={{
+              left: level2DragPosition.x,
+              top: level2DragPosition.y,
+              transform: 'translate(-50%, -50%)',
+              willChange: 'transform',
+            }}
+          >
+            <div className="inline-block bg-yellow-200 border-4 border-yellow-400 rounded-lg p-6 shadow-2xl opacity-90">
+              <p className="text-4xl font-bold text-gray-800">{level2DraggingWord}</p>
+            </div>
+          </div>
+        )}
+
         <style jsx>{`
           @keyframes shake {
             0%,
@@ -1162,6 +1204,23 @@ export default function WordStudyJournal() {
             </div>
           )}
         </div>
+
+        {/* Dragging overlay for touch devices - Level 3 */}
+        {level3DragPosition && level3DraggingOption && (
+          <div
+            className="fixed pointer-events-none z-[9999]"
+            style={{
+              left: level3DragPosition.x,
+              top: level3DragPosition.y,
+              transform: 'translate(-50%, -50%)',
+              willChange: 'transform',
+            }}
+          >
+            <div className="bg-amber-50 border-4 border-amber-300 rounded-lg p-4 font-bold text-lg shadow-2xl opacity-90">
+              {level3DraggingOption}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
