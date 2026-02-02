@@ -68,15 +68,19 @@ export default function SignUp({ onToggleSignIn }: SignUpProps) {
                   ua.includes("Twitter") ||
                   ua.includes("Line") ||
                   ua.includes("WhatsApp") ||
-                  (ua.includes("iPhone") && !ua.includes("Safari"));
+                  (ua.includes("iPhone") && !ua.includes("Safari")) ||
+                  // Android WebView detection
+                  (ua.includes("Android") && ua.includes("wv"));
 
                 const authUrl = `${window.location.origin}/api/auth/google?mode=signin&redirect=/dashboard`;
 
                 if (isInAppBrowser) {
                   // For in-app browsers, show instructions to open in Safari/Chrome
-                  alert(
-                    'To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again',
-                  );
+                  const isAndroid = ua.includes("Android");
+                  const instructions = isAndroid
+                    ? 'To sign in with Google, please:\n\n1. Tap the three dots (...) menu\n2. Select "Open in Chrome" or "Open in Browser"\n3. Then try signing in again'
+                    : 'To sign in with Google, please:\n\n1. Tap the three dots (...) or share button\n2. Select "Open in Safari" or "Open in Browser"\n3. Then try signing in again';
+                  alert(instructions);
                   return;
                 }
 
